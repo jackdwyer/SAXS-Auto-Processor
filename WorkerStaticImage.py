@@ -6,7 +6,7 @@ Jack dywer
 
 
 import zmq
-import DatFile
+import CommonLib.DatFile
 import sys
 
 class WorkerStaticImage():
@@ -34,10 +34,10 @@ if __name__ == "__main__":
         context = zmq.Context()
 
         samples = context.socket(zmq.PULL)
-        samples.connect("tcp://127.0.0.1:7889")
+        samples.connect("tcp://127.0.0.1:7882")
         
         bufferReq = context.socket(zmq.REQ)
-        bufferReq.connect("tcp://127.0.0.1:7880")
+        bufferReq.connect("tcp://127.0.0.1:7883")
         
 
         

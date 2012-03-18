@@ -27,7 +27,7 @@ class WorkerBufferAverage():
 
 def send_buffer_data(context, worker):
     bufferReply = context.socket(zmq.REP)
-    bufferReply.bind("tcp://*:7880")
+    bufferReply.bind("tcp://*:7883")
     
     while True:
         req = bufferReply.recv() #wait for request of buffer
@@ -45,7 +45,7 @@ if __name__ == "__main__":
         context = zmq.Context()
 
         buffers = context.socket(zmq.PULL)
-        buffers.connect("tcp://127.0.0.1:7888")
+        buffers.connect("tcp://127.0.0.1:7881")
         
         junk = Thread(target=send_buffer_data, args=(context, worker))
         junk.start()
