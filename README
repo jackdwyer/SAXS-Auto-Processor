@@ -1,0 +1,6 @@
+Required Third party Libraries
+- Mysqldb
+- yaml (maybe)
+- epics
+- zmq
+- msgpack (maybe)

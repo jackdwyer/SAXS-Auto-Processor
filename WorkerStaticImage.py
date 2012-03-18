@@ -6,22 +6,76 @@ Jack dywer
 
 
 import zmq
-import CommonLib.DatFile
+from CommonLib import TableBuilder
 import sys
 
 class WorkerStaticImage():
     
     def __init__(self):
         self.allIntensities = []
-    
-    
-    def run(self, bufferFile):
-        bufferObject = DatFile.DatFile(bufferFile)
-        self.allIntensities.append(bufferObject.getIntensities())
-            
-    def getAveBuffer(self):
-        return self.allIntensities
+        self.subtractedDatIntensities = []
+        self.subtractedDatq = []
+        
+        
+        self.collumAttributes = ['subtracted_location']
+        self.newTable = TableBuilder.TableBuilder("test", "images", self.collumAttributes)
+       
+    def run(self, datFile, aveBuffer):
+        subtractedDatIntensities = []
+        subtractedDatq = []
+        for i in range(len(datFile.intensities)):
+            #Intensities
+            value = datFile.intensities[i] - aveBuffer[i]
+            subtractedDatIntensities.insert(i, value)
+            #Q Values
+            subtractedDatq.insert(i, datFile.q[i])
+        
+        
+        self.subtractedDatIntensities = subtractedDatIntensities
+        self.subtractedDatq = subtractedDatq
+        name = datFile.getFileName()
+        self.writeFile(name)
+        
 
+
+    def writeFile(self, name):
+        location = "testWrite" + str(name)
+        f = open(location, 'w')
+        for i in range(len(self.subtractedDatq)):
+            f.write("[" + str(self.subtractedDatq[i]) + ", " + str(self.subtractedDatIntensities[i]) + "] , \n")
+        
+        f.close()
+        self.exportData(location)
+        print  "FILE WRITTEN"
+        
+        
+
+    def exportData(self, location):
+        d = { "subtracted_location" : location }
+        self.newTable.addData(d)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
 if __name__ == "__main__":
     worker = WorkerStaticImage()
@@ -29,6 +83,8 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "tests":
         worker.run("testDat/0p009_0166.dat")
         print worker.getAveBuffer()
+        
+        
     
     else:
         context = zmq.Context()
@@ -42,14 +98,9 @@ if __name__ == "__main__":
 
         
         while True:
-            data = samples.recv()
-            bufferReq.send("gimme")
-            bufferBlah = bufferReq.recv()
-        
-            print bufferBlah
-            print "^666666666666666666666666666666666666666666666666666"
-            print "got SAMPLE %s" % data
-            worker.run(data)
-            print worker.getAveBuffer()
+            datFile = samples.recv_pyobj()
+            bufferReq.send("REQ-AVEBUFFER")
+            aveBuffer = bufferReq.recv_pyobj()
+            worker.run(datFile, aveBuffer)
          
 
