@@ -13,7 +13,6 @@ from CommonLib import LogLine
 from CommonLib import TableBuilder
 from CommonLib import DatFile
 import MySQLdb as mysql
-import pickle
 
 
 class Engine():
@@ -36,6 +35,9 @@ class Engine():
         self.bufferWorker.bind("tcp://*:7881")  
         self.sampleWorker = self.context.socket(zmq.PUSH)
         self.sampleWorker.bind("tcp://*:7882")
+        #7883 is used by the WorkerBufferAverage
+        self.dbWorker = self.context.socket(zmq.PUSH)
+        self.dbWorker.connect("tcp://127.0.0.1:7884")
     
         #For holding the data
         self.lines = [] #List of lines already read
@@ -48,26 +50,7 @@ class Engine():
         #Make sure all sockets are created
         time.sleep(1.0)
     
-
-    def buildTable(self):
-        self.forceDBCreation()
-        collumAttributes = ['GISAXS_OMEGA', 'Protein_SMPL', 'Phi', 'NumericTimeStamp', 'Slit_3_V', 'I0', 'Slit_2_V', 'Slit_2_H', 'NOMINAL_CL', 'Slit_3_H', 'Keithly2', 'Slit_4_H', 'TimeStamp', 'ActualExpTime', 'Ibs', 'Slit_4_V', 'exptime', 'SMPL_TBL_X', 'SMPL_TBL_Y', 'Energy', 'It', 'Temp2', 'Temp1', 'SMPL_TYPE', 'GISAXS_SMPL_X', 'GISAXS_SMPL_Y', 'ImageLocation', 'subtracted_location']
-        self.newTable = TableBuilder.TableBuilder(self.user, "experiment1", collumAttributes)
-
-    def exportData(self, line):
-        line = LogLine.LogLine(line)
-        self.newTable.addData(line.data)
-
-    def forceDBCreation(self):
-        try:
-            db = mysql.connect(user="root", host="localhost", passwd="a")
-            c = db.cursor()
-            cmd = "CREATE DATABASE IF NOT EXISTS " + str(self.user) + ";"
-            c.execute(cmd)      
-        except Exception:
-            print "Database for user: " + str(self.user) + "  -Failed to be created"
-            raise
-        
+ 
         
     def readLatestLine(self):
         noLines = True
@@ -80,10 +63,14 @@ class Engine():
                     if (self.latestLine in self.lines):
                         time.sleep(0.05)
                     else:
-                        self.exportData(self.latestLine)
                         self.lines.append(self.latestLine)
                         self.logLines.append(LogLine.LogLine(self.latestLine))
                         self.index = self.index + 1
+                        
+                        #Send logline to be added to DB
+                        self.dbWorker.send("logLine")
+                        self.dbWorker.send_pyobj(self.logLines[self.index-1])
+                        
                         noLines = False
                 except IndexError:
                     pass
@@ -93,6 +80,7 @@ class Engine():
                 print "IOERROR"
                 time.sleep(0.5)
                 pass
+            
         
     def getDatFile(self):
         """TODO: make better... forgot the better and faster way I had the imagename
@@ -130,7 +118,6 @@ class Engine():
             self.getDatFile()
             print "got datfile"
             print self.datFiles[self.index-1].getDatFilePath()
-            print self.datFiles[self.index-1].getIntensities()
             
             
             imageType = (self.logLines[self.index-1].getValue("SMPL_TYPE"))
@@ -154,7 +141,10 @@ class Engine():
 
     def run(self, user):
         self.user = user
-        self.buildTable()
+        self.dbWorker.send("user")
+        self.dbWorker.send(str(self.user))  
+        self.dbWorker.send("Experiment")
+        self.dbWorker.send(str(self.experiment))      
         
         #Setup Variables/File Locations for user
         self.logFile = "testDat/livelogfile.log"

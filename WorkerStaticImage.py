@@ -16,9 +16,11 @@ class WorkerStaticImage():
         self.subtractedDatIntensities = []
         self.subtractedDatq = []
         
-        
-        self.collumAttributes = ['subtracted_location']
-        self.newTable = TableBuilder.TableBuilder("test", "images", self.collumAttributes)
+        #For writting to DB
+        self.context = zmq.Context()
+        self.dbWorker = self.context.socket(zmq.PUSH)
+        self.dbWorker.connect("tcp://127.0.0.1:7884")
+  
        
     def run(self, datFile, aveBuffer):
         subtractedDatIntensities = []
@@ -39,37 +41,21 @@ class WorkerStaticImage():
 
 
     def writeFile(self, name):
-        location = "testWrite" + str(name)
+        location = "testWrite/" + "subtracted-" + str(name)
         f = open(location, 'w')
         for i in range(len(self.subtractedDatq)):
             f.write("[" + str(self.subtractedDatq[i]) + ", " + str(self.subtractedDatIntensities[i]) + "] , \n")
         
         f.close()
         self.exportData(location)
-        print  "FILE WRITTEN"
         
+        print "file written"
         
 
     def exportData(self, location):
-        d = { "subtracted_location" : location }
-        self.newTable.addData(d)
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+        self.dbWorker.send("ImageLocation")
+        self.dbWorker.send(str(location))
+
         
         
         
@@ -94,6 +80,8 @@ if __name__ == "__main__":
         
         bufferReq = context.socket(zmq.REQ)
         bufferReq.connect("tcp://127.0.0.1:7883")
+        
+
         
 
         

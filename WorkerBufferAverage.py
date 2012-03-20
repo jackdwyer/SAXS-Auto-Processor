@@ -5,11 +5,10 @@ Jack dywer
 """
 
 import zmq
-import DatFile
+from CommonLib import DatFile
 import sys
 import time
 from threading import Thread
-import pickle
 from CommonLib import LogLine
 from CommonLib import TableBuilder
 
