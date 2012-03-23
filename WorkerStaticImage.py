@@ -15,9 +15,9 @@ import sys
 class WorkerStaticImage():
     
     def __init__(self):
-        self.subtractedDatIntensities = []
-        self.subtractedDatq = []
-        self.subtractedErrors = []
+        self.subtractedDatIntensities = [0.00066294443, 0.0019888332, 0.0033147218, 0.011270041]
+        self.subtractedDatq = [0.00000000, 0.00000000, 0.00000000, 0.036064556]
+        self.subtractedErrors = [0.00000000, 0.00000000, 0.00000000, 0.0013119254]
         
         #For writting to DB
         self.context = zmq.Context()
@@ -49,10 +49,10 @@ class WorkerStaticImage():
     def writeFile(self, name):
         location = "testWrite/" + "subtracted-" + str(name)
         f = open(location, 'w')
-        f.write('%14s %16s %16s' % ('q', 'I', 'Err')) #Needed for string formatting
+        f.write(name + "\n")
+        f.write('%14s %16s %16s \n' % ('q', 'I', 'Err')) #Needed for string formatting
         for i in range(len(self.subtractedDatq)):
-            f.write("[" + str(self.subtractedDatq[i]) + ", " + str(self.subtractedDatIntensities[i]) + "] , \n")
-        
+            f.write('%18.10f %16.10f %16.10f \n' % (self.subtractedDatq[i], self.subtractedDatIntensities[i], self.subtractedErrors[i]))        
         f.close()
         self.exportData(location)
         
