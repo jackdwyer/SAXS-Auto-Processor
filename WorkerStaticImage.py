@@ -2,6 +2,9 @@
 """
 Jack dywer
 18 march 2012
+
+23 March
+- Fixing what is written out
 """
 
 
@@ -46,6 +49,7 @@ class WorkerStaticImage():
     def writeFile(self, name):
         location = "testWrite/" + "subtracted-" + str(name)
         f = open(location, 'w')
+        f.write('%14s %16s %16s' % ('q', 'I', 'Err')) #Needed for string formatting
         for i in range(len(self.subtractedDatq)):
             f.write("[" + str(self.subtractedDatq[i]) + ", " + str(self.subtractedDatIntensities[i]) + "] , \n")
         
@@ -70,8 +74,7 @@ if __name__ == "__main__":
     worker = WorkerStaticImage()
     
     if len(sys.argv) > 1 and sys.argv[1] == "tests":
-        worker.run("testDat/0p009_0166.dat")
-        print worker.getAveBuffer()
+        worker.writeFile("TestWrite")
         
         
     
