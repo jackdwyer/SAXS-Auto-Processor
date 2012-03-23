@@ -45,7 +45,6 @@ class WorkerStaticImage():
         self.writeFile(name)
         
 
-
     def writeFile(self, name):
         location = "testWrite/" + "subtracted-" + str(name)
         f = open(location, 'w')
