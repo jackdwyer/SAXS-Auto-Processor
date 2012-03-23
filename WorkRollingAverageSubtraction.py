@@ -6,5 +6,7 @@ Jack dywer
 Averages the Static Image, and subtracts the averaged Buffer Average
 """
 
-class WorkerRollingAverageSubtraction:
+class WorkerRollingAverageSubtraction():
     
+    def __init__(self):
+        self.allInt
