@@ -15,9 +15,9 @@ import sys
 class WorkerStaticImage():
     
     def __init__(self):
-        self.subtractedDatIntensities = [0.00066294443, 0.0019888332, 0.0033147218, 0.011270041]
-        self.subtractedDatq = [0.00000000, 0.00000000, 0.00000000, 0.036064556]
-        self.subtractedErrors = [0.00000000, 0.00000000, 0.00000000, 0.0013119254]
+        self.subtractedDatIntensities = []
+        self.subtractedDatq = []
+        self.subtractedErrors = []
         
         #For writting to DB
         self.context = zmq.Context()
@@ -40,7 +40,8 @@ class WorkerStaticImage():
         
         self.subtractedDatIntensities = subtractedDatIntensities
         self.subtractedDatq = subtractedDatq
-        self.subtractedDatq = subtractedErrors
+        self.subtractedErrors = subtractedErrors
+        
         name = datFile.getFileName()
         self.writeFile(name)
         
