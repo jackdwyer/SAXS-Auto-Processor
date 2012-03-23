@@ -12,9 +12,9 @@ import sys
 class WorkerStaticImage():
     
     def __init__(self):
-        self.allIntensities = []
         self.subtractedDatIntensities = []
         self.subtractedDatq = []
+        self.subtractedErrors = []
         
         #For writting to DB
         self.context = zmq.Context()
@@ -25,16 +25,19 @@ class WorkerStaticImage():
     def run(self, datFile, aveBuffer):
         subtractedDatIntensities = []
         subtractedDatq = []
+        subtractedErrors = []
         for i in range(len(datFile.intensities)):
             #Intensities
             value = datFile.intensities[i] - aveBuffer[i]
             subtractedDatIntensities.insert(i, value)
             #Q Values
             subtractedDatq.insert(i, datFile.q[i])
+            subtractedErrors.insert(i, datFile.errors[i])
         
         
         self.subtractedDatIntensities = subtractedDatIntensities
         self.subtractedDatq = subtractedDatq
+        self.subtractedDatq = subtractedErrors
         name = datFile.getFileName()
         self.writeFile(name)
         
