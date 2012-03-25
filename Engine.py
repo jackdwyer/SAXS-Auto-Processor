@@ -34,7 +34,7 @@ class Engine():
         self.bufferWorker = self.context.socket(zmq.PUSH)
         self.bufferWorker.bind("tcp://*:7881")  
         self.sampleWorker = self.context.socket(zmq.PUSH)
-        self.sampleWorker.bind("tcp://*:7882")
+        self.sampleWorker.connect("tcp://127.0.0.1:7882")
         #7883 is used by the WorkerBufferAverage
         self.dbWorker = self.context.socket(zmq.PUSH)
         self.dbWorker.connect("tcp://127.0.0.1:7884")
