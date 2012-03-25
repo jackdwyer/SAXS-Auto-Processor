@@ -47,7 +47,7 @@ class WorkerStaticImage():
         
 
     def writeFile(self, name):
-        location = "testWrite/" + "subtracted-" + str(name)
+        location = "testWrite/" + str(name)
         f = open(location, 'w')
         f.write(name + "\n")
         f.write('%14s %16s %16s \n' % ('q', 'I', 'Err')) #Needed for string formatting
@@ -63,12 +63,6 @@ class WorkerStaticImage():
         self.dbWorker.send("ImageLocation")
         self.dbWorker.send(str(location))
 
-        
-        
-        
-        
-        
-        
 
 if __name__ == "__main__":
     worker = WorkerStaticImage()
@@ -82,7 +76,7 @@ if __name__ == "__main__":
         context = zmq.Context()
 
         samples = context.socket(zmq.PULL)
-        samples.connect("tcp://127.0.0.1:7882")
+        samples.bind("tcp://127.0.0.1:7882")
         
         bufferReq = context.socket(zmq.REQ)
         bufferReq.connect("tcp://127.0.0.1:7883")
