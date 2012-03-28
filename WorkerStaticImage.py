@@ -76,7 +76,7 @@ if __name__ == "__main__":
         context = zmq.Context()
 
         samples = context.socket(zmq.PULL)
-        samples.bind("tcp://127.0.0.1:7882")
+        samples.connect("tcp://127.0.0.1:7882")
         
         bufferReq = context.socket(zmq.REQ)
         bufferReq.connect("tcp://127.0.0.1:7883")

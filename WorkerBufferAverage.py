@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+ #!/usr/bin/env python2.7
 """
 Jack dywer
 18 march 2012
@@ -33,7 +33,10 @@ class WorkerBufferAverage():
                 value = (value/(len(self.allIntensities)))
                 
             aveIntensities.insert(x, value)
-            self.aveIntensities = aveIntensities
+        self.aveIntensities = aveIntensities
+        print aveIntensities
+            
+        print "Average Buffer Generated"
   
     def getAve(self):
         return self.aveIntensities
@@ -43,7 +46,7 @@ class WorkerBufferAverage():
 
 def send_buffer_data(context, worker):
     bufferReply = context.socket(zmq.REP)
-    bufferReply.bind("tcp://*:7883")
+    bufferReply.bind("tcp://127.0.0.1:7883")
     
     try:
         while True:

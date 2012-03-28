@@ -27,17 +27,21 @@ class Engine():
         
         #File Locations
         self.logLocation = "testDat/livelogfile.log"
-        self.datFileLocation = "/home/jack/sim/"
+        self.datFileLocation = "/home/dwyerj/sim/"
         
         #ZeroMQ setup stuff
         self.context = zmq.Context()
         self.bufferWorker = self.context.socket(zmq.PUSH)
         self.bufferWorker.bind("tcp://*:7881")  
         self.sampleWorker = self.context.socket(zmq.PUSH)
-        self.sampleWorker.connect("tcp://127.0.0.1:7882")
+        self.sampleWorker.bind("tcp://127.0.0.1:7882")
         #7883 is used by the WorkerBufferAverage
         self.dbWorker = self.context.socket(zmq.PUSH)
         self.dbWorker.connect("tcp://127.0.0.1:7884")
+        #7885 is used for WorkerRollingAverageSubtraction
+        self.rollingAverageWorker = self.context.socket(zmq.PUSH)
+        self.rollingAverageWorker.bind("tcp://127.0.0.1:7885")
+        
     
         #For holding the data
         self.lines = [] #List of lines already read
@@ -130,6 +134,7 @@ class Engine():
                 self.bufferWorker.send_pyobj(self.datFiles[self.index-1])
             if (imageType == "STATIC_SAMPLE"):
                 self.sampleWorker.send_pyobj(self.datFiles[self.index-1])
+                self.rollingAverageWorker.send_pyobj(self.datFiles[self.index-1])
 
 
         
@@ -147,7 +152,7 @@ class Engine():
         self.dbWorker.send(str(self.experiment))      
         
         #Setup Variables/File Locations for user
-        self.logFile = "testDat/livelogfile.log"
+        self.logFile = "testDat/livelogfile_nk_edit.log"
                        
         epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.epicPVChange)
         
