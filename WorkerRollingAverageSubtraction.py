@@ -34,12 +34,13 @@ class WorkerRollingAverageSubtraction():
         self.allQ.append(datFile.q)
         self.allErrors.append(datFile.errors)
 
-        self.generateIntensityAverage()
-        self.generateQAverage()
-        self.generateErrorAverage()
-        
-                
-        self.writeFile("rolling_average1.dat")
+        if (len(self.allIntensities) > 1):
+            self.generateIntensityAverage()
+            self.generateQAverage()
+            self.generateErrorAverage()
+            self.writeFile("rolling_average1.dat")
+        else:
+            print "only 1 dat file.. unable to average"
         
         
     def generateIntensityAverage(self):
