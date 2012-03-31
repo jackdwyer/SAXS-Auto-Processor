@@ -45,7 +45,7 @@ def main(user):
 def run(user):
       
     #setup log generation 
-    logFileName = "livelogfile.log" #actual real log file prevous generated in another experiment
+    logFileName = "data/livelogfile.log" #actual real log file prevous generated in another experiment
     log = open(logFileName)
     line = log.readline()
     
