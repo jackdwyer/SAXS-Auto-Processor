@@ -8,6 +8,7 @@ expects a dictionary with q, i, error values
 prints to an accuracy of 10 decimal places.
 
 """
+import os
 
 
 class DatFileWriter:
@@ -22,8 +23,13 @@ class DatFileWriter:
         
         
     def writeFile(self):
-        loc = self.location+self.name
+        if not os.path.exists(self.location):
+            os.makedirs(self.location)
+       
+       
+        loc = self.location+self.name                
         f = open(loc, 'w')
+        
         f.write(self.name + "\n")
         
         formatting  = '%'+str(4 + self.accuracy)+'s %'+str(6 + self.accuracy)+'s %'+str(6 + self.accuracy)+'s \n'
