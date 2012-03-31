@@ -9,7 +9,7 @@ Jack dywer
 
 
 import zmq
-from CommonLib import TableBuilder
+from CommonLib import *
 import sys
 
 class WorkerStaticImage():

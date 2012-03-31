@@ -6,9 +6,7 @@ Jack dywer
 #TODO: Fix up sample Typpe, eg write to another table of subtracted types.
 
 import zmq
-from CommonLib import LogLine
-from CommonLib import TableBuilder
-from CommonLib import DatFile
+from CommonLib import *
 import MySQLdb as mysql
 
 
