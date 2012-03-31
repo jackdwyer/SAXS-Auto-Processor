@@ -18,20 +18,16 @@ class DatFileWriter:
         self.name = name
         self.dict = dict
         self.accuracy = accuracy
-        
-        
-        
+   
         
     def writeFile(self):
+        #Used for checking if the folder exists.. will be used later in engine
         if not os.path.exists(self.location):
             os.makedirs(self.location)
-       
-       
+                   
         loc = self.location+self.name                
         f = open(loc, 'w')
-        
         f.write(self.name + "\n")
-        
         formatting  = '%'+str(4 + self.accuracy)+'s %'+str(6 + self.accuracy)+'s %'+str(6 + self.accuracy)+'s \n'
         f.write(formatting % ('q', 'I', 'Err')) #Needed for string formatting
         for i in range(len(self.dict['q'])):
