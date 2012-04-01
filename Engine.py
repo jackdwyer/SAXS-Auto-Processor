@@ -30,7 +30,8 @@ class Engine():
         self.rollingAverageWorker = self.context.socket(zmq.PUSH)
         self.rollingAverageWorker.bind("tcp://127.0.0.1:7885")
         
-    
+        
+          
         #For holding the data
         self.lines = [] #List of lines already read
         self.logLines = [] #List of LogLine Objects, that have been broken down for easy access
@@ -49,14 +50,26 @@ class Engine():
         self.logLocation = "testDat/livelogfile.log"
         self.datFileLocation = "/home/dwyerj/sim/"
         
-        #For serialisation of objects/data
         
         #Make sure all sockets are created
         time.sleep(1.0)
         
     def clear(self):
         """Clears engine data, and workers"""
+        self.lines = []
+        self.logLines = []
+        self.lastLine = ""
+        self.datFiles = []
+        self.index = 0
+        self.user = ""
+        self.experiment = "EXPERIMENT_1"
+        self.logFile = ""
         
+    def generateDB(self):
+        self.dbWorker.send("user")
+        self.dbWorker.send(str(self.user))
+        self.dbWorker.send("Experiment")
+        self.dbWorker.send(str(self.experiment)) 
     
  
         
@@ -144,30 +157,30 @@ class Engine():
     def getUser(self, path):
         """Splits file path, and returns only user"""
         user = path.split("/")
-        user = filter(None, b) #needed to remove the none characters from the array
+        user = filter(None, user) #needed to remove the none characters from the array
         return user[-1] #currently the user_epn is the last object in the list
     
     def userChange(self, char_value, **kw):
         """Get the user_epn when a change over has occured, 
         this will create a new DB for the user, create directory structure
         and clear out all workers"""
+        self.clear()
         user = self.getUser(char_value)
+        self.user = user
+        print "USER CHANGED - ", self.user 
+
+        
+        
+        self.generateDB()        
+        self.run()
     
+        #fix        self.logFile = "testDat/livelogfile_nk_edit.log"
 
        
  
 
 
-    def run(self, user):
-        self.user = user
-        self.dbWorker.send("user")
-        self.dbWorker.send(str(self.user))
-        self.dbWorker.send("Experiment")
-        self.dbWorker.send(str(self.experiment))      
-        
-        #Setup Variables/File Locations for user
-        self.logFile = "testDat/livelogfile_nk_edit.log"
-                       
+    def run(self):                       
         epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
         epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.userChange)
  
@@ -182,6 +195,4 @@ class Engine():
 
 if __name__ == "__main__":
     engine = Engine()
-    #Should do check for changeover script here
-    user = raw_input("ENTER USER >> ")
-    engine.run(user)
+    engine.run()

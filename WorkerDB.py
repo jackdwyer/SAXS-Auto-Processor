@@ -18,16 +18,14 @@ class WorkerDB():
         self.root = "root"
         self.password = "a"
         
-        
-        
         self.user = ""
         self.experiment = ""
         self.logTable = "" 
         self.imageTable = ""
-    
+        self.name = "WorkerDB"
     
     def forceDBCreation(self, user):
-        print "here"
+        print ""
         self.user = user
         try:
             print "trying.."
