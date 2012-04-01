@@ -66,7 +66,8 @@ class Engine():
         self.datFiles = []
         
         self.bufferWorker.send("clear")
-        self.sampleWorker.send("clear")
+        self.sampleWorker.send("clear") #todo
+        self.bufferWorker.send("clear")
         
         Logger.log(self.name, "ENGINE and ALL WORKERS CLEARED")
 
@@ -132,6 +133,7 @@ class Engine():
                 self.bufferWorker.send("sample")
                 self.sampleWorker.send_pyobj(self.datFiles[self.index-1])
                 Logger.log(self.name, "Sent DatFile to WorkerStaticImage")
+                self.bufferWorker.send("sample")
                 self.rollingAverageWorker.send_pyobj(self.datFiles[self.index-1])
                 Logger.log(self.name, "Sent DatFile to WorkerRollingImage")
 
