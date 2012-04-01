@@ -14,7 +14,7 @@ class AverageList:
     def average(self, list):
         self.outterList = list
         if (len(self.outterList) == 1): #Unable to average with only 1 list
-            return list
+            return list[0] #need this, else it returns a list of lists
         
         results = []
         v = float(0)

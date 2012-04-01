@@ -48,6 +48,9 @@ class WorkerRollingAverageSubtraction():
         self.aveQ = self.ave.average(self.allQ)
         self.aveErrors = self.ave.average(self.allErrors)
 
+        print self.aveIntensities
+        print self.aveErrors
+
         Logger.log(self.name, "Averaging Completed")
         
         self.subtract(aveBuffer)
@@ -62,7 +65,10 @@ class WorkerRollingAverageSubtraction():
     def subtract(self, buffer):
         subtractedIntensities = []
         for i in range(len(self.aveIntensities)):
-            value = self.aveIntensities[i] - buffer[i]
+            bufVal = buffer[i]
+            print bufVal
+            print self.aveIntensities[i]
+            value = (self.aveIntensities[i] - bufVal)
             subtractedIntensities.insert(i, value)
         
         self.subtractedIntensities = subtractedIntensities
@@ -75,9 +81,9 @@ if __name__ == "__main__":
     worker = WorkerRollingAverageSubtraction()
 
     if len(sys.argv) > 1 and sys.argv[1] == "tests":
-        b = [1,1,1]
-        dat = DatFile.DatFile("Sim/data/water4_0004.dat")
-        worker.run(dat, b)
+        buf = [1,1,1]
+        dat = DatFile.DatFile("Sim/data/test.dat")
+        worker.run(dat, buf)
 
     else:    
 
