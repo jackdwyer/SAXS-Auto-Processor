@@ -32,6 +32,16 @@ class WorkerStaticImage():
         
         #for generic writting
         self.datWriter = DatFileWriter.DatFileWriter()
+        
+        self.firstTime = True
+        
+    def clear(self):
+        self.subtractedDatIntensities = []
+        self.subtractedDatq = []
+        self.subtractedErrors = []
+        self.firstTime = True
+        Logger.log(self.name, "Worker Cleared - forgotten buffer")
+
 
        
     def run(self, datFile, aveBuffer):
@@ -76,11 +86,21 @@ if __name__ == "__main__":
         bufferReq = context.socket(zmq.REQ)
         bufferReq.connect("tcp://127.0.0.1:7883")
         
+        aveBufer = []
 
         while True:
-            datFile = samples.recv_pyobj()
-            bufferReq.send("REQ-AVEBUFFER")
-            aveBuffer = bufferReq.recv_pyobj()
-            worker.run(datFile, aveBuffer)
+            
+            filter = samples.recv()
+            if (str(filter) == "sample"):
+                datFile = samples.recv_pyobj()
+                Logger.log(worker.name, "Recieved DatFile")
+                if (work.firstTime):
+                    bufferReq.send("REQ-AVEBUFFER")
+                    aveBuffer = bufferReq.recv_pyobj()
+                    worker.firstTime = False
+                worker.run(datFile, aveBuffer)
+                
+            if (str(filter) == 'clear'):
+                worker.clear()
          
 
