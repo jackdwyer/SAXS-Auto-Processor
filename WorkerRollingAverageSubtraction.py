@@ -51,6 +51,8 @@ class WorkerRollingAverageSubtraction():
         
         self.subtract(aveBuffer)
         
+        self.datWriter.writeFile("Sim/testWriter", "newTEST", { 'q': self.aveQ, 'i' : self.aveQ, 'erros':self.aveErrors})
+        
         
 
         

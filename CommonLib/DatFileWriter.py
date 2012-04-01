@@ -13,14 +13,19 @@ import os
 
 class DatFileWriter:
     
-    def __init__(self, location, name, dict, accuracy = 10):
-        self.location = location
-        self.name = name
-        self.dict = dict
+    def __init__(self, accuracy = 10):
+        self.name = "DatFileWriter"
+        self.location = ""
+        self.datName = ""
+        self.data = {}
         self.accuracy = accuracy
    
         
-    def writeFile(self):
+    def writeFile(self, location, datName, dict):
+        self.location = location
+        self.datName = datName
+        self.data = dict
+        
         #Used for checking if the folder exists.. will be used later in engine
         if not os.path.exists(self.location):
             os.makedirs(self.location)
