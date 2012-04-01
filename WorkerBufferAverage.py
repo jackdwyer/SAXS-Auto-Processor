@@ -7,6 +7,7 @@ Jack dywer
 import zmq
 from CommonLib import AverageList
 from CommonLib import Logger
+from CommonLib import DatFile
 
 import sys
 import time
@@ -17,17 +18,15 @@ class WorkerBufferAverage():
     
     def __init__(self):
         self.name = "WorkerBufferAverage" #For logging
-    
         self.allIntensities = []
         self.aveIntensities = []
-        self.ave = AverageList()
+        self.ave = AverageList.AverageList()
 
     
     
     def run(self, datFile):
         self.allIntensities.append(datFile.intensities)
         self.aveIntensities = self.ave.average(self.allIntensities)
-        
         Logger.log(self.name, "Average Buffer Generated")
   
     def getAve(self):
@@ -52,7 +51,8 @@ if __name__ == "__main__":
     worker = WorkerBufferAverage()
     
     if len(sys.argv) > 1 and sys.argv[1] == "tests":
-        worker.run("Sim/data/0p009_0166.dat")
+        d = DatFile.DatFile("Sim/data/0p009_0166.dat")
+        worker.run(d)
     
     else:
         context = zmq.Context()
