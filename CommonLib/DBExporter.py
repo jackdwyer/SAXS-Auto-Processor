@@ -31,6 +31,7 @@ MAKE A DB BASED ON THE NAME.. then the next directory will be the table
 class DBExporter:
     
     def __init__(self, user, experiment):
+        self.name = "DBExporter"
         #here could generate connection string on the fly, needed for take home if they are going to be connecting to SQLite
         db = "mysql+mysqldb://root:a@localhost/"+user
         engine = create_engine(db)
@@ -43,9 +44,7 @@ class DBExporter:
             name = Column(String)
         
         Base.metadata.create_all(engine)
-
-    
-        
+              
         
         
 if __name__ == "__main__":
