@@ -12,6 +12,7 @@ import zmq
 from CommonLib import DatFile
 from CommonLib import LogLine
 from CommonLib import Logger
+from CommonLib import DirectoryCreator
 import MySQLdb as mysql
 
 
@@ -20,7 +21,7 @@ class Engine():
         self.name = "Engine" #For logging
         
         self.absolutePath = "/home/dwyerj/beam/"
-        self.directoryCreator = DirectoryCreator(self.absolutePath)
+        self.directoryCreator = DirectoryCreator.DirectoryCreator(self.absolutePath)
 
 
         #ZeroMQ setup stuff
@@ -104,7 +105,9 @@ class Engine():
         
         self.generateDB()        
         
-        self.buildDirectories(self.user, self.experiment);
+        self.directoryCreator.createFolderStructure(self.user, self.experiment);
+        
+        Logger.log(self.name, "Folder Structure Created")
 
     
         #fix        self.logFile = "testDat/livelogfile_nk_edit.log" 
