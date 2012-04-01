@@ -30,8 +30,8 @@ class WorkerDB():
         self.imageTable = ""
     
     def forceDBCreation(self, user):
+        
         Logger.log(self.name, "Forcing Database Creation")
-
         self.user = user
         try:
             db = mysql.connect(user=self.root, host=self.host, passwd=self.password)
@@ -75,26 +75,26 @@ if __name__ == "__main__":
             filter = dbWriter.recv()
             if (str(filter) == "user"):
                 user = dbWriter.recv()
-                Logger.log(self.name, "Recieved Command to build Database for user: " + str(self.user))
+                Logger.log(worker.name, "Recieved Command to build Database for user: " + str(self.user))
                 worker.forceDBCreation(user)
                 
             if (str(filter) == "Experiment"):
                 experiment = dbWriter.recv()
-                Logger.log(self.name, "Building experiment table: " + str(experiment))
+                Logger.log(worker.name, "Building experiment table: " + str(experiment))
                 worker.buildExperimentTable(str(experiment))
             
             if (str(filter) == "logLine"):
-                Logger.log(self.name, "Writing LogLine to DB")
+                Logger.log(worker.name, "Writing LogLine to DB")
                 logLine = dbWriter.recv_pyobj()
                 worker.writeLogToDB(logLine)
-                Logger.log(self.name, "LogLine written")
+                Logger.log(worker.name, "LogLine written")
 
                 
             if (str(filter) == "ImageLocation"):
                 location = dbWriter.recv()
-                Logger.log(self.name, "Image Location recieved, writing to DB")
+                Logger.log(worker.name, "Image Location recieved, writing to DB")
                 worker.writeImageLocation(str(location))
-                Logger.log(self.name, "Location written: ", str(location))
+                Logger.log(worker.name, "Location written: ", str(location))
                 
 
     except KeyboardInterrupt:
