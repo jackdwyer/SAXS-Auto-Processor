@@ -71,7 +71,6 @@ class Engine():
         self.rollingAverageWorker.send("clear")
         
         Logger.log(self.name, "ENGINE and ALL WORKERS CLEARED")
-
         
 
     def generateDB(self):
@@ -142,11 +141,6 @@ class Engine():
                 Logger.log(self.name, "Sent DatFile to WorkerRollingImage")
 
 
-
-
-
-
-
     def run(self):                       
         epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
         epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.userChange)
@@ -157,9 +151,6 @@ class Engine():
         except KeyboardInterrupt:
             pass
         
-        
-        
-    
     
 ###These should go into generic methods
     def readLatestLine(self):
