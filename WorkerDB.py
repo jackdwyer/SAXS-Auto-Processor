@@ -16,6 +16,8 @@ class WorkerDB():
     def __init__(self):
         #for logging
         self.name = "WorkerDB"
+        Logger.log(self.name, "Worker Generated")
+
         
         #General SQL setup
         self.host = "localhost"
