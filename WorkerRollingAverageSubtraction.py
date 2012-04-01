@@ -35,6 +35,25 @@ class WorkerRollingAverageSubtraction():
         
         self.ave = AverageList.AverageList()
         self.datWriter = DatFileWriter.DatFileWriter()
+        
+        self.firstTime = True
+        
+    def clear(self):
+        """Function for clearing data from the worker, for the next
+        experiment"""
+        self.allIntensities = []
+        self.allQ = []
+        self.allErrors = []
+        
+        self.aveIntensities = []
+        self.aveQ = []
+        self.aveErrors = []
+               
+        self.subtractedIntensities = []
+        
+        self.firstTime = True
+
+        Logger.log(self.name, "Worker Cleared - all buffers forgotten")
 
 
     
@@ -92,17 +111,19 @@ if __name__ == "__main__":
         bufferReq.connect("tcp://127.0.0.1:7883")
 
 
-        firstTime = True
         aveBuffer = []
 
         while True:
-            datFile = samples.recv_pyobj()
-            Logger.log(worker.name, "Recieved DatFile")
-            if (firstTime):
-                bufferReq.send("REQ-AVEBUFFER")
-                aveBuffer = bufferReq.recv_pyobj()
-                firstTime = False
-
-            worker.run(datFile, aveBuffer)
-     
+            filter = samples.recv()
+            if (str(filter) == "sample"): 
+                datFile = samples.recv_pyobj()
+                Logger.log(worker.name, "Recieved DatFile")
+                if (worker.firstTime):
+                    bufferReq.send("REQ-AVEBUFFER")
+                    aveBuffer = bufferReq.recv_pyobj()
+                    worker.firstTime = False
+                worker.run(datFile, aveBuffer)
+            
+            if (str(filter) == "clear"):
+                worker.clear()
 
