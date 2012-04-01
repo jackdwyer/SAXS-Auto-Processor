@@ -37,7 +37,7 @@ class WorkerBufferAverage():
     def clear(self):
         self.allIntensities = []
         self.aveIntensities = []
-        Logger.Log(self.name, "Worker Cleared - all buffers forgotten")
+        Logger.log(self.name, "Worker Cleared - all buffers forgotten")
     
     
     
