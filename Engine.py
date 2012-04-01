@@ -66,7 +66,7 @@ class Engine():
         self.datFiles = []
         
         self.bufferWorker.send("clear")
-        #self.sampleWorker.send("clear") #todo
+        self.sampleWorker.send("clear") 
         self.rollingAverageWorker.send("clear")
         
         Logger.log(self.name, "ENGINE and ALL WORKERS CLEARED")
@@ -78,6 +78,8 @@ class Engine():
         self.dbWorker.send(str(self.user))
         self.dbWorker.send("Experiment")
         self.dbWorker.send(str(self.experiment)) 
+        Logger.log(self.name, "Database Created - " + self.user)
+
         
     
     def getUser(self, path):
