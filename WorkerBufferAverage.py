@@ -34,6 +34,11 @@ class WorkerBufferAverage():
     def getAve(self):
         return self.aveIntensities
     
+    def clear(self):
+        self.allIntensities = []
+        self.aveIntensities = []
+        Logger.Log(self.name, "Worker Cleared - all buffers forgotten")
+    
     
     
 
@@ -66,8 +71,19 @@ if __name__ == "__main__":
         junk.start()
         try:
             while True:
-                datFile = buffers.recv_pyobj()
-                worker.run(datFile)
+                #filter out what to do
+                filter = buffers.recv():
+                if (str(filter) == "datFile"):
+                    datFile = buffers.recv_pyobj()
+                    worker.run(datFile)
+                
+                if (str(filter) == 'clear'):
+                    worker.clear() 
+                    
+                
+                
+                
+
                 
         except KeyboardInterrupt:
             pass

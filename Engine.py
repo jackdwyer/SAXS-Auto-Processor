@@ -64,6 +64,9 @@ class Engine():
         self.lastLine = ""
         self.datFiles = []
         
+        self.bufferWorker.send("clear")
+
+        
 
     def generateDB(self):
         self.dbWorker.send("user")
@@ -117,6 +120,7 @@ class Engine():
             #if (imageType == "BUFFER"):
             if (imageType == "BUFFER"):
                 Logger.log(self.name, "BUFFER")
+                self.bufferWorker.send("datFile")
                 self.bufferWorker.send_pyobj(self.datFiles[self.index-1])
                 Logger.log(self.name, "sent DatFile to WorkerBuffer")
             if (imageType == "STATIC_SAMPLE"):
