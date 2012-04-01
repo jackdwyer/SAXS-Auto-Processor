@@ -19,7 +19,9 @@ from threading import Thread
 class WorkerRollingAverageSubtraction():
 
     def __init__(self):
-        print "worker generated"
+        self.name = "WorkerRollingAverageSubtraction" # For logging
+        Logger.log(self.name, "Worker Generated")
+        
         self.allIntensities = []
         self.allQ = []
         self.allErrors = []
@@ -29,6 +31,10 @@ class WorkerRollingAverageSubtraction():
         self.aveErrors = []
                
         self.subtractedIntensities = []
+        
+        self.ave = AverageList.AverageList()
+        self.datWriter = DatFileWriter.DatFileWriter()
+
 
     
     def run(self, datFile, aveBuffer):
@@ -36,55 +42,19 @@ class WorkerRollingAverageSubtraction():
         self.allQ.append(datFile.q)
         self.allErrors.append(datFile.errors)
 
-        if (len(self.allIntensities) > 1):
-            self.generateIntensityAverage()
-            self.generateQAverage()
-            self.generateErrorAverage()
-            self.writeFile("rolling_average1.dat")
-        else:
-            print "only 1 dat file.. unable to average"
+        #averaging out
+        self.aveIntensities = self.ave.average(self.allIntensities)
+        self.aveQ = self.ave.average(self.allQ)
+        self.aveErrors = self.ave.average(self.allErrors)
+
+        Logger.log(self.name, "Averaging Completed")
+        
+        self.subtract(aveBuffer)
         
         
-    def generateIntensityAverage(self):
-        value = 0.0
-        aveIntensities = []
-        #knows now the length of each list
-        print len(self.allIntensities)
-        for i in range(len(self.allIntensities[0])):
-            #so now it should index against each list
-            for x in range(len(self.allIntensities)):
-                b = self.allIntensities[x][i]
-                value = value + b
-            aveIntensities.insert(x, value)
-            
-        self.aveIntensities = aveIntensities
+
         
-        
-        print self.aveIntensities
-        
-    def generateQAverage(self):
-        value = 0.0
-        #Loop across list and create averages
-        aveQ = []
-        for i in range(len(self.allQ[0])):
-            for x in range(len(self.allQ)):
-                value = self.allQ[x][i] + value
-            value = (value/(len(self.allQ)))    
-            aveQ.insert(x, value)
-            
-        self.aveQ = aveQ
-            
-    def generateErrorAverage(self):
-        value = 0.0
-        #Loop across list and create averages
-        aveErrors = []
-        for i in range(len(self.allErrors[0])):
-            for x in range(len(self.allErrors)):
-                value = self.allErrors[x][i] + value
-            value = (value/(len(self.allErrors)))    
-            aveErrors.insert(x, value)
-        self.aveErrors = aveErrors
-        
+               
         
     def subtract(self, buffer):
         subtractedIntensities = []
@@ -93,6 +63,8 @@ class WorkerRollingAverageSubtraction():
             subtractedIntensities.insert(i, value)
         
         self.subtractedIntensities = subtractedIntensities
+        
+        Logger.log(self.name, "Subtraction Completed")
         
         
     def writeFile(self, name):
