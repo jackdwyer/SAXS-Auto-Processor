@@ -11,7 +11,8 @@ class AverageList:
     def __init__(self, list = []):
         self.outterList = list      
     
-    def average(self):
+    def average(self, list):
+        self.outterList = list
         if (len(self.outterList) == 1): #Unable to average with only 1 list
             return list
         
