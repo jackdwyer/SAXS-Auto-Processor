@@ -54,6 +54,7 @@ class Engine():
         
     def clear(self):
         """Clears out the Engine and all workers, should only occur when a new user has changed over"""
+        Logger.log(self.name, "Commencing Clear out")
         self.index = 0
         self.user = ""
         self.experiment = "EXPERIMENT_1"
@@ -65,6 +66,8 @@ class Engine():
         self.datFiles = []
         
         self.bufferWorker.send("clear")
+        
+        Logger.log(self.name, "ENGINE and ALL WORKERS CLEARED")
 
         
 
@@ -85,10 +88,10 @@ class Engine():
         """Get the user_epn when a change over has occured, 
         this will create a new DB for the user, create directory structure
         and clear out all workers"""
+        Logger.log(self.name, "User change over initiated")
         self.clear()
         user = self.getUser(char_value)
         self.user = user
-        Logger.log(self.name, "USER CHANGE OVER")
         Logger.log(self.name, "NEW USER: " + str(self.user))
         
         self.generateDB()        
