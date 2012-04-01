@@ -41,6 +41,10 @@ class WorkerStaticImage():
         self.subtractedErrors = []
         self.firstTime = True
         Logger.log(self.name, "Worker Cleared - forgotten buffer")
+        
+    def updateRecords(self, user, experiment):
+        self.user = user
+        self.experiment = experiment
 
 
        
@@ -100,6 +104,11 @@ if __name__ == "__main__":
                     worker.firstTime = False
                 worker.run(datFile, aveBuffer)
                 
+            if (str(filter) == 'user'):
+                user = samples.recv()
+                experiment = samples.recv()
+                worker.updateRecords(user, experiment)
+            
             if (str(filter) == 'clear'):
                 worker.clear()
          

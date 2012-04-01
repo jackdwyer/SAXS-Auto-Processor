@@ -38,6 +38,9 @@ class WorkerRollingAverageSubtraction():
         
         self.firstTime = True
         
+        self.user = ""
+        self.experiment = ""
+        
     def clear(self):
         """Function for clearing data from the worker, for the next
         experiment"""
@@ -55,7 +58,9 @@ class WorkerRollingAverageSubtraction():
 
         Logger.log(self.name, "Worker Cleared - forgotten all previous buffers and datfiles")
 
-
+    def updateRecords(self, user, experiment):
+        self.user = user
+        self.experiment = experiment
     
     def run(self, datFile, aveBuffer):
         self.allIntensities.append(datFile.intensities)
@@ -123,6 +128,11 @@ if __name__ == "__main__":
                     aveBuffer = bufferReq.recv_pyobj()
                     worker.firstTime = False
                 worker.run(datFile, aveBuffer)
+                
+            if (str(filter) == 'user'):
+                user = samples.recv()
+                experiment = samples.recv()
+                worker.updateRecords(user, experiment)
             
             if (str(filter) == "clear"):
                 worker.clear()
