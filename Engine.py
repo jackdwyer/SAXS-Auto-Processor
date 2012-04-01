@@ -70,8 +70,90 @@ class Engine():
         self.dbWorker.send(str(self.user))
         self.dbWorker.send("Experiment")
         self.dbWorker.send(str(self.experiment)) 
+        
+    
+    def getUser(self, path):
+        """Splits file path, and returns only user"""
+        user = path.split("/")
+        user = filter(None, user) #needed to remove the none characters from the array
+        return user[-1] #currently the user_epn is the last object in the list
+    
+    def userChange(self, char_value, **kw):
+        """Get the user_epn when a change over has occured, 
+        this will create a new DB for the user, create directory structure
+        and clear out all workers"""
+        self.clear()
+        user = self.getUser(char_value)
+        self.user = user
+        Logger.log(self.name, "USER CHANGE OVER")
+        Logger.log(self.name, "NEW USER: " + str(self.user))
+        
+        self.generateDB()        
+        self.run()
+    
+        #fix        self.logFile = "testDat/livelogfile_nk_edit.log" 
+        
+        #Setup Variables/File Locations for user
+        self.logFile = "testDat/livelogfile_nk_edit.log"
 
         
+    
+    
+    
+    
+    
+    
+    def imageTaken(self, value, **kw ):
+        """Check Logline, get all details on latest image """
+        Logger.log(self.name, "Image Value Changed - Shot Taken")
+        
+        if value == 100:
+            self.readLatestLine()
+            Logger.log(self.name, "Read Latest line from LogFile")
+            self.getDatFile()
+            Logger.log(self.name, "Retrieved DatFile")
+           
+            
+            #print self.datFiles[self.index-1].getDatFilePath()
+            
+            
+            imageType = (self.logLines[self.index-1].getValue("SMPL_TYPE"))
+            
+            #print imageType
+            
+            #if (imageType == "BUFFER"):
+            if (imageType == "BUFFER"):
+                Logger.log(self.name, "BUFFER")
+                self.bufferWorker.send_pyobj(self.datFiles[self.index-1])
+                Logger.log(self.name, "sent DatFile to WorkerBuffer")
+            if (imageType == "STATIC_SAMPLE"):
+                Logger.log(self.name, "STATIC IMAGE")
+                self.sampleWorker.send_pyobj(self.datFiles[self.index-1])
+                Logger.log(self.name, "Sent DatFile to WorkerStaticImage")
+                self.rollingAverageWorker.send_pyobj(self.datFiles[self.index-1])
+                Logger.log(self.name, "Sent DatFile to WorkerRollingImage")
+
+
+
+
+
+
+
+    def run(self):                       
+        epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
+        epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.userChange)
+ 
+        try:
+            while True:
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            pass
+        
+        
+        
+    
+    
+###These should go into generic methods
     def readLatestLine(self):
         noLines = True
         while (noLines):          
@@ -122,78 +204,6 @@ class Engine():
                 noDatFile = False
             except IOError:
                 time.sleep(0.05)
-    
-    
-    
-    
-    
-    def imageTaken(self, value, **kw ):
-        """Check Logline, get all details on latest image """
-        Logger.log(self.name, "Image Value Changed - Shot Taken")
-        
-        if value == 100:
-            self.readLatestLine()
-            Logger.log(self.name, "Read Latest line from LogFile")
-            self.getDatFile()
-            Logger.log(self.name, "Retrieved DatFile")
-           
-            
-            #print self.datFiles[self.index-1].getDatFilePath()
-            
-            
-            imageType = (self.logLines[self.index-1].getValue("SMPL_TYPE"))
-            
-            #print imageType
-            
-            #if (imageType == "BUFFER"):
-            if (imageType == "BUFFER"):
-                Logger.log(self.name, "BUFFER")
-                self.bufferWorker.send_pyobj(self.datFiles[self.index-1])
-                Logger.log(self.name, "sent DatFile to WorkerBuffer")
-            if (imageType == "STATIC_SAMPLE"):
-                Logger.log(self.name, "STATIC IMAGE")
-                self.sampleWorker.send_pyobj(self.datFiles[self.index-1])
-                Logger.log(self.name, "Sent DatFile to WorkerStaticImage")
-                self.rollingAverageWorker.send_pyobj(self.datFiles[self.index-1])
-                Logger.log(self.name, "Sent DatFile to WorkerRollingImage")
-
-
-
-    def getUser(self, path):
-        """Splits file path, and returns only user"""
-        user = path.split("/")
-        user = filter(None, user) #needed to remove the none characters from the array
-        return user[-1] #currently the user_epn is the last object in the list
-    
-    def userChange(self, char_value, **kw):
-        """Get the user_epn when a change over has occured, 
-        this will create a new DB for the user, create directory structure
-        and clear out all workers"""
-        self.clear()
-        user = self.getUser(char_value)
-        self.user = user
-        Logger.log(self.name, "USER CHANGE OVER")
-        Logger.log(self.name, "NEW USER: " + str(self.user))
-        
-        self.generateDB()        
-        self.run()
-    
-        #fix        self.logFile = "testDat/livelogfile_nk_edit.log" 
-        
-        #Setup Variables/File Locations for user
-        self.logFile = "testDat/livelogfile_nk_edit.log"
-
-
-
-    def run(self):                       
-        epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
-        epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.userChange)
- 
-        try:
-            while True:
-                time.sleep(0.1)
-        except KeyboardInterrupt:
-            pass
 
 
 
