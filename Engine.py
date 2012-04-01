@@ -15,6 +15,28 @@ import MySQLdb as mysql
 
 class Engine():
     def __init__(self):
+
+        
+        #ZeroMQ setup stuff
+        self.context = zmq.Context()
+        self.bufferWorker = self.context.socket(zmq.PUSH)
+        self.bufferWorker.bind("tcp://127.0.0.1:7881")  
+        self.sampleWorker = self.context.socket(zmq.PUSH)
+        self.sampleWorker.bind("tcp://127.0.0.1:7882")
+        #7883 is used by the WorkerBufferAverage
+        self.dbWorker = self.context.socket(zmq.PUSH)
+        self.dbWorker.bind("tcp://127.0.0.1:7884")
+        #7885 is used for WorkerRollingAverageSubtraction
+        self.rollingAverageWorker = self.context.socket(zmq.PUSH)
+        self.rollingAverageWorker.bind("tcp://127.0.0.1:7885")
+        
+    
+        #For holding the data
+        self.lines = [] #List of lines already read
+        self.logLines = [] #List of LogLine Objects, that have been broken down for easy access
+        self.latestLine = ""
+        self.datFiles = []
+        
         #To make sure we dont miss any loglines
         self.index = 0
         
@@ -27,30 +49,14 @@ class Engine():
         self.logLocation = "testDat/livelogfile.log"
         self.datFileLocation = "/home/dwyerj/sim/"
         
-        #ZeroMQ setup stuff
-        self.context = zmq.Context()
-        self.bufferWorker = self.context.socket(zmq.PUSH)
-        self.bufferWorker.bind("tcp://*:7881")  
-        self.sampleWorker = self.context.socket(zmq.PUSH)
-        self.sampleWorker.bind("tcp://127.0.0.1:7882")
-        #7883 is used by the WorkerBufferAverage
-        self.dbWorker = self.context.socket(zmq.PUSH)
-        self.dbWorker.connect("tcp://127.0.0.1:7884")
-        #7885 is used for WorkerRollingAverageSubtraction
-        self.rollingAverageWorker = self.context.socket(zmq.PUSH)
-        self.rollingAverageWorker.bind("tcp://127.0.0.1:7885")
-        
-    
-        #For holding the data
-        self.lines = [] #List of lines already read
-        self.logLines = [] #List of LogLine Objects, that have been broken down for easy access
-        self.latestLine = ""
-        self.datFiles = []
-        
         #For serialisation of objects/data
         
         #Make sure all sockets are created
         time.sleep(1.0)
+        
+    def clear(self):
+        """Clears engine data, and workers"""
+        
     
  
         
@@ -146,7 +152,7 @@ class Engine():
         this will create a new DB for the user, create directory structure
         and clear out all workers"""
         user = self.getUser(char_value)
-        
+    
 
        
  
