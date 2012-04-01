@@ -9,7 +9,8 @@ Engine for the SAXS/WAXS Auto Processor
 import epics
 import time
 import zmq
-from CommonLib import *
+from CommonLib import DatFile
+from CommonLib import LogLine
 from CommonLib import Logger
 import MySQLdb as mysql
 
