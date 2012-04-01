@@ -13,6 +13,9 @@ import MySQLdb as mysql
 
 class WorkerDB():
     def __init__(self):
+        #for logging
+        self.name = "WorkerDB"
+        
         #General SQL setup
         self.host = "localhost"
         self.root = "root"
@@ -27,17 +30,16 @@ class WorkerDB():
     
     
     def forceDBCreation(self, user):
-        print "here"
+        Logger.log(self.name, "Forcing Database Creation")
         self.user = user
         try:
-            print "trying.."
             db = mysql.connect(user=self.root, host=self.host, passwd=self.password)
             c = db.cursor()
             cmd = "CREATE DATABASE IF NOT EXISTS " + str(self.user) + ";"
             c.execute(cmd)      
-            print "DATABASE CREATED for USER: ", self.user
+            Logger.log(self.name, "Database Created for user: ", self.user)
         except Exception:
-            print "Database for user: " + str(self.user) + "  -Failed to be created"
+            Logger.log(self.name, "Database CREATION FAILED for user:", self.user)
             raise
     
     
@@ -72,26 +74,26 @@ if __name__ == "__main__":
             filter = dbWriter.recv()
             if (str(filter) == "user"):
                 user = dbWriter.recv()
-                print "Building a Database for user: ", user
+                Logger.log(self.name, "Recieved Command to build Database for user: ", self.user)
                 worker.forceDBCreation(user)
                 
             if (str(filter) == "Experiment"):
                 experiment = dbWriter.recv()
-                print "Building Table for Experiment: ", experiment
+                Logger.log(self.name, "Building experiment table: ", experiment)
                 worker.buildExperimentTable(str(experiment))
             
             if (str(filter) == "logLine"):
-                print "Writing out LogLine To DB"
+                Logger.log(self.name, "Writing LogLine to DB")
                 logLine = dbWriter.recv_pyobj()
                 worker.writeLogToDB(logLine)
-                print "Logline written to DB"
+                Logger.log(self.name, "LogLine written")
 
                 
             if (str(filter) == "ImageLocation"):
                 location = dbWriter.recv()
-                print "Writing ImageLocation: ", location
+                Logger.log(self.name, "Image Location recieved, writing to DB")
                 worker.writeImageLocation(str(location))
-                print "Location Written"
+                Logger.log(self.name, "Location written: ", str(location))
                 
 
     except KeyboardInterrupt:
