@@ -14,6 +14,8 @@ from threading import Thread
 class WorkerBufferAverage():
     
     def __init__(self):
+        self.name = "WorkerBufferAverage" #For logging
+    
         self.allIntensities = []
         self.aveIntensities = []
         self.ave = AverageList()
@@ -22,20 +24,9 @@ class WorkerBufferAverage():
     
     def run(self, datFile):
         self.allIntensities.append(datFile.intensities)
-        value = 0.0
+        self.aveIntensities = self.ave.average(self.allIntensities)
         
-        #Loop across list and create averages
-        aveIntensities = []
-        for i in range(len(self.allIntensities[0])):
-            for x in range(len(self.allIntensities)):
-                value = self.allIntensities[x][i] + value
-                value = (value/(len(self.allIntensities)))
-                
-            aveIntensities.insert(x, value)
-        self.aveIntensities = aveIntensities
-        print aveIntensities
-            
-        print "Average Buffer Generated"
+        Logger.log(self.name, "Average Buffer Generated")
   
     def getAve(self):
         return self.aveIntensities
