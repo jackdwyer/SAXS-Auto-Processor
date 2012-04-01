@@ -11,8 +11,8 @@ import os
 import Logger
 
 class DirectoryCreator:
-    def __init__(self):
-        self.absolutePath = "/home/dwyerj/beam/"
+    def __init__(self, absolutePath):
+        self.absolutePath = absolutePath
         self.user = ""
         self.experiment = ""
         self.fullPath = ""

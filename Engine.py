@@ -18,6 +18,10 @@ import MySQLdb as mysql
 class Engine():
     def __init__(self):
         self.name = "Engine" #For logging
+        
+        self.absolutePath = "/home/dwyerj/beam/"
+        self.directoryCreator = DirectoryCreator(self.absolutePath)
+
 
         #ZeroMQ setup stuff
         self.context = zmq.Context()
@@ -99,6 +103,9 @@ class Engine():
         Logger.log(self.name, "NEW USER: " + str(self.user))
         
         self.generateDB()        
+        
+        self.buildDirectories(self.user, self.experiment);
+
     
         #fix        self.logFile = "testDat/livelogfile_nk_edit.log" 
         
