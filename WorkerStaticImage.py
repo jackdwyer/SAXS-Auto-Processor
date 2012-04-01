@@ -63,10 +63,10 @@ if __name__ == "__main__":
     worker = WorkerStaticImage()
     
     if len(sys.argv) > 1 and sys.argv[1] == "tests":
-        worker.writeFile("TestWrite")
-        
-        
-    
+        buf = [1,1,1]
+        dat = DatFile.DatFile("Sim/data/test.dat")
+        worker.run(dat, buf)      
+            
     else:
         context = zmq.Context()
 
