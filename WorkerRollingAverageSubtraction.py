@@ -53,7 +53,7 @@ class WorkerRollingAverageSubtraction():
         
         self.firstTime = True
 
-        Logger.log(self.name, "Worker Cleared - all buffers forgotten")
+        Logger.log(self.name, "Worker Cleared - forgotten all previous buffers and datfiles")
 
 
     
