@@ -109,7 +109,7 @@ class Engine():
     
     
     
-    def epicPVChange(self, value, **kw ):
+    def imageTaken(self, value, **kw ):
         """Check Logline, get all details on latest image """
         print "Value Changed"
         
@@ -135,24 +135,36 @@ class Engine():
                 self.rollingAverageWorker.send_pyobj(self.datFiles[self.index-1])
 
 
-        
-        
+    def getUser(self, path):
+        """Splits file path, and returns only user"""
+        user = path.split("/")
+        user = filter(None, b) #needed to remove the none characters from the array
+        return user[-1] #currently the user_epn is the last object in the list
     
+    def userChange(self, char_value, **kw):
+        """Get the user_epn when a change over has occured, 
+        this will create a new DB for the user, create directory structure
+        and clear out all workers"""
+        user = self.getUser(char_value)
+        
 
-
+       
+ 
 
 
     def run(self, user):
         self.user = user
         self.dbWorker.send("user")
-        self.dbWorker.send(str(self.user))  
+        self.dbWorker.send(str(self.user))
         self.dbWorker.send("Experiment")
         self.dbWorker.send(str(self.experiment))      
         
         #Setup Variables/File Locations for user
         self.logFile = "testDat/livelogfile_nk_edit.log"
                        
-        epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.epicPVChange)
+        epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
+        epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.userChange)
+ 
         
         try:
             while True:
