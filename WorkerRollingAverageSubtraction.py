@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
         while True:
             datFile = samples.recv_pyobj()
-            print "recieved the datFile"
+            Logger.log(worker.name, "Recieved DatFile")
             if (firstTime):
                 bufferReq.send("REQ-AVEBUFFER")
                 aveBuffer = bufferReq.recv_pyobj()
