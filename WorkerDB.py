@@ -28,11 +28,8 @@ class WorkerDB():
         self.name = "WorkerDB"
     
     def forceDBCreation(self, user):
-<<<<<<< HEAD
-        print ""
-=======
         Logger.log(self.name, "Forcing Database Creation")
->>>>>>> work
+
         self.user = user
         try:
             db = mysql.connect(user=self.root, host=self.host, passwd=self.password)
