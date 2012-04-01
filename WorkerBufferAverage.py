@@ -35,6 +35,7 @@ class WorkerBufferAverage():
         return self.aveIntensities
     
     def clear(self):
+        """Clear out function for when a new experiment is starting"""
         self.allIntensities = []
         self.aveIntensities = []
         Logger.log(self.name, "Worker Cleared - all buffers forgotten")
