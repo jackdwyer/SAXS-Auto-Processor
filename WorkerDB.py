@@ -36,9 +36,9 @@ class WorkerDB():
             c = db.cursor()
             cmd = "CREATE DATABASE IF NOT EXISTS " + str(self.user) + ";"
             c.execute(cmd)      
-            Logger.log(self.name, "Database Created for user: ", self.user)
+            Logger.log(self.name, "Database Created for user: " + str(self.user))
         except Exception:
-            Logger.log(self.name, "Database CREATION FAILED for user:", self.user)
+            Logger.log(self.name, "Database CREATION FAILED for user:" + str(self.user))
             raise
     
     
@@ -73,12 +73,12 @@ if __name__ == "__main__":
             filter = dbWriter.recv()
             if (str(filter) == "user"):
                 user = dbWriter.recv()
-                Logger.log(self.name, "Recieved Command to build Database for user: ", self.user)
+                Logger.log(self.name, "Recieved Command to build Database for user: " + str(self.user))
                 worker.forceDBCreation(user)
                 
             if (str(filter) == "Experiment"):
                 experiment = dbWriter.recv()
-                Logger.log(self.name, "Building experiment table: ", experiment)
+                Logger.log(self.name, "Building experiment table: " + str(experiment))
                 worker.buildExperimentTable(str(experiment))
             
             if (str(filter) == "logLine"):
