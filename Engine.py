@@ -16,7 +16,7 @@ import MySQLdb as mysql
 class Engine():
     def __init__(self):
         
-        self.name = "Engine"
+        self.name = "Engine" #For logging
 
         
         #ZeroMQ setup stuff
@@ -30,23 +30,10 @@ class Engine():
         self.dbWorker.bind("tcp://127.0.0.1:7884")
         #7885 is used for WorkerRollingAverageSubtraction
         self.rollingAverageWorker = self.context.socket(zmq.PUSH)
-        self.rollingAverageWorker.bind("tcp://127.0.0.1:7885")
-        
-    
-        #For holding the data
-        self.lines = [] #List of lines already read
-        self.logLines = [] #List of LogLine Objects, that have been broken down for easy access
-        self.latestLine = ""
-        self.datFiles = []
-        
-        #For serialisation of objects/data
-        
-        #Make sure all sockets are created
-        time.sleep(1.0)
+        self.rollingAverageWorker.bind("tcp://127.0.0.1:7885")        
         
         #To make sure we dont miss any loglines
         self.index = 0
-        
         #User setup
         self.user = ""
         self.experiment = "EXPERIMENT_1"
@@ -56,9 +43,26 @@ class Engine():
         self.logLocation = "testDat/livelogfile.log"
         self.datFileLocation = "/home/dwyerj/sim/"
         
+        #For holding the data
+        self.lines = [] #List of lines already read
+        self.logLines = [] #List of LogLine Objects, that have been broken down for easy access
+        self.latestLine = ""
+        self.datFiles = []
+        
+        #Make sure all sockets are created
+        time.sleep(1.0)
+        
     def clear(self):
         """Clears out the Engine and all workers, should only occur when a new user has changed over"""
+        self.index = 0
+        self.user = ""
+        self.experiment = "EXPERIMENT_1"
+        self.logFile = ""
         
+        self.lines = []
+        self.logLines = []
+        self.latestLine = ""
+        self.datFiles = []
     
  
         
@@ -142,11 +146,15 @@ class Engine():
                 self.sampleWorker.send_pyobj(self.datFiles[self.index-1])
                 self.rollingAverageWorker.send_pyobj(self.datFiles[self.index-1])
 
-
+    
+    def getUser(self, user):
+        """gets full/absolute path, pulls out just the user_epn and returns as string"""
+        
         
         
     def userChange(self, char_value, **kw):
         self.clear()
+        user = self.getUser(char_value)
         
         
 
