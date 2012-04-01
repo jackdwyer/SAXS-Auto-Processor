@@ -18,6 +18,8 @@ class WorkerBufferAverage():
     
     def __init__(self):
         self.name = "WorkerBufferAverage" #For logging
+        Logger.log(self.name, "Worker Generated")
+
         self.allIntensities = []
         self.aveIntensities = []
         self.ave = AverageList.AverageList()

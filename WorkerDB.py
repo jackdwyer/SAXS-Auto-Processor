@@ -6,7 +6,8 @@ Jack dywer
 #TODO: Fix up sample Typpe, eg write to another table of subtracted types.
 
 import zmq
-from CommonLib import *
+from CommonLib import TableBuilder
+from CommonLib import Logger
 import MySQLdb as mysql
 
 
@@ -25,7 +26,6 @@ class WorkerDB():
         self.experiment = ""
         self.logTable = "" 
         self.imageTable = ""
-        self.name = "WorkerDB"
     
     def forceDBCreation(self, user):
         Logger.log(self.name, "Forcing Database Creation")
