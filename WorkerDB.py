@@ -75,7 +75,7 @@ if __name__ == "__main__":
             filter = dbWriter.recv()
             if (str(filter) == "user"):
                 user = dbWriter.recv()
-                Logger.log(worker.name, "Recieved Command to build Database for user: " + str(self.user))
+                Logger.log(worker.name, "Recieved Command to build Database for user: " + str(user))
                 worker.forceDBCreation(user)
                 
             if (str(filter) == "Experiment"):
