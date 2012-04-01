@@ -63,10 +63,7 @@ class WorkerRollingAverageSubtraction():
     def subtract(self, buffer):
         subtractedIntensities = []
         for i in range(len(self.aveIntensities)):
-            bufVal = buffer[i]
-            print bufVal
-            print self.aveIntensities[i]
-            value = (self.aveIntensities[i] - bufVal)
+            value = (self.aveIntensities[i] - buffer[i])
             subtractedIntensities.insert(i, value)
         
         self.subtractedIntensities = subtractedIntensities
