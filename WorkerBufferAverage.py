@@ -16,6 +16,7 @@ class WorkerBufferAverage():
     def __init__(self):
         self.allIntensities = []
         self.aveIntensities = []
+        self.ave = AverageList()
 
     
     

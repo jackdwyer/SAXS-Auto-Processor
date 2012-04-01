@@ -8,7 +8,7 @@ Common generic averaging class/methods.
 
 class AverageList:
     
-    def __init__(self, list):
+    def __init__(self, list = []):
         self.outterList = list      
     
     def average(self):
