@@ -44,8 +44,8 @@ if __name__ == "__main__":
     
     l = [l1, l2, l3, l4, l5]
 
-    testAverage = AverageList(l)
-    t = testAverage.average()
+    testAverage = AverageList()
+    t = testAverage.average(l)
     
     if t[0] == expected1:
         print "PASSED - TEST 1"
