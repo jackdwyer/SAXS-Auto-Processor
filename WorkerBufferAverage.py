@@ -5,7 +5,9 @@ Jack dywer
 """
 
 import zmq
-from CommonLib import *
+from CommonLib import AverageList
+from CommonLib import Logger
+
 import sys
 import time
 from threading import Thread
@@ -50,7 +52,7 @@ if __name__ == "__main__":
     worker = WorkerBufferAverage()
     
     if len(sys.argv) > 1 and sys.argv[1] == "tests":
-        worker.run("testDat/0p009_0166.dat")
+        worker.run("Sim/data/0p009_0166.dat")
     
     else:
         context = zmq.Context()
