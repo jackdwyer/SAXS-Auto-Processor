@@ -12,12 +12,15 @@ import zmq
 from CommonLib import Logger
 from CommonLib import DatFile
 from CommonLib import DatFileWriter
-from CommonLib import AverageList
 import sys
 
 class WorkerStaticImage():
     
     def __init__(self):
+        self.name = "WorkerStaticImage"  #for logging
+        Logger.log(self.name, "Worker Generated")
+        
+        
         self.subtractedDatIntensities = []
         self.subtractedDatq = []
         self.subtractedErrors = []
@@ -26,7 +29,10 @@ class WorkerStaticImage():
         self.context = zmq.Context()
         self.dbWorker = self.context.socket(zmq.PUSH)
         self.dbWorker.connect("tcp://127.0.0.1:7884")
-  
+        
+        #for generic writting
+        self.datWriter = DatFileWriter.DatFileWriter()
+
        
     def run(self, datFile, aveBuffer):
         subtractedDatIntensities = []
@@ -45,21 +51,7 @@ class WorkerStaticImage():
         self.subtractedDatq = subtractedDatq
         self.subtractedErrors = subtractedErrors
         
-        name = datFile.getFileName()
-        self.writeFile(name)
-        
-
-    def writeFile(self, name):
-        location = "testWrite/" + str(name)
-        f = open(location, 'w')
-        f.write(name + "\n")
-        f.write('%14s %16s %16s \n' % ('q', 'I', 'Err')) #Needed for string formatting
-        for i in range(len(self.subtractedDatq)):
-            f.write('%18.10f %16.10f %16.10f \n' % (self.subtractedDatq[i], self.subtractedDatIntensities[i], self.subtractedErrors[i]))        
-        f.close()
-        self.exportData(location)
-        
-        print "file written"
+        self.datWriter.writeFile("testWrite/", "staticImageTEst", { 'q' : self.subtractedDatq, 'i' : self.subtractedDatIntensities, 'errors' : self.subtractedErrors})
         
 
     def exportData(self, location):
@@ -85,9 +77,6 @@ if __name__ == "__main__":
         bufferReq.connect("tcp://127.0.0.1:7883")
         
 
-        
-
-        
         while True:
             datFile = samples.recv_pyobj()
             bufferReq.send("REQ-AVEBUFFER")
