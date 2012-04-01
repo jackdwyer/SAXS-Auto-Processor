@@ -72,7 +72,7 @@ if __name__ == "__main__":
         try:
             while True:
                 #filter out what to do
-                filter = buffers.recv():
+                filter = buffers.recv()
                 if (str(filter) == "datFile"):
                     datFile = buffers.recv_pyobj()
                     worker.run(datFile)
