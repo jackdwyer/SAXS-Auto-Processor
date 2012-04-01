@@ -39,7 +39,8 @@ class DatFileWriter:
             formatting = '%'+str(8 + self.accuracy)+'.'+str(self.accuracy)+'f %'+str(6 + self.accuracy)+'.'+str(self.accuracy)+'f %'+str(6 + self.accuracy)+'.'+str(self.accuracy)+'f \n'
             f.write(formatting % (self.dict['q'][i], self.dict['i'][i], self.dict['errors'][i]))        
         f.close()
-        print "file written"
+        Logger.log(self.name, "DatFile Written")
+
 
         
 #test
