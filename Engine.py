@@ -89,19 +89,12 @@ class Engine():
         Logger.log(self.name, "NEW USER: " + str(self.user))
         
         self.generateDB()        
-        self.run()
     
         #fix        self.logFile = "testDat/livelogfile_nk_edit.log" 
         
         #Setup Variables/File Locations for user
         self.logFile = "testDat/livelogfile_nk_edit.log"
-
-        
-    
-    
-    
-    
-    
+         
     
     def imageTaken(self, value, **kw ):
         """Check Logline, get all details on latest image """
