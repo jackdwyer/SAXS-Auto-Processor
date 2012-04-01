@@ -31,7 +31,7 @@ class DatFileWriter:
         if not os.path.exists(self.location):
             os.makedirs(self.location)
                    
-        loc = self.location+self.name                
+        loc = self.location+self.datName                
         f = open(loc, 'w')
         f.write(self.datName + "\n")
         formatting  = '%'+str(4 + self.accuracy)+'s %'+str(6 + self.accuracy)+'s %'+str(6 + self.accuracy)+'s \n'
@@ -40,7 +40,7 @@ class DatFileWriter:
             formatting = '%'+str(8 + self.accuracy)+'.'+str(self.accuracy)+'f %'+str(6 + self.accuracy)+'.'+str(self.accuracy)+'f %'+str(6 + self.accuracy)+'.'+str(self.accuracy)+'f \n'
             f.write(formatting % (self.data['q'][i], self.data['i'][i], self.data['errors'][i]))        
         f.close()
-        Logger.log(self.name, "DatFile Written")
+        Logger.log(self.datName, "DatFile Written")
 
 
         

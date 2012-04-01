@@ -20,11 +20,14 @@ class AverageList:
         v = float(0)
         innerList = self.outterList[0]
         for x in range(len(innerList)):
-            for i in range(len(self.outterList)):
-                v = self.outterList[i][x] + v
-            v = v / (len(self.outterList))
-            results.append(v)
-            v = float(0)
+            try:
+                for i in range(len(self.outterList)):
+                    v = self.outterList[i][x] + v
+                v = v / (len(self.outterList))
+                results.append(v)
+                v = float(0)
+            except IndexError:
+                pass
         return results
     
 

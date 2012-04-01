@@ -19,8 +19,8 @@ import MySQLdb as mysql
 class Engine():
     def __init__(self):
         self.name = "Engine" #For logging
-        
-        self.absolutePath = "/home/dwyerj/beam/"
+
+        self.absolutePath = "/home/ics/jack/beam/"
         self.directoryCreator = DirectoryCreator.DirectoryCreator(self.absolutePath)
 
 
@@ -36,24 +36,33 @@ class Engine():
         #7885 is used for WorkerRollingAverageSubtraction
         self.rollingAverageWorker = self.context.socket(zmq.PUSH)
         self.rollingAverageWorker.bind("tcp://127.0.0.1:7885")        
-        
+
         #To make sure we dont miss any loglines
         self.index = 0
+        self.datIndex = 0
         #User setup
         self.user = ""
         self.experiment = "EXPERIMENT_1"
-        self.logFile = ""
-        
+        self.logFile = "/mnt/images/data/Cycle_2012_1/Melton_4615/livelogfile.log"
+
         #File Locations
-        self.logLocation = "testDat/livelogfile.log"
-        self.datFileLocation = "/home/dwyerj/sim/"
-        
+        self.logLocation = "/mnt/images/data/Cycle_2012_1/Melton_4615/livelogfile.log"
+        #self.logLocation = "testDat/livelogfile.log"
+        self.datFileLocation = "/mnt/images/data/Cycle_2012_1/Melton_4615/dat/"
+
 
         #For holding the data
         self.lines = [] #List of lines already read
         self.logLines = [] #List of LogLine Objects, that have been broken down for easy access
         self.latestLine = ""
         self.datFiles = []
+
+
+        
+        #comparision checks again datfile name
+        self.lastDatFile = ""
+        self.currentDatFile = ""
+
 
         #Make sure all sockets are created
         time.sleep(1.0)
@@ -64,17 +73,20 @@ class Engine():
         self.index = 0
         self.user = ""
         self.experiment = "EXPERIMENT_1"
-        self.logFile = ""
-        
+        #self.logFile = ""
+
         self.lines = []
         self.logLines = []
         self.lastLine = ""
         self.datFiles = []
-        
+
         self.bufferWorker.send("clear")
         self.sampleWorker.send("clear") 
         self.rollingAverageWorker.send("clear")
-        
+
+        self.lastDatFile = ""
+        self.currentDatFile = ""    
+
         Logger.log(self.name, "ENGINE and ALL WORKERS CLEARED")
         
 
@@ -139,50 +151,105 @@ class Engine():
         #fix        self.logFile = "testDat/livelogfile_nk_edit.log" 
         
         #Setup Variables/File Locations for user
-        self.logFile = "testDat/livelogfile_nk_edit.log"
-         
-    
-    def imageTaken(self, value, **kw ):
+        #self.logFile = "testDat/livelogfile_nk_edit.log"
+        
+    def getOnlyName(self, name):
+        #TODO REFACTOR        
+        b = name.split('_')
+        del b[-1]
+        return b
+
+    def checkName(self):
+        #TODO REFACTOR
+        if (self.datIndex == 1) or (self.datIndex == 0):
+            return False;
+        else:
+            previousName = self.datFiles[self.datIndex - 2].getFileName()
+            currentName = self.datFiles[self.datIndex - 1].getFileName()
+        prev = self.getOnlyName(previousName)
+        cur = self.getOnlyName(currentName)
+
+        if (cur == prev):  
+            return True
+        else:   
+            return False
+            
+
+
+
+
+    #def imageTaken(self, value, **kw):
+    def imageTaken(self):
         """Check Logline, get all details on latest image """
         Logger.log(self.name, "Image Value Changed - Shot Taken")
         
-        if value == 100:
-            self.readLatestLine()
-            Logger.log(self.name, "Read Latest line from LogFile")
-            self.getDatFile()
-            Logger.log(self.name, "Retrieved DatFile")
-           
-            
-            #print self.datFiles[self.index-1].getDatFilePath()
-            
-            
-            imageType = (self.logLines[self.index-1].getValue("SMPL_TYPE"))
-            
-            #print imageType
-            
-            #if (imageType == "BUFFER"):
-            if (imageType == "BUFFER"):
-                Logger.log(self.name, "BUFFER")
-                self.bufferWorker.send("datFile")
-                self.bufferWorker.send_pyobj(self.datFiles[self.index-1])
-                Logger.log(self.name, "sent DatFile to WorkerBuffer")
-            if (imageType == "STATIC_SAMPLE"):
-                Logger.log(self.name, "STATIC IMAGE")
-                self.sampleWorker.send("sample")
-                self.sampleWorker.send_pyobj(self.datFiles[self.index-1])
-                Logger.log(self.name, "Sent DatFile to WorkerStaticImage")
+        #self.index = value #This is to foce the engine to begin where ever the experiment is
+        self.readLatestLine()
+        Logger.log(self.name, "Read Latest line from LogFile")
+        self.getDatFile()
+        Logger.log(self.name, "Retrieved DatFile")
+       
+        changeInName = self.checkName()
+        #Here to test against sample change, then slap out for if its a buffer
+        
                 
-                self.rollingAverageWorker.send("sample")
-                self.rollingAverageWorker.send_pyobj(self.datFiles[self.index-1])
-                Logger.log(self.name, "Sent DatFile to WorkerRollingImage")
 
 
-    def run(self):                       
-        epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
-        epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.userChange)
+
+        try:
+            imageType = (self.logLines[self.index-1].data['SampleType'])
+        except KeyError:
+            Logger.log(self.name, "KeyError on SampleType, probably nothing")
+            imageType = "4"
+
+        if ((imageType == '0') and (changeInName)):
+            Logger.log(self.name, "Root Name Change - Idicating Sample Change")
+            Logger.log(self.name, "New Buffer Generated - Clearing Workers")
+            self.bufferWorker.send("recalculate_buffer")
+            self.sampleWorker.send("new_buffer")
+            self.rollingAverageWorker.send("new_buffer")
+        
+        if ((changeInName) and (imageType != 0)):
+            Logger.log(self.name, "Root Name Change - Idicating Sample Change")
+            self.sampleWorker.send("new_sample")
+            self.rollingAverageWorker.send("new_sample")
+
+
+
+        #print self.datFiles[self.index-1].getDatFilePath()
+        #print self.logLines[self.index-1].attributes
+        #NEW FORMAT..
+        #imageType = (self.logLines[self.index-1].data['SampleType'])
+        #imageType = (self.logLines[self.index-1].getValue("SMPL_TYPE"))
+        
+        print imageType
+        
+        Logger.log(self.name, "INDEX: " + str(self.index))
+        #if (imageType == "BUFFER"):
+        if (imageType == '0'): #Buffer
+            Logger.log(self.name, "BUFFER")
+            self.bufferWorker.send("datFile")
+            self.bufferWorker.send_pyobj(self.datFiles[self.datIndex-1])
+            Logger.log(self.name, "sent DatFile to WorkerBuffer")
+        if (imageType == '1'): #Static_image
+            Logger.log(self.name, "STATIC IMAGE")
+            self.sampleWorker.send("sample")
+            self.sampleWorker.send_pyobj(self.datFiles[self.datIndex-1])
+            Logger.log(self.name, "Sent DatFile to WorkerStaticImage")
+            
+            self.rollingAverageWorker.send("sample")
+            self.rollingAverageWorker.send_pyobj(self.datFiles[self.datIndex-1])
+            Logger.log(self.name, "Sent DatFile to WorkerRollingImage")
+
+
+    def run(self):   
+        print "in run"                    
+        #epics.camonitor("13PIL1:cam1:ArrayCounter_RBV", callback=self.imageTaken)
+        #epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.userChange)
  
         try:
             while True:
+                self.imageTaken()
                 time.sleep(0.1)
         except KeyboardInterrupt:
             pass
@@ -193,7 +260,7 @@ class Engine():
         noLines = True
         while (noLines):          
             try:
-                Logger.log(self.name, "Opening LogFile")                
+                Logger.log(self.name, "Opening LogFile")
                 v = open(self.logFile, "r")
                 try:
                     self.latestLine = v.readlines()[self.index]
@@ -210,16 +277,19 @@ class Engine():
                         
                         noLines = False
                 except IndexError:
+                    Logger.log(self.name, "IndexError - trying to read last line from logfile")
                     pass
                                 
                 v.close()
             except IOError:
                 Logger.log(self.name, "IOERROR - trying to read last line from logfile")
-                time.sleep(0.5)
+                Logger.log(self.name, self.logFile)
+                time.sleep(0.2)
                 pass
             
         
     def getDatFile(self):
+        _pass = 0
         """TODO: make better... forgot the better and faster way I had the imagename
         """
         ##returns dat file location
@@ -234,14 +304,30 @@ class Engine():
         dat = str(dat)
         while (noDatFile):
             try:
-                datFile = ('testDat/'+ dat)  
-                self.datFiles.append(DatFile.DatFile(datFile))               
+                datFile = (self.datFileLocation + dat)  
+                self.datFiles.append(DatFile.DatFile(datFile))
+                self.datIndex = self.datIndex + 1
+                Logger.log(self.name, "INDEX DATFILES: " + str(self.datIndex))               
                 noDatFile = False
             except IOError:
+                if (_pass > 3):
+                    print "dunno doesnt exist ?"
+                    _pass = 0
+                    #self.index = self.index - 1
+                    break
+
+
+                Logger.log(self.name, "IOERROR - trying to open latest datfile")
+                Logger.log(self.name, "DATFILE - " + str(datFile))
+
+
                 time.sleep(0.05)
+                _pass = _pass + 1
 
 
 
 if __name__ == "__main__":
     engine = Engine()
+    foo = 1
+    engine.userChange("/mnt/images/data/Cycle_2012_1/Melton_4615/")
     engine.run()

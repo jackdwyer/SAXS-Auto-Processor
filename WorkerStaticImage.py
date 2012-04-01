@@ -41,6 +41,12 @@ class WorkerStaticImage():
         self.subtractedErrors = []
         self.firstTime = True
         Logger.log(self.name, "Worker Cleared - forgotten buffer")
+
+    def newSample(self):
+        #This isnt really needed
+        self.subtractedDatIntensities = []
+        self.subtractedDatq = []
+        self.subtractedErrors = []
         
     def updateRecords(self, user, experiment):
         self.user = user
@@ -64,8 +70,10 @@ class WorkerStaticImage():
         self.subtractedDatIntensities = subtractedDatIntensities
         self.subtractedDatq = subtractedDatq
         self.subtractedErrors = subtractedErrors
+
+        name = datFile.getFileName()
         
-        self.datWriter.writeFile("testWrite/", "staticImageTEst", { 'q' : self.subtractedDatq, 'i' : self.subtractedDatIntensities, 'errors' : self.subtractedErrors})
+        self.datWriter.writeFile("/home/ics/jack/beam/", str(name) , { 'q' : self.subtractedDatq, 'i' : self.subtractedDatIntensities, 'errors' : self.subtractedErrors})
         
 
     def exportData(self, location):
@@ -98,11 +106,18 @@ if __name__ == "__main__":
             if (str(filter) == "sample"):
                 datFile = samples.recv_pyobj()
                 Logger.log(worker.name, "Recieved DatFile")
-                if (work.firstTime):
+                if (worker.firstTime):
                     bufferReq.send("REQ-AVEBUFFER")
                     aveBuffer = bufferReq.recv_pyobj()
                     worker.firstTime = False
                 worker.run(datFile, aveBuffer)
+
+            if (str(filter) == 'new_buffer'):
+                worker.clear()
+            
+            if (str(filter) == 'new_sample'):
+                worker.newSample()
+
                 
             if (str(filter) == 'user'):
                 user = samples.recv()

@@ -88,6 +88,9 @@ if __name__ == "__main__":
                     user = buffers.recv()
                     experiment = buffers.recv()
                     worker.updateRecords(user, experiment)
+
+                if (str(filter) == 'recalculate_buffer'):
+                    worker.clear()
                 
                 if (str(filter) == 'clear'):
                     worker.clear() 

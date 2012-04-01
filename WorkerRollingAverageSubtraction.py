@@ -37,9 +37,19 @@ class WorkerRollingAverageSubtraction():
         self.datWriter = DatFileWriter.DatFileWriter()
         
         self.firstTime = True
+        self.newSampleCheck = False
+
+
+        self.name = ""
         
         self.user = ""
         self.experiment = ""
+        
+
+
+    def setName(self, datFile):
+        name = datFile.getFileName()
+        self.name = "rolled_sub_ave_"+str(name)
         
     def clear(self):
         """Function for clearing data from the worker, for the next
@@ -58,6 +68,21 @@ class WorkerRollingAverageSubtraction():
 
         Logger.log(self.name, "Worker Cleared - forgotten all previous buffers and datfiles")
 
+    def newSample(self):
+
+        self.allIntensities = []
+        self.allQ = []
+        self.allErrors = []
+        
+        self.aveIntensities = []
+        self.aveQ = []
+        self.aveErrors = []
+
+        self.subtractedIntensities = []
+
+
+
+
     def updateRecords(self, user, experiment):
         self.user = user
         self.experiment = experiment
@@ -71,13 +96,14 @@ class WorkerRollingAverageSubtraction():
         self.aveIntensities = self.ave.average(self.allIntensities)
         self.aveQ = self.ave.average(self.allQ)
         self.aveErrors = self.ave.average(self.allErrors)
-
+        
+        
 
         Logger.log(self.name, "Averaging Completed")
         
         self.subtract(aveBuffer)
         
-        self.datWriter.writeFile("Sim/testWriter/", "newTEST.dat", { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
+        self.datWriter.writeFile("/home/ics/jack/beam/", self.name, { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
         
         
 
@@ -127,8 +153,21 @@ if __name__ == "__main__":
                     bufferReq.send("REQ-AVEBUFFER")
                     aveBuffer = bufferReq.recv_pyobj()
                     worker.firstTime = False
+                    worker.setName(datFile)
+                #shitty fix
+                if (worker.newSampleCheck):
+                    worker.setName(datFile)
+                    worker.newSampleCheck = False
                 worker.run(datFile, aveBuffer)
                 
+            if (str(filter) == 'new_buffer'):
+                worker.firstTime = True; 
+                worker.newSample() 
+            
+            if (str(filter) == 'new_sample'):
+                worker.newSample()         
+                worker.newSampleCheck = False 
+
             if (str(filter) == 'user'):
                 user = samples.recv()
                 experiment = samples.recv()

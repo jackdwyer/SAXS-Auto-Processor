@@ -112,7 +112,6 @@ class DatFile:
     def reprocessDatFile(self):
         self.processDatFile()
 
-    
-        
+
 
     

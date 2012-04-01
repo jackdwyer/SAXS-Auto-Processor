@@ -46,7 +46,7 @@ class WorkerDB():
     
     def buildExperimentTable(self, experiment):
         self.experiment = experiment
-        collumAttributes = ['GISAXS_OMEGA', 'Protein_SMPL', 'Phi', 'NumericTimeStamp', 'Slit_3_V', 'I0', 'Slit_2_V', 'Slit_2_H', 'NOMINAL_CL', 'Slit_3_H', 'Keithly2', 'Slit_4_H', 'TimeStamp', 'ActualExpTime', 'Ibs', 'Slit_4_V', 'exptime', 'SMPL_TBL_X', 'SMPL_TBL_Y', 'Energy', 'It', 'Temp2', 'Temp1', 'SMPL_TYPE', 'GISAXS_SMPL_X', 'GISAXS_SMPL_Y', 'ImageLocation']
+        collumAttributes = ['I0', 'NumericTimeStamp', 'WashType', 'FilePluginDestination', 'TimeStamp', 'Energy', 'NORD', 'SampleType', 'It', 'SampleTableX', 'SampleTableY', 'Temperature2', 'Temperature1', 'WellNumber', 'Ibs', 'exptime', 'FilePluginFileName', 'ImageLocation']
         self.logTable = TableBuilder.TableBuilder(self.user, self.experiment, collumAttributes)
         
         #This needs to bs fixed to support different sample types

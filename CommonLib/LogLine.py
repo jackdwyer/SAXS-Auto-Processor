@@ -58,12 +58,12 @@ class LogLine:
                 
 
 if __name__ == "__main__":
-    line = '<LOGLINE TimeStamp = "Thu Feb 23 2012 14:07:41.472" NumericTimeStamp = "111380861.472" exptime = "1" I0 = "88356" It = "5" Ibs = "82163" SMPL_TBL_X = "0" SMPL_TBL_Y = "0" Energy = "12" Temp1 = "-273.15" Temp2 = "-273.15" Protein_SMPL = "69" GISAXS_OMEGA = "0.885" ActualExpTime = "1" Slit_2_H = "1.496" Slit_2_V = "0.9955" Slit_3_H = "0.3794" Slit_3_V = "0.3788" Slit_4_H = "1.1949" Slit_4_V = "1.2054" NOMINAL_CL = "0" GISAXS_SMPL_X = "58.125" GISAXS_SMPL_Y = "134.55" SMPL_TYPE = "EMPTY_CAP" Keithly2 = "-2.22021" Phi = "0" >/home/det/p2_det/images/data/Cycle_2012_1/ChapmanSmith_4733/mtcap3_0001.tif</LOGLINE>'
+    line = '<LOGLINE TimeStamp = "Sun Apr 01 2012 17:25:45.715" NumericTimeStamp = "114679545.715" exptime = "1" SampleTableX = "0" SampleTableY = "-0.00204353" Energy = "12" Temperature1 = "30.548" Temperature2 = "-270" WellNumber = "19" SampleType = "0" WashType = "0" FilePluginDestination = "all" FilePluginFileName = "/home/det/p2_det/images/data/Cycle_2012_1/Melton_4615/P1B7_HCL_PH3_100_NACL_0586.tif" NORD = "9" Ibs = "31460" I0 = "59688" It = "0" >/home/det/p2_det/images/data/Cycle_2012_1/Melton_4615/P1B7_HCL_PH3_100_NACL_0586.tif</LOGLINE>'
     a = LogLine(line)
     #print a.line
     #a.getAttributes()
     #print a.data
     print a.attributes
-    print a.data["exptime"]
+    print a.data["SampleType"]
     
                 
