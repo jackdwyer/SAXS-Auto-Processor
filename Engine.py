@@ -15,6 +15,11 @@ import MySQLdb as mysql
 
 class Engine():
     def __init__(self):
+<<<<<<< HEAD
+=======
+        
+        self.name = "Engine" #For logging
+>>>>>>> work
 
         
         #ZeroMQ setup stuff
@@ -28,16 +33,31 @@ class Engine():
         self.dbWorker.bind("tcp://127.0.0.1:7884")
         #7885 is used for WorkerRollingAverageSubtraction
         self.rollingAverageWorker = self.context.socket(zmq.PUSH)
-        self.rollingAverageWorker.bind("tcp://127.0.0.1:7885")
+        self.rollingAverageWorker.bind("tcp://127.0.0.1:7885")        
         
+        #To make sure we dont miss any loglines
+        self.index = 0
+        #User setup
+        self.user = ""
+        self.experiment = "EXPERIMENT_1"
+        self.logFile = ""
+        
+        #File Locations
+        self.logLocation = "testDat/livelogfile.log"
+        self.datFileLocation = "/home/dwyerj/sim/"
+        
+<<<<<<< HEAD
         
           
+=======
+>>>>>>> work
         #For holding the data
         self.lines = [] #List of lines already read
         self.logLines = [] #List of LogLine Objects, that have been broken down for easy access
         self.latestLine = ""
         self.datFiles = []
         
+<<<<<<< HEAD
         #To make sure we dont miss any loglines
         self.index = 0
         
@@ -51,25 +71,38 @@ class Engine():
         self.datFileLocation = "/home/dwyerj/sim/"
         
         
+=======
+>>>>>>> work
         #Make sure all sockets are created
         time.sleep(1.0)
         
     def clear(self):
+<<<<<<< HEAD
         """Clears engine data, and workers"""
         self.lines = []
         self.logLines = []
         self.lastLine = ""
         self.datFiles = []
+=======
+        """Clears out the Engine and all workers, should only occur when a new user has changed over"""
+>>>>>>> work
         self.index = 0
         self.user = ""
         self.experiment = "EXPERIMENT_1"
         self.logFile = ""
         
+<<<<<<< HEAD
     def generateDB(self):
         self.dbWorker.send("user")
         self.dbWorker.send(str(self.user))
         self.dbWorker.send("Experiment")
         self.dbWorker.send(str(self.experiment)) 
+=======
+        self.lines = []
+        self.logLines = []
+        self.latestLine = ""
+        self.datFiles = []
+>>>>>>> work
     
  
         
@@ -153,6 +186,7 @@ class Engine():
                 self.sampleWorker.send_pyobj(self.datFiles[self.index-1])
                 self.rollingAverageWorker.send_pyobj(self.datFiles[self.index-1])
 
+<<<<<<< HEAD
 
     def getUser(self, path):
         """Splits file path, and returns only user"""
@@ -175,15 +209,45 @@ class Engine():
         self.run()
     
         #fix        self.logFile = "testDat/livelogfile_nk_edit.log"
+=======
+    
+    def getUser(self, user):
+        """gets full/absolute path, pulls out just the user_epn and returns as string"""
+        
+        
+        
+    def userChange(self, char_value, **kw):
+        self.clear()
+        user = self.getUser(char_value)
+        
+        
+>>>>>>> work
 
        
  
 
 
+<<<<<<< HEAD
     def run(self):                       
         epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
         epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.userChange)
  
+=======
+
+    def run(self, user):
+        self.user = user
+        self.dbWorker.send("user")
+        self.dbWorker.send(str(self.user))  
+        self.dbWorker.send("Experiment")
+        self.dbWorker.send(str(self.experiment))      
+        
+        #Setup Variables/File Locations for user
+        self.logFile = "testDat/livelogfile_nk_edit.log"
+                       
+        epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
+        epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.userChange)
+
+>>>>>>> work
         
         try:
             while True:
