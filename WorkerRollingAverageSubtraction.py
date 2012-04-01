@@ -48,14 +48,12 @@ class WorkerRollingAverageSubtraction():
         self.aveQ = self.ave.average(self.allQ)
         self.aveErrors = self.ave.average(self.allErrors)
 
-        print self.aveIntensities
-        print self.aveErrors
 
         Logger.log(self.name, "Averaging Completed")
         
         self.subtract(aveBuffer)
         
-        self.datWriter.writeFile("Sim/testWriter", "newTEST", { 'q': self.aveQ, 'i' : self.aveQ, 'erros':self.aveErrors})
+        self.datWriter.writeFile("Sim/testWriter/", "newTEST.dat", { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
         
         
 
