@@ -66,7 +66,7 @@ if __name__ == "__main__":
     worker = WorkerDB()
     context = zmq.Context()
     dbWriter = context.socket(zmq.PULL)
-    dbWriter.bind("tcp://*:7884")
+    dbWriter.connect("tcp://127.0.0.1:7884")
     
     try:
         while True:

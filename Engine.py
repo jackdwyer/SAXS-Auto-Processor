@@ -15,27 +15,19 @@ import MySQLdb as mysql
 
 class Engine():
     def __init__(self):
-        #To make sure we dont miss any loglines
-        self.index = 0
         
-        #User setup
-        self.user = ""
-        self.experiment = "EXPERIMENT_1"
-        self.logFile = ""
-        
-        #File Locations
-        self.logLocation = "testDat/livelogfile.log"
-        self.datFileLocation = "/home/dwyerj/sim/"
+        self.name = "Engine"
+
         
         #ZeroMQ setup stuff
         self.context = zmq.Context()
         self.bufferWorker = self.context.socket(zmq.PUSH)
-        self.bufferWorker.bind("tcp://*:7881")  
+        self.bufferWorker.bind("tcp://127.0.0.1:7881")  
         self.sampleWorker = self.context.socket(zmq.PUSH)
         self.sampleWorker.bind("tcp://127.0.0.1:7882")
         #7883 is used by the WorkerBufferAverage
         self.dbWorker = self.context.socket(zmq.PUSH)
-        self.dbWorker.connect("tcp://127.0.0.1:7884")
+        self.dbWorker.bind("tcp://127.0.0.1:7884")
         #7885 is used for WorkerRollingAverageSubtraction
         self.rollingAverageWorker = self.context.socket(zmq.PUSH)
         self.rollingAverageWorker.bind("tcp://127.0.0.1:7885")
@@ -51,6 +43,22 @@ class Engine():
         
         #Make sure all sockets are created
         time.sleep(1.0)
+        
+        #To make sure we dont miss any loglines
+        self.index = 0
+        
+        #User setup
+        self.user = ""
+        self.experiment = "EXPERIMENT_1"
+        self.logFile = ""
+        
+        #File Locations
+        self.logLocation = "testDat/livelogfile.log"
+        self.datFileLocation = "/home/dwyerj/sim/"
+        
+    def clear(self):
+        """Clears out the Engine and all workers, should only occur when a new user has changed over"""
+        
     
  
         
@@ -109,7 +117,7 @@ class Engine():
     
     
     
-    def epicPVChange(self, value, **kw ):
+    def imageTaken(self, value, **kw ):
         """Check Logline, get all details on latest image """
         print "Value Changed"
         
@@ -137,7 +145,10 @@ class Engine():
 
         
         
-    
+    def userChange(self, char_value, **kw):
+        self.clear()
+        
+        
 
 
 
@@ -152,7 +163,9 @@ class Engine():
         #Setup Variables/File Locations for user
         self.logFile = "testDat/livelogfile_nk_edit.log"
                        
-        epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.epicPVChange)
+        epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
+        epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.userChange)
+
         
         try:
             while True:
