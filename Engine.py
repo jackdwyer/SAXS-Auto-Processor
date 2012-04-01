@@ -133,6 +133,7 @@ class Engine():
                 self.sampleWorker.send("sample")
                 self.sampleWorker.send_pyobj(self.datFiles[self.index-1])
                 Logger.log(self.name, "Sent DatFile to WorkerStaticImage")
+                
                 self.rollingAverageWorker.send("sample")
                 self.rollingAverageWorker.send_pyobj(self.datFiles[self.index-1])
                 Logger.log(self.name, "Sent DatFile to WorkerRollingImage")
