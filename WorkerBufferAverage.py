@@ -23,7 +23,9 @@ class WorkerBufferAverage():
         self.allIntensities = []
         self.aveIntensities = []
         self.ave = AverageList.AverageList()
-
+        
+        self.user = ""
+        self.experiment = ""
     
     
     def run(self, datFile):
@@ -39,6 +41,10 @@ class WorkerBufferAverage():
         self.allIntensities = []
         self.aveIntensities = []
         Logger.log(self.name, "Worker Cleared - all buffers forgotten")
+        
+    def updateRecords(self, user, experiment):
+        self.user = user
+        self.experiment = experiment
     
     
     
@@ -77,6 +83,11 @@ if __name__ == "__main__":
                 if (str(filter) == "datFile"):
                     datFile = buffers.recv_pyobj()
                     worker.run(datFile)
+                    
+                if (str(filter) == 'user'):
+                    user = buffers.recv()
+                    experiment = buffers.recv()
+                    worker.updateRecords(user, experiment)
                 
                 if (str(filter) == 'clear'):
                     worker.clear() 
