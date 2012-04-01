@@ -75,7 +75,7 @@ class Engine():
         noLines = True
         while (noLines):          
             try:
-                print "trying to open file"
+                Logger.log(self.name, "Opening LogFile")                
                 v = open(self.logFile, "r")
                 try:
                     self.latestLine = v.readlines()[self.index]
@@ -96,7 +96,7 @@ class Engine():
                                 
                 v.close()
             except IOError:
-                print "IOERROR"
+                Logger.log(self.name, "IOERROR - trying to read last line from logfile")
                 time.sleep(0.5)
                 pass
             
@@ -128,28 +128,34 @@ class Engine():
     
     def imageTaken(self, value, **kw ):
         """Check Logline, get all details on latest image """
-        print "Value Changed"
+        Logger.log(self.name, "Image Value Changed - Shot Taken")
         
         if value == 100:
-            print "Value = 100"
             self.readLatestLine()
-            print "read last line"
+            Logger.log(self.name, "Read Latest line from LogFile")
             self.getDatFile()
-            print "got datfile"
-            print self.datFiles[self.index-1].getDatFilePath()
+            Logger.log(self.name, "Retrieved DatFile")
+           
+            
+            #print self.datFiles[self.index-1].getDatFilePath()
             
             
             imageType = (self.logLines[self.index-1].getValue("SMPL_TYPE"))
             
-            print imageType
+            #print imageType
             
             #if (imageType == "BUFFER"):
             if (imageType == "BUFFER"):
-                #Sent datFile object to worker
+                Logger.log(self.name, "BUFFER")
                 self.bufferWorker.send_pyobj(self.datFiles[self.index-1])
+                Logger.log(self.name, "sent DatFile to WorkerBuffer")
             if (imageType == "STATIC_SAMPLE"):
+                Logger.log(self.name, "STATIC IMAGE")
                 self.sampleWorker.send_pyobj(self.datFiles[self.index-1])
+                Logger.log(self.name, "Sent DatFile to WorkerStaticImage")
                 self.rollingAverageWorker.send_pyobj(self.datFiles[self.index-1])
+                Logger.log(self.name, "Sent DatFile to WorkerRollingImage")
+
 
 
     def getUser(self, path):
@@ -165,8 +171,8 @@ class Engine():
         self.clear()
         user = self.getUser(char_value)
         self.user = user
-        print "USER CHANGED - ", self.user 
-
+        Logger.log(self.name, "USER CHANGE OVER")
+        Logger.log(self.name, "NEW USER: ", self.user)
         
         self.generateDB()        
         self.run()
