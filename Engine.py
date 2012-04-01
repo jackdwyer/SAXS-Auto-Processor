@@ -10,6 +10,7 @@ import epics
 import time
 import zmq
 from CommonLib import *
+from CommonLib import Logger
 import MySQLdb as mysql
 
 
@@ -172,7 +173,7 @@ class Engine():
         user = self.getUser(char_value)
         self.user = user
         Logger.log(self.name, "USER CHANGE OVER")
-        Logger.log(self.name, "NEW USER: ", self.user)
+        Logger.log(self.name, "NEW USER: " + str(self.user))
         
         self.generateDB()        
         self.run()
