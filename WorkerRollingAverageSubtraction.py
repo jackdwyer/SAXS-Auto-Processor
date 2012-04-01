@@ -10,6 +10,7 @@ import zmq
 from CommonLib import Logger
 from CommonLib import DatFile
 from CommonLib import DatFileWriter
+from CommonLib import AverageList
 
 import sys
 import time
@@ -67,36 +68,15 @@ class WorkerRollingAverageSubtraction():
         self.subtractedIntensities = subtractedIntensities
         
         Logger.log(self.name, "Subtraction Completed")
-        
-        
-    def writeFile(self, name):
-        location = "testRolling/" + str(name)
-        f = open(location, 'w')
-        f.write(name + "\n")
-        f.write('%14s %16s %16s \n' % ('q', 'I', 'Err')) #Needed for string formatting
-        for i in range(len(self.aveIntensities)):
-            f.write('%18.10f %16.10f %16.10f \n' % (self.aveQ[i], self.aveIntensities[i], self.aveErrors[i]))        
-        f.close()
-        
-        print "file written"
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+     
+
 
 if __name__ == "__main__":
     worker = WorkerRollingAverageSubtraction()
 
     if len(sys.argv) > 1 and sys.argv[1] == "tests":
         b = [1,1,1]
-        dat = DatFile.DatFile("t.dat")
+        dat = DatFile.DatFile("Sim/data/water4_0004.dat")
         worker.run(dat, b)
 
     else:    
