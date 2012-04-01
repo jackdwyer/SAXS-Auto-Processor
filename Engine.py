@@ -84,6 +84,30 @@ class Engine():
         self.dbWorker.send("Experiment")
         self.dbWorker.send(str(self.experiment)) 
         Logger.log(self.name, "Database Created - " + self.user)
+        
+    def updateWorkers(self):
+                self.bufferWorker.send("user")
+                self.bufferWorker.send(self.user)
+                Logger.log(self.name, "sent new user to WorkerBuffer")
+                self.bufferWorker.send(self.experiment)
+                Logger.log(self.name, "sent new experiment to WorkerBuffer")
+
+
+
+                self.sampleWorker.send("user")
+                self.sampleWorker.send(self.user)
+                Logger.log(self.name, "Sent new user to WorkerStaticImage")
+                self.sampleWorker.send(self.experiment)
+                Logger.log(self.name, "Sent new experiment to WorkerStaticImage")
+                
+                self.rollingAverageWorker.send("user")
+                self.rollingAverageWorker.send(self.user)
+                Logger.log(self.name, "Sent new user to WorkerRollingImage")
+                self.rollingAverageWorker.send(self.experiment)
+                Logger.log(self.name, "Sent new experiment to WorkerRollingImage")
+
+        
+        
 
         
     
@@ -97,16 +121,18 @@ class Engine():
         """Get the user_epn when a change over has occured, 
         this will create a new DB for the user, create directory structure
         and clear out all workers"""
+        
         Logger.log(self.name, "User change over initiated")
-        self.clear()
-        user = self.getUser(char_value)
+        self.clear() #Clear engine, and all workers
+        
+        user = self.getUser(char_value) #get new user
         self.user = user
         Logger.log(self.name, "NEW USER: " + str(self.user))
         
-        self.generateDB()        
+        self.generateDB() 
+        self.updateWorkers()
         
         self.directoryCreator.createFolderStructure(self.user, self.experiment);
-        
         Logger.log(self.name, "Folder Structure Created")
 
     
