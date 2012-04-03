@@ -22,8 +22,7 @@ class Engine():
 
         self.absolutePath = "/home/ics/jack/beam/"
         self.directoryCreator = DirectoryCreator.DirectoryCreator(self.absolutePath)
-
-
+        
         #ZeroMQ setup stuff
         self.context = zmq.Context()
         self.bufferWorker = self.context.socket(zmq.PUSH)
