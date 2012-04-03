@@ -200,7 +200,9 @@ class Engine():
             imageType = (self.logLines[self.index-1].data['SampleType'])
         except KeyError:
             Logger.log(self.name, "KeyError on SampleType, probably nothing")
-            imageType = "4"
+            imageType = "12"
+
+
 
         if ((imageType == '0') and (changeInName)):
             Logger.log(self.name, "Root Name Change - Idicating Sample Change")
