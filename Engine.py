@@ -42,12 +42,12 @@ class Engine():
         #User setup
         self.user = ""
         self.experiment = "EXPERIMENT_1"
-        self.logFile = "/mnt/images/data/Cycle_2012_1/Melton_4615/livelogfile.log"
+        self.logFile = "/mnt/images/data/Cycle_2012_1/Pelliccia_4562/livelogfile.log"
 
         #File Locations
-        self.logLocation = "/mnt/images/data/Cycle_2012_1/Melton_4615/livelogfile.log"
+        self.logLocation = "/mnt/images/data/Cycle_2012_1/Pelliccia_4562/livelogfile.log"
         #self.logLocation = "testDat/livelogfile.log"
-        self.datFileLocation = "/mnt/images/data/Cycle_2012_1/Melton_4615/dat/"
+        self.datFileLocation = "/mnt/images/data/Cycle_2012_1/Pelliccia_4562/Melton_4615/dat/"
 
 
         #For holding the data
@@ -255,6 +255,14 @@ class Engine():
         except KeyboardInterrupt:
             pass
         
+
+
+
+
+
+
+
+
     
 ###These should go into generic methods
     def readLatestLine(self):
@@ -330,5 +338,7 @@ class Engine():
 if __name__ == "__main__":
     engine = Engine()
     foo = 1
-    engine.userChange("/mnt/images/data/Cycle_2012_1/Melton_4615/")
+    #/mnt/images/data/Cycle_2012_1/Melton_4615/ - experiment from sunday 1st
+    #/mnt/images/data/Cycle_2012_1/Pelliccia_4562 - experiment from today(tuesday) 3rd
+    engine.userChange("/mnt/images/data/Cycle_2012_1/Pelliccia_4562")
     engine.run()

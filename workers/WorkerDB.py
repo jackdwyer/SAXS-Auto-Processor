@@ -13,7 +13,7 @@ import MySQLdb as mysql
 
 
 class WorkerDB():
-    def __init__(self):
+    def __init__(self, host, user, password):
         #for logging
         self.name = "WorkerDB"
         Logger.log(self.name, "Worker Generated")
@@ -22,7 +22,7 @@ class WorkerDB():
         #General SQL setup
         self.host = "localhost"
         self.root = "root"
-        self.password = "a"
+        self.password = "Beam138Line"
         
         self.user = ""
         self.experiment = ""
