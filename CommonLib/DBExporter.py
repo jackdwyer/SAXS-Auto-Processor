@@ -33,7 +33,7 @@ class DBExporter:
     def __init__(self, user, experiment):
         self.name = "DBExporter"
         #here could generate connection string on the fly, needed for take home if they are going to be connecting to SQLite
-        db = "mysql+mysqldb://root:a@localhost/"+user
+        db = "mysql+mysqldb://root:Beam138Line@localhost/"+user
         engine = create_engine(db)
 
         Base = declarative_base()
