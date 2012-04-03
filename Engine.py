@@ -336,5 +336,7 @@ class Engine():
 if __name__ == "__main__":
     engine = Engine()
     foo = 1
-    engine.userChange("/mnt/images/data/Cycle_2012_1/Melton_4615/")
+    #/mnt/images/data/Cycle_2012_1/Melton_4615/ - experiment from sunday 1st
+    #/mnt/images/data/Cycle_2012_1/Pelliccia_4562 - experiment from today(tuesday) 3rd
+    engine.userChange("/mnt/images/data/Cycle_2012_1/Pelliccia_4562")
     engine.run()
