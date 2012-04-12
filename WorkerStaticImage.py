@@ -7,14 +7,15 @@ Jack dywer
 - Fixing what is written out
 """
 
-
 import zmq
 from CommonLib import Logger
 from CommonLib import DatFile
 from CommonLib import DatFileWriter
 import sys
 
-class WorkerStaticImage():
+from Worker import Worker
+
+class WorkerStaticImage(Worker):
     
     def __init__(self):
         self.name = "WorkerStaticImage"  #for logging
@@ -82,6 +83,7 @@ class WorkerStaticImage():
 
 
 if __name__ == "__main__":
+
     worker = WorkerStaticImage()
     
     if len(sys.argv) > 1 and sys.argv[1] == "tests":

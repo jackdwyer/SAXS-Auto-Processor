@@ -13,7 +13,7 @@ Engine2 will replace Engine1 very soon
  
 """     
 import yaml
-from Workers import WorkerDB, WorkerBufferAverage, WorkerStaticImage
+import WorkerDB
 
 
 class Engine2():
@@ -26,14 +26,14 @@ class Engine2():
         self.workers = {}
         self.loadWorkers(self.config['workers'])
     
-        print self.workers
         
     def loadWorkers(self, workers):
         #Force Load WorkerDB
         dbWorker = WorkerDB.WorkerDB(host = self.config['database']['host'], user = self.config['database']['user'], password = self.config['database']['password'])
 
+        #TODO: Relative Location of imports
         for worker in workers:
-            workerModule = __import__(worker, level=2, globals=globals())
+            workerModule = __import__(worker)
             mod = getattr(workerModule, worker)
             x = mod()
             self.workers[worker] = x
