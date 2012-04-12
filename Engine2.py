@@ -13,7 +13,7 @@ Engine2 will replace Engine1 very soon
  
 """     
 import yaml
-from workers import WorkerDB
+from Workers import WorkerDB, WorkerBufferAverage, WorkerStaticImage
 
 
 class Engine2():
@@ -22,21 +22,22 @@ class Engine2():
         #Get all configuration details to pass off to workers
         stream = file(configFile, 'r') 
         self.config = yaml.load(stream)
-        
-        
-        print self.config['database']['host']
-        print self.config['workers'][0]
-        
-        #
-        self.workers  = {'bufferAverage' : 'WorkerBufferAverage', 'dbWriter' : 'WorkerDB' }
-        
-        self.loadWorkers()
-        
-        
     
-    def loadWorkers(self):
-        #Will begin with the DB worker
+        self.workers = {}
+        self.loadWorkers(self.config['workers'])
+    
+        print self.workers
+        
+    def loadWorkers(self, workers):
+        #Force Load WorkerDB
         dbWorker = WorkerDB.WorkerDB(host = self.config['database']['host'], user = self.config['database']['user'], password = self.config['database']['password'])
+
+        for worker in workers:
+            workerModule = __import__(worker, level=2, globals=globals())
+            mod = getattr(workerModule, worker)
+            x = mod()
+            self.workers[worker] = x
+    
 
 
 if __name__ == "__main__":

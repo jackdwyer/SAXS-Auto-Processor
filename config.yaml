@@ -4,4 +4,5 @@ database :
     password : "a"
 
 #These worker always need to be loaded for subtraction and web interface to occur
-defaultWorkers : ["WorkerDB", "WorkerBufferAverage", "WorkerStaticImage", "WorkerRollingAverage"] 
+#WorkerDB will always load
+workers : ["WorkerBufferAverage", "WorkerStaticImage", "WorkerRollingAverage"] 
