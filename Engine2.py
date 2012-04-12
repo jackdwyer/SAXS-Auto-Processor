@@ -25,9 +25,9 @@ class Engine2():
         
         
         print self.config['database']['host']
+        print self.config['workers'][0]
         
-        
-        #Will always have Definate workers for the averaged Subtraction to occur
+        #
         self.workers  = {'bufferAverage' : 'WorkerBufferAverage', 'dbWriter' : 'WorkerDB' }
         
         self.loadWorkers()
