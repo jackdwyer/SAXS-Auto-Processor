@@ -22,20 +22,23 @@ class WorkerStaticImage(Worker):
         Logger.log(self.name, "Worker Generated")
         
         
+        
         self.subtractedDatIntensities = []
         self.subtractedDatq = []
         self.subtractedErrors = []
+        
+        self.dataList = [self.subtractedDatIntensities, self.subtractedDatq, self.subtractedErrors]
         
         #For writting to DB
         self.context = zmq.Context()
         self.dbWorker = self.context.socket(zmq.PUSH)
         self.dbWorker.connect("tcp://127.0.0.1:7884")
         
-        #for generic writting
+        #for generic writing
         self.datWriter = DatFileWriter.DatFileWriter()
         
         self.firstTime = True
-        self.run()
+        self.clear1()
         
     def clear(self):
         self.subtractedDatIntensities = []
