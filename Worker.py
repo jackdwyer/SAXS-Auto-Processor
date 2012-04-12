@@ -9,6 +9,8 @@ class Worker:
     def run(self):
         print "run"
 
+    def test(self):
+        print "test inheritied"
 
 
 if __name__ == "__main__":

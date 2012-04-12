@@ -35,6 +35,7 @@ class WorkerStaticImage(Worker):
         self.datWriter = DatFileWriter.DatFileWriter()
         
         self.firstTime = True
+        self.run()
         
     def clear(self):
         self.subtractedDatIntensities = []
