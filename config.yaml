@@ -1,0 +1,7 @@
+database : 
+    host : "localhost"
+    user : "root"
+    password : "a"
+
+#These worker always need to be loaded for subtraction and web interface to occur
+defaultWorkers : ["WorkerDB", "WorkerBufferAverage", "WorkerStaticImage", "WorkerRollingAverage"] 
