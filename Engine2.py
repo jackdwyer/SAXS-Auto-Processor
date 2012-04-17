@@ -15,12 +15,23 @@ Engine2 will replace Engine1 very soon
 import yaml
 import WorkerDB
 
+from CommonLib import Logger
+
+
 
 class Engine2():
 
     def __init__(self, configFile):
+        
+        self.name = "Engine"
+        
         #Get all configuration details to pass off to workers
-        stream = file(configFile, 'r') 
+        try:
+            stream = file(configFile, 'r') 
+        except IOError:
+            Logger.log(self.name, "Unable to find configuration, exiting.")
+            exit()
+            
         self.config = yaml.load(stream)
     
         self.workers = {}

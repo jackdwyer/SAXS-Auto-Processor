@@ -19,7 +19,7 @@ class WorkerStaticImage(Worker):
     
     def __init__(self):
         self.name = "WorkerStaticImage"  #for logging
-        Logger.log(self.name, "Worker Generated")
+        Logger.log(self.name, "Generated")
         
         
         

@@ -21,7 +21,7 @@ class WorkerRollingAverageSubtraction():
 
     def __init__(self):
         self.name = "WorkerRollingAverageSubtraction" # For logging
-        Logger.log(self.name, "Worker Generated")
+        Logger.log(self.name, "Generated")
         
         self.allIntensities = []
         self.allQ = []

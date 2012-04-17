@@ -16,13 +16,13 @@ class WorkerDB():
     def __init__(self, host, user, password):
         #for logging
         self.name = "WorkerDB"
-        Logger.log(self.name, "Worker Generated")
+        Logger.log(self.name, "Generated")
 
         
         #General SQL setup
-        self.host = "localhost"
-        self.root = "root"
-        self.password = "Beam138Line"
+        self.host = ""
+        self.root = ""
+        self.password = ""
         
         self.user = ""
         self.experiment = ""
