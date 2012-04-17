@@ -21,8 +21,8 @@ class WorkerDB():
         
         #General SQL setup
         self.host = "localhost"
-        self.root = "root"
-        self.password = "Beam138Line"
+        self.root = ""
+        self.password = ""
         
         self.user = ""
         self.experiment = ""
