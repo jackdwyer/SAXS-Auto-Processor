@@ -9,17 +9,55 @@ import zmq
 from CommonLib import TableBuilder
 from CommonLib import Logger
 import MySQLdb as mysql
+from Worker import Worker
 
 
 
-class WorkerDB():
-    def __init__(self, host, user, password):
+class WorkerDB(Worker):
+    
+    def cheese(self, host, user, password):
+        
+        context = zmq.Context()
+        dbWriter = context.socket(zmq.PULL)
+        dbWriter.connect("tcp://127.0.0.1:"+self.port)
+        
+        try:
+            while True:
+                #Will be first sent, what to write/do
+                filter = dbWriter.recv()
+                if (str(filter) == "user"):
+                    user = dbWriter.recv()
+                    Logger.log(worker.name, "Recieved Command to build Database for user: " + str(user))
+                    worker.forceDBCreation(user)
+                    
+                if (str(filter) == "Experiment"):
+                    experiment = dbWriter.recv()
+                    Logger.log(worker.name, "Building experiment table: " + str(experiment))
+                    worker.buildExperimentTable(str(experiment))
+                
+                if (str(filter) == "logLine"):
+                    Logger.log(worker.name, "Writing LogLine to DB")
+                    logLine = dbWriter.recv_pyobj()
+                    worker.writeLogToDB(logLine)
+                    Logger.log(worker.name, "LogLine written")
+    
+                    
+                if (str(filter) == "ImageLocation"):
+                    location = dbWriter.recv()
+                    Logger.log(worker.name, "Image Location recieved, writing to DB")
+                    worker.writeImageLocation(str(location))
+                    Logger.log(worker.name, "Location written: ", str(location))
+
+        except KeyboardInterrupt:
+            pass
+        
+        
         #for logging
         self.name = "WorkerDB"
-        Logger.log(self.name, "Generated")
 
         
         #General SQL setup
+<<<<<<< HEAD
 <<<<<<< HEAD
         self.host = ""
 =======
@@ -27,18 +65,28 @@ class WorkerDB():
 >>>>>>> 033a1b135d12c6a73f9a54d67e1f5c725a188636
         self.root = ""
         self.password = ""
+=======
+        self.host = host
+        self.dbUser = user
+        self.password = password
+        
+        
+>>>>>>> work
         
         self.user = ""
         self.experiment = ""
         self.logTable = "" 
         self.imageTable = ""
+        
+        Logger.log(self.name, "Generated")
+
     
     def forceDBCreation(self, user):
         
         Logger.log(self.name, "Forcing Database Creation")
         self.user = user
         try:
-            db = mysql.connect(user=self.root, host=self.host, passwd=self.password)
+            db = mysql.connect(user=self.dbUser, host=self.host, passwd=self.password)
             c = db.cursor()
             cmd = "CREATE DATABASE IF NOT EXISTS " + str(self.user) + ";"
             c.execute(cmd)      
@@ -69,6 +117,9 @@ class WorkerDB():
 
 if __name__ == "__main__":
     worker = WorkerDB()
+    
+    
+    
     context = zmq.Context()
     dbWriter = context.socket(zmq.PULL)
     dbWriter.connect("tcp://127.0.0.1:7884")

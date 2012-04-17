@@ -3,6 +3,9 @@ database :
     user : "root"
     password : "a"
 
+
 #These worker always need to be loaded for subtraction and web interface to occur
 #WorkerDB will always load
-workers : ["WorkerBufferAverage", "WorkerStaticImage", "WorkerRollingAverageSubtraction"] 
+workers : ["WorkerBufferAverage", "WorkerStaticImage", "WorkerRollingAverageSubtraction", "WorkerDB"] 
+
+location : "/home/jack/beamlinetesting/"

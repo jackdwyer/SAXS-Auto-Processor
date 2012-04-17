@@ -12,11 +12,13 @@ from CommonLib import DatFile
 import sys
 import time
 from threading import Thread
+from Worker import Worker
 
 
-class WorkerBufferAverage():
+
+class WorkerBufferAverage(Worker):
     
-    def __init__(self):
+    def eh(self):
         self.name = "WorkerBufferAverage" #For logging
         Logger.log(self.name, "Generated")
 
