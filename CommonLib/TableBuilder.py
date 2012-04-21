@@ -5,7 +5,6 @@ from sqlalchemy import Column, Integer, String
 
 
 class TableBuilder():
-
     
     def __init__(self, database, tableName, attribList):
         self.Base = declarative_base()

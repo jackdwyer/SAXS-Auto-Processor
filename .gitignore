@@ -1,0 +1,4 @@
+*.pyc
+
+# Dat files 
+*.dat
