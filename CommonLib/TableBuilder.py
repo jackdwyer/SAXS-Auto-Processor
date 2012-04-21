@@ -10,7 +10,7 @@ class TableBuilder():
     def __init__(self, database, tableName, attribList):
         self.Base = declarative_base()
         self.tableName = tableName
-        self.engine = create_engine("mysql+mysqldb://root:Beam138Line@localhost/"+database)
+        self.engine = create_engine("mysql+mysqldb://root:a@localhost/"+database)
         self.dictColumns = {}
         self.attribList = attribList
         self.columnBuilder()
