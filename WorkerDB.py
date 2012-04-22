@@ -57,21 +57,15 @@ class WorkerDB(Worker):
 
         
         #General SQL setup
-<<<<<<< HEAD
-<<<<<<< HEAD
-        self.host = ""
-=======
+
         self.host = "localhost"
->>>>>>> 033a1b135d12c6a73f9a54d67e1f5c725a188636
         self.root = ""
         self.password = ""
-=======
+
         self.host = host
         self.dbUser = user
         self.password = password
-        
-        
->>>>>>> work
+
         
         self.user = ""
         self.experiment = ""
