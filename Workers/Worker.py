@@ -13,21 +13,26 @@ import sys
 import time
 from threading import Thread
 
-from CommonLib.Logger import log
+from Core.Logger import log
+
 class Worker():
     def __init__(self, name):
+        print "test inheritance"
         self.name = name
         self.dataList = []
         self.replyData = []
         
-        self.reply = False
-                
+        
+        self.reply = False        
         #ZMQ stuff
         self.context = zmq.Context()
         self.pull = self.context.socket(zmq.PULL)
         
         log(self.name, "Generated")
         
+        
+    def setName(self, name):
+        self.name = name
         
     def connect(self, pullPort, replyPort = False):
         self.pull.connect("tcp://127.0.0.1:"+str(pullPort));
@@ -53,13 +58,15 @@ class Worker():
             self.dataList[i] = []
         print self.dataList
         
-    def doWork(self, filter):                
+        
+    def doWork(self, filter):  
         if (str(filter) == "clear"):
             self.clear()
             
         #Test    
         if (str(filter) == "testPush"):
-            log(self.name, "TestPull/Push - Completed")
+            log(self.name, "Test Pull/Push - Completed")
+            
             
     def sendData(self):
         try:
@@ -71,6 +78,8 @@ class Worker():
                 #Test    
                 if (req == "testReply"):
                     self.reply.send_pyobj(req)
+                    log(self.name, "Test Req/Rep - Completed")
+
         except KeyboardInterrupt:
             pass   
 
@@ -95,22 +104,25 @@ if __name__ == "__main__":
     context = zmq.Context()
     replyPass = False
 
-    
+    print "TEST 1 - ONLY PUSH/PULL"
     #Test 1 - Only a pull socket
-    b = Worker("Worker")
+    b = Worker("Worker (Sub)")
     t = Thread(target=b.connect, args=(pushPort, False))
     t.start()
-    time.sleep(1)
+
+    
     testPush = context.socket(zmq.PUSH)
     testPush.bind("tcp://127.0.0.1:"+str(pushPort))
     testPush.send("testPush")
+    time.sleep(0.1)
     testPush.close()
-    
+
+
     #Test 2
-    b = Worker("Worker")
+    print "TEST 2 - ONLY REQ/RECV"
+    b = Worker("Worker (Sub)")
     t = Thread(target=b.connect, args=(pushPort, reqPort))
     t.start()
-    time.sleep(0.5)
     
     testReq = context.socket(zmq.REQ)
     testReq.bind("tcp://127.0.0.1:"+str(reqPort))
