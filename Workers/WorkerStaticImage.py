@@ -96,7 +96,7 @@ if __name__ == "__main__":
 
     #Test 2
     print "TEST 2 - ONLY REQ/RECV"
-    b = Worker("Worker (Sub)")
+    b = Worker()
     t = Thread(target=b.connect, args=(pushPort, reqPort))
     t.start()
     
