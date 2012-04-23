@@ -14,10 +14,10 @@ import time
 from threading import Thread
 
 from Core.Logger import log
+from Core import DatFileWriter
 
 class Worker():
     def __init__(self, name):
-        print "test inheritance"
         self.name = name
         self.dataList = []
         self.replyData = []
@@ -27,6 +27,10 @@ class Worker():
         #ZMQ stuff
         self.context = zmq.Context()
         self.pull = self.context.socket(zmq.PULL)
+        
+        #DatFile writer
+        self.datWriter = DatFileWriter.DatFileWriter()
+
         
         log(self.name, "Generated")
         
@@ -39,7 +43,7 @@ class Worker():
         
         if (replyPort != False):
             self.reply = self.context.socket(zmq.REP)
-            self.reply.connect("tcp://127.0.0.1:"+str(replyPort))
+            self.reply.bind("tcp://127.0.0.1:"+str(replyPort))
             log(self.name, "All Ports Connected -> pullPort: "+str(pullPort)+" - replyPort: "+str(replyPort))
         else:
             log(self.name, "All Ports Connected -> pullPort: "+str(pullPort)+" - replyPort: INACTIVE")
@@ -100,7 +104,7 @@ class Worker():
          
 if __name__ == "__main__":
     pushPort = 4000
-    reqPort = 4001
+    reqPort = 8000
     context = zmq.Context()
     replyPass = False
 
@@ -125,7 +129,7 @@ if __name__ == "__main__":
     t.start()
     
     testReq = context.socket(zmq.REQ)
-    testReq.bind("tcp://127.0.0.1:"+str(reqPort))
+    testReq.connect("tcp://127.0.0.1:"+str(reqPort))
     testReq.send("testReply")
     testReply = testReq.recv_pyobj()
     

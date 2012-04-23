@@ -19,7 +19,11 @@ from Worker import Worker
 class WorkerStaticImage(Worker):
     def __init__(self):
         Worker.__init__(self, "WorkerStaticImage")
-        print self.name
+
+
+
+
+
 
 if __name__ == "__main__":
 
