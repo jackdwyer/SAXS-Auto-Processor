@@ -18,10 +18,8 @@ from Worker import Worker
 
 class WorkerStaticImage(Worker):
     def __init__(self):
-        #super(WorkerStaticImage, self).__init__()
         Worker.__init__(self, "WorkerStaticImage")
-        #self.name = "testin"
-        
+        print self.name
 
 if __name__ == "__main__":
 
