@@ -19,25 +19,41 @@ from Core import DatFileWriter
 class Worker():
     def __init__(self, name):
         self.name = name
-        self.dataList = []
         self.replyData = []
         
+        self.user = ""
+        self.experiment = ""
+        self.absolutePath = ""
         
+        self.aveBuffer = []
+        self.needBuffer = True
+        
+        #Set so that a reply socket is not always started
         self.reply = False        
         #ZMQ stuff
         self.context = zmq.Context()
         self.pull = self.context.socket(zmq.PULL)
+        #for requesting Buffer
+        self.reqBuffer = self.context.socket(zmq.REQ)
+        
         
         #DatFile writer
         self.datWriter = DatFileWriter.DatFileWriter()
 
-        
+
+        self.dataList = [self.aveBuffer]        
         log(self.name, "Generated")
         
         
     def setName(self, name):
         self.name = name
+    
+    def updateDetails(self, user, experiment, absolutePath):
+        self.user = user
+        self.experiment = experiment
+        self.absolutePath = absolutePath
         
+    
     def connect(self, pullPort, replyPort = False):
         self.pull.connect("tcp://127.0.0.1:"+str(pullPort));
         
@@ -50,8 +66,11 @@ class Worker():
         self.run()
 
 
+    def setBufferRequest(self, port):
+        self.reqBuffer.connect("tcp://127.0.0.1"+str(port))
 
-    def addToDataList(self, data):
+    def addToClearList(self, data):
+        """Slap all lists in here to be cleared when needed"""
         self.dataList.append(data)
         
 
@@ -60,16 +79,18 @@ class Worker():
         #Clear all lists TODO dictionaries/variables
         for i in range(len(self.dataList)):
             self.dataList[i] = []
+        self.needBuffer = True
         print self.dataList
+        log(self.name, "Cleared")
         
         
-    def doWork(self, filter):  
-        if (str(filter) == "clear"):
-            self.clear()
-            
-        #Test    
+    def process(self, filter):    
         if (str(filter) == "testPush"):
             log(self.name, "Test Pull/Push - Completed")
+            
+        if (str(filter) == "clear"):
+            log(self.name, "CLEARED")   
+    
             
             
     def sendData(self):
@@ -96,7 +117,10 @@ class Worker():
         try:
             while True:
                 filter = self.pull.recv()
-                self.doWork(filter)
+                if (filter == 'clear'):
+                    self.clear()
+                else:
+                    self.process(filter)
                 
         except KeyboardInterrupt:
             pass
@@ -117,7 +141,7 @@ if __name__ == "__main__":
     
     testPush = context.socket(zmq.PUSH)
     testPush.bind("tcp://127.0.0.1:"+str(pushPort))
-    testPush.send("testPush")
+    testPush.send("clear")
     time.sleep(0.1)
     testPush.close()
 
