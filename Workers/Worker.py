@@ -16,19 +16,23 @@ from threading import Thread
 from Core.Logger import log
 
 class Worker():
-    def __init__(self):
-        self.name = "Worker (Sub)"
+    def __init__(self, name):
+        print "test inheritance"
+        self.name = name
         self.dataList = []
         self.replyData = []
         
-        self.reply = False
-                
+        
+        self.reply = False        
         #ZMQ stuff
         self.context = zmq.Context()
         self.pull = self.context.socket(zmq.PULL)
         
         log(self.name, "Generated")
         
+        
+    def setName(self, name):
+        self.name = name
         
     def connect(self, pullPort, replyPort = False):
         self.pull.connect("tcp://127.0.0.1:"+str(pullPort));
@@ -102,7 +106,7 @@ if __name__ == "__main__":
 
     print "TEST 1 - ONLY PUSH/PULL"
     #Test 1 - Only a pull socket
-    b = Worker()
+    b = Worker("Worker (Sub)")
     t = Thread(target=b.connect, args=(pushPort, False))
     t.start()
 
@@ -116,7 +120,7 @@ if __name__ == "__main__":
 
     #Test 2
     print "TEST 2 - ONLY REQ/RECV"
-    b = Worker()
+    b = Worker("Worker (Sub)")
     t = Thread(target=b.connect, args=(pushPort, reqPort))
     t.start()
     
