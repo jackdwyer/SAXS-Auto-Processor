@@ -10,6 +10,8 @@ Jack dywer
 from threading import Thread
 import zmq
 import sys
+sys.path.append("../")
+
 import time
 
 from Core.Logger import log
@@ -96,7 +98,7 @@ if __name__ == "__main__":
 
     #Test 2
     print "TEST 2 - ONLY REQ/RECV"
-    b = Worker()
+    b = WorkerStaticImage()
     t = Thread(target=b.connect, args=(pushPort, reqPort))
     t.start()
     
