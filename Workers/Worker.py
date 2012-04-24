@@ -23,6 +23,7 @@ class Worker():
         self.name = name
         self.replyData = []
         
+        #need this to be able to save data etc
         self.user = ""
         self.experiment = ""
         self.absolutePath = ""
@@ -41,6 +42,9 @@ class Worker():
         
         #DatFile writer
         self.datWriter = DatFileWriter.DatFileWriter()
+        #Averager
+        self.ave = AverageList.AverageList()
+
 
 
         self.dataList = [self.aveBuffer]        
@@ -87,11 +91,11 @@ class Worker():
         
         
     def process(self, filter):    
+        #raise Exception("You must override this method!")
+
         if (str(filter) == "testPush"):
             log(self.name, "Test Pull/Push - Completed")
-            
-        if (str(filter) == "clear"):
-            log(self.name, "CLEARED")   
+
     
             
             
