@@ -10,6 +10,8 @@ Will also be abstract/interface for what methods need to be overridden etc
 
 import zmq
 import sys
+sys.path.append("../")
+
 import time
 from threading import Thread
 

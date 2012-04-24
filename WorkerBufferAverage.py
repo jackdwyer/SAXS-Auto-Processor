@@ -3,16 +3,18 @@
 Jack dywer
 18 march 2012
 """
+import sys
+import time
+from threading import Thread
+from Worker import Worker
 
+sys.path.append("../Core")
 import zmq
 from CommonLib import AverageList
 from CommonLib import Logger
 from CommonLib import DatFile
 
-import sys
-import time
-from threading import Thread
-from Worker import Worker
+
 
 
 
