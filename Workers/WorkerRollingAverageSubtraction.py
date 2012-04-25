@@ -1,24 +1,16 @@
-#!/usr/bin/env python2.7
 """
-Jack dywer
-18 march 2012
+Jack Dwyer
 
-23 March
-- Fixing what is written out
 """
 
 from threading import Thread
 import zmq
 import sys
-sys.path.append("../")
-
 import time
 
 from Core.Logger import log
 from Core import DatFile
 from Core import DatFileWriter
-from Core import AverageList
-
 
 from Worker import Worker
 
@@ -43,24 +35,48 @@ class WorkerStaticImage(Worker):
             if (self.needBuffer):
                 self.reqBuffer.send("bufferRequest")
                 self.aveBuffer = self.reqBuffer.recv_pyobj()
-                self.imageSubtraction(self.datFile, self.aveBuffer)
                 self.needBuffer = False
-
+                self.average()
+                self.imageSubtraction()
             else:
-                self.imageSubtraction(self.datFile, self.aveBuffer)
+                self.average()
+                self.imageSubtraction()
+                
+    def average(self):
+        self.allIntensities.append(self.datFile.intensities)
+        self.allQ.append(self.datFile.q)
+        self.allErrors.append(self.datFile.errors)
+
+        #averaging out
+        self.aveIntensities = self.ave.average(self.allIntensities)
+        self.aveQ = self.ave.average(self.allQ)
+        self.aveErrors = self.ave.average(self.allErrors)
+        
+        
+
+        Logger.log(self.name, "Averaging Completed")
+        
+        self.subtract(aveBuffer)
+        
+        self.datWriter.writeFile("/home/ics/jack/beam/", self.name, { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
+        
+        
 
 
-    def imageSubtraction(self, datFile, aveBuffer):
+
+
+
+    def imageSubtraction(self):
         subtractedDatIntensities = []
         subtractedDatq = []
         subtractedErrors = []
-        for i in range(len(datFile.intensities)):
+        for i in range(len(self.dateFile.intensities)):
             #Intensities
-            value = datFile.intensities[i] - aveBuffer[i]
+            value = self.datFile.intensities[i] - self.aveBuffer[i]
             subtractedDatIntensities.insert(i, value)
             #Q Values
-            subtractedDatq.insert(i, datFile.q[i])
-            subtractedErrors.insert(i, datFile.errors[i])
+            subtractedDatq.insert(i, self.datFile.q[i])
+            subtractedErrors.insert(i, self.datFile.errors[i])
         
         
         self.subtractedDatIntensities = subtractedDatIntensities
@@ -100,7 +116,7 @@ if __name__ == "__main__":
 
     #Test 2
     print "TEST 2 - ONLY REQ/RECV"
-    b = WorkerStaticImage()
+    b = Worker()
     t = Thread(target=b.connect, args=(pushPort, reqPort))
     t.start()
     
@@ -118,7 +134,3 @@ if __name__ == "__main__":
         print "TEST OVER - Succeeded"
     else:
         print "TEST OVER - Failed with reply"
-
-
-         
-
