@@ -17,6 +17,8 @@ import time
 from Core.Logger import log
 from Core import DatFile
 from Core import DatFileWriter
+from Core import AverageList
+
 
 from Worker import Worker
 

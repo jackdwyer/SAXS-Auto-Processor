@@ -17,11 +17,16 @@ from threading import Thread
 
 from Core.Logger import log
 from Core import DatFileWriter
+from Core import AverageList
+
 
 class Worker():
     def __init__(self, name):
         self.name = name
-        self.replyData = []
+        
+        self.aveIntensities = []
+        self.aveQ = []
+        self.aveErrors = []
         
         #need this to be able to save data etc
         self.user = ""
@@ -47,7 +52,8 @@ class Worker():
 
 
 
-        self.dataList = [self.aveBuffer]        
+        self.dataList = [self.aveBuffer, self.aveIntensities, self.aveQ,  self.aveErrorsa
+                         ]        
         log(self.name, "Generated")
         
         
@@ -104,7 +110,7 @@ class Worker():
             while True:
                 req = self.reply.recv() #wait for request of buffer
                 if (req == "buffer"):
-                    self.reply.send_pyobj(self.replyData)
+                    self.reply.send_pyobj(self.aveBuffer)
                     
                 #Test    
                 if (req == "testReply"):
@@ -130,6 +136,15 @@ class Worker():
                 
         except KeyboardInterrupt:
             pass
+        
+    
+    def close(self):
+        """Close all zmq sockets"""
+        self.pull.close()
+        try:
+            self.reply.close()
+        except KeyboardInterrupt:
+            pass 
                 
          
 if __name__ == "__main__":
@@ -150,6 +165,7 @@ if __name__ == "__main__":
     testPush.send("clear")
     time.sleep(0.1)
     testPush.close()
+    b.close()
 
 
     #Test 2
@@ -167,6 +183,7 @@ if __name__ == "__main__":
         replyPass = True
 
     testReq.close()
+    b.close()
     
     if (replyPass):
         print "TEST OVER - Succeeded"
