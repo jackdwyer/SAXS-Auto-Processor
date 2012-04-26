@@ -18,10 +18,10 @@ import WorkerDB
 import epics
 import time
 import zmq
-from CommonLib import DatFile
-from CommonLib import LogLine
-from CommonLib import Logger
-from CommonLib import DirectoryCreator
+from Core import DatFile
+from Core import LogLine
+from Core import Logger
+from Core import DirectoryCreator
 import MySQLdb as mysql
 
 

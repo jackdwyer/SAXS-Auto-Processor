@@ -37,12 +37,13 @@ class Worker():
         self.needBuffer = True
         
         #Set so that a reply socket is not always started
-        self.reply = False        
+        self.reqBuffer = False        
         #ZMQ stuff
         self.context = zmq.Context()
         self.pull = self.context.socket(zmq.PULL)
+        
         #for requesting Buffer
-        self.reqBuffer = self.context.socket(zmq.REQ)
+        #self.reqBuffer = self.context.socket(zmq.REQ)
         
         
         #DatFile writer
@@ -52,8 +53,7 @@ class Worker():
 
 
 
-        self.dataList = [self.aveBuffer, self.aveIntensities, self.aveQ,  self.aveErrorsa
-                         ]        
+        self.dataList = [self.aveBuffer, self.aveIntensities, self.aveQ,  self.aveErrors]        
         log(self.name, "Generated")
         
         
@@ -65,22 +65,28 @@ class Worker():
         self.experiment = experiment
         self.absolutePath = absolutePath
         
-    
-    def connect(self, pullPort, replyPort = False):
+    #Overriden by Buffer Average
+    def connect(self, pullPort, reqPort = False):
         self.pull.connect("tcp://127.0.0.1:"+str(pullPort));
         
-        if (replyPort != False):
-            self.reply = self.context.socket(zmq.REP)
-            self.reply.bind("tcp://127.0.0.1:"+str(replyPort))
-            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort)+" - replyPort: "+str(replyPort))
+        if (reqPort != False):
+            self.reqBuffer = self.context.socket(zmq.REQ)
+            self.reqBuffer.connect("tcp://127.0.0.1:"+str(reqPort))
+            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort)+" - requestPort: "+str(reqPort))
         else:
-            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort)+" - replyPort: INACTIVE")
+            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort)+" - requestPort: INACTIVE")
         self.run()
 
 
-    def setBufferRequest(self, port):
-        self.reqBuffer.connect("tcp://127.0.0.1"+str(port))
-
+    def requestBuffer(self):
+        self.reqBuffer.send("buffer")
+        aveBuffer = reqBuffer.recv_pyobj()
+        return aveBuffer
+    
+      
+      
+      
+      
     def addToClearList(self, data):
         """Slap all lists in here to be cleared when needed"""
         self.dataList.append(data)
@@ -94,43 +100,36 @@ class Worker():
         self.needBuffer = True
         print self.dataList
         log(self.name, "Cleared")
+       
+       
         
         
     def process(self, filter):    
         #raise Exception("You must override this method!")
-
         if (str(filter) == "testPush"):
             log(self.name, "Test Pull/Push - Completed")
 
-    
-            
-            
-    def sendData(self):
-        try:
-            while True:
-                req = self.reply.recv() #wait for request of buffer
-                if (req == "buffer"):
-                    self.reply.send_pyobj(self.aveBuffer)
-                    
-                #Test    
-                if (req == "testReply"):
-                    self.reply.send_pyobj(req)
-                    log(self.name, "Test Req/Rep - Completed")
 
-        except KeyboardInterrupt:
-            pass   
+    
+    def test(self):
+        log(self.name, "Test Method Preformed") 
+        
+
+            
 
     
     
     def run(self):
-        if (self.reply != False):
-            replyThread = Thread(target=self.sendData)
-            replyThread.start()
+        #if (self.reqBuffer != False):
+            #replyThread = Thread(target=self.sendData)
+            #replyThread.start()
         try:
             while True:
                 filter = self.pull.recv()
                 if (filter == 'clear'):
                     self.clear()
+                if (str(filter) == "test"):
+                    print "TEST PUSH - WORKER"
                 else:
                     self.process(filter)
                 

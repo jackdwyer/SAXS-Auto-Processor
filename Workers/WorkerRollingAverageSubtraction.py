@@ -14,9 +14,9 @@ from Core import DatFileWriter
 
 from Worker import Worker
 
-class WorkerStaticImage(Worker):
+class WorkerRollingAverageSubtraction(Worker):
     def __init__(self):
-        Worker.__init__(self, "WorkerStaticImage")
+        Worker.__init__(self, "WorkerRollingAverageSubtraction")
         
         self.subtractedDatIntensities = []
         self.subtractedDatq = []
@@ -51,7 +51,6 @@ class WorkerStaticImage(Worker):
         self.aveIntensities = self.ave.average(self.allIntensities)
         self.aveQ = self.ave.average(self.allQ)
         self.aveErrors = self.ave.average(self.allErrors)
-        
         
 
         Logger.log(self.name, "Averaging Completed")
