@@ -17,21 +17,45 @@ from Worker import Worker
 
 class WorkerBufferAverage(Worker):
     def __init__(self):
-        Worker.__init__(self, "WorkerStaticImage")
+        Worker.__init__(self, "WorkerBufferAverage")
         self.allIntensities = []
         self.aveIntensities = []
         
         self.addToClearList(self.allIntensities)
     
+        self.reply = self.context.socket(zmq.REP)
+    
     
     def process(self, filter):
         if (filter == "buffer"):
-            datFile = buffers.recv_pyobj()
-            self.allIntensities.append(datFile.intensities)
-            #only averages out all intensities
-            self.aveBuffer = self.ave.average(self.allIntensities)
-            log(self.name, "Average Buffer Generated")
+            self.datFile = buffers.recv_pyobj()
+            self.average()
             
+    
+    def average(self):
+        self.allIntensities.append(self.datFile.intensities)
+        self.allQ.append(self.datFile.q)
+        self.allErrors.append(self.datFile.errors)
+
+        #averaging out
+        self.aveIntensities = self.ave.average(self.allIntensities)
+        self.aveQ = self.ave.average(self.allQ)
+        self.aveErrors = self.ave.average(self.allErrors)
+        
+        self.datWriter.writeFile(self.absolutePath, self.name, { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
+
+        Logger.log(self.name, "Averaging Completed")
+        
+        
+            
+    def connect(self, pullPort, replyPort):
+        self.pull.connect("tcp://127.0.0.1:"+str(pullPort))
+        self.reply.bind("tcp://127.0.0.1:"+str(replyPort))
+        log(self.name, "All Ports Connected -> pullPort: "+str(pullPort)+" - replyPort: "+str(replyPort))
+        
+        self.run()
+
+    
     
     #Need to override the run method, as we only want the buffer to clear if there is a new buffer
     def run(self):
@@ -43,11 +67,28 @@ class WorkerBufferAverage(Worker):
                 filter = self.pull.recv()
                 if (filter == 'newBuffer'):
                     self.clear()
+                if (filter == 'test'):
+                    print "WORKING"
                 else:
                     self.process(filter)
                 
         except KeyboardInterrupt:
             pass
+    
+    def sendData(self):
+        try:
+            while True:
+                req = self.reply.recv() #wait for request of buffer
+                if (req == "buffer"):
+                    self.reply.send_pyobj(self.aveBuffer)
+                    
+                #Test    
+                if (req == "testReply"):
+                    self.reply.send_pyobj(req)
+
+        except KeyboardInterrupt:
+            pass   
+
         
 
 
@@ -58,18 +99,7 @@ if __name__ == "__main__":
     context = zmq.Context()
     replyPass = False
 
-    print "TEST 1 - ONLY PUSH/PULL"
-    #Test 1 - Only a pull socket
-    b = WorkerBufferAverage()
-    t = Thread(target=b.connect, args=(pushPort, False))
-    t.start()
 
-    
-    testPush = context.socket(zmq.PUSH)
-    testPush.bind("tcp://127.0.0.1:"+str(pushPort))
-    testPush.send("clear")
-    time.sleep(0.1)
-    testPush.close()
 
 
     #Test 2

@@ -5,15 +5,25 @@ Jack dywer
 """
 #TODO: Fix up sample Typpe, eg write to another table of subtracted types.
 
+
+import sys
+import time
+from threading import Thread
+sys.path.append("../")
 import zmq
-from CommonLib import TableBuilder
-from CommonLib import Logger
-import MySQLdb as mysql
+from Core import AverageList
+from Core.Logger import log
+from Core import DatFile
+
 from Worker import Worker
 
+from Core import TableBuilder
+from Core import Logger
+import MySQLdb as mysql
 
 
-class WorkerDB(Worker):
+
+class WorkerDB():
     
     def cheese(self, host, user, password):
         

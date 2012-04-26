@@ -27,7 +27,7 @@ sys.path.append("../")
 
 from Core import LogLine
 
-absoluteLocation = "/home/jack/beamlinetesting/"
+absoluteLocation = "/home/dwyerj/beamlinetesting/"
 
 #Create User Directory:
 def ensure_dir(f):
