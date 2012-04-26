@@ -22,7 +22,10 @@ import epics
 import glob
 import shutil
 import os
-from LogLine import LogLine
+import sys
+sys.path.append("../")
+
+from Core import LogLine
 
 absoluteLocation = "/home/jack/beamlinetesting/"
 
@@ -40,14 +43,14 @@ def makeLog(location):
 def main(user):
     dir = absoluteLocation+str(user)+"/"
     ensure_dir(dir)
-    makeLog(dir)
     epics.caput("13SIM1:cam1:NumImages.VAL", 0, wait=True)
     
 
 def run(user):
       
     #setup log generation 
-    logFileName = "../data/livelogfile.log" #actual real log file prevous generated in another experiment
+    makeLog(dir)
+    logFileName = "../data/livelogfile.log" #actual real log file previous generated in another experiment
     log = open(logFileName)
     line = log.readline()
     
@@ -56,14 +59,14 @@ def run(user):
     
     
     #list files in directory
-    datFiles = glob.glob('/home/dwyerj/legitData/NK_dat/*.dat')
+    datFiles = glob.glob('../data/dat/*.dat')
     
     x = 0 #index for datFileList
     time.sleep(2)
     while True:
         lineData = LogLine(line)
         fileLoc = lineData.data["ImageLocation"]
-        liveLogFile = open(absoluteLocation+user+"/livelogfile.log", "a")
+        liveLogFile = open(str(absoluteLocation)+str(user)+"/livelogfile.log", "a")
         epics.caput("13SIM1:cam1:NumImages.VAL", 0, wait=True)
         print epics.caget("13SIM1:cam1:NumImages_RBV")
         #get just filename
