@@ -30,8 +30,6 @@ class Engine2():
     def __init__(self, configFile):
         self.name = "Engine"
         self.context = zmq.Context()
-
-        
         
         #Get all configuration details to pass off to workers
         try:

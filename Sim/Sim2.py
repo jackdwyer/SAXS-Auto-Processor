@@ -22,7 +22,12 @@ import epics
 import glob
 import shutil
 import os
-from LogLine import LogLine
+import sys
+sys.path.append("../")
+
+from Core import LogLine
+
+absoluteLocation = "/home/jack/beamlinetesting/"
 
 #Create User Directory:
 def ensure_dir(f):
@@ -30,22 +35,22 @@ def ensure_dir(f):
     if not os.path.exists(d):
         os.makedirs(d)
 
-def makeLog(user):
+def makeLog(location):
     #make the log file
-    liveLogFile = open("/home/dwyerj/sim/"+user+"/livelogfile.log", "w")
+    liveLogFile = open(location+"raw_dat/livelogfile.log", "w")
     liveLogFile.close()
 
 def main(user):
-    dir = "/home/dwyerj/sim/"+user+"/"
+    dir = absoluteLocation+str(user)+"/"
     ensure_dir(dir)
-    makeLog(user)
     epics.caput("13SIM1:cam1:NumImages.VAL", 0, wait=True)
     
 
 def run(user):
       
     #setup log generation 
-    logFileName = "data/livelogfile.log" #actual real log file prevous generated in another experiment
+    makeLog(dir)
+    logFileName = "../data/livelogfile.log" #actual real log file previous generated in another experiment
     log = open(logFileName)
     line = log.readline()
     
@@ -54,15 +59,14 @@ def run(user):
     
     
     #list files in directory
-    datFiles = glob.glob('/home/dwyerj/legitData/NK_dat/*.dat')
+    datFiles = glob.glob('../data/dat/*.dat')
     
     x = 0 #index for datFileList
     time.sleep(2)
     while True:
         lineData = LogLine(line)
         fileLoc = lineData.data["ImageLocation"]
-        print file
-        liveLogFile = open("/home/dwyerj/sim/"+user+"/livelogfile.log", "a")
+        liveLogFile = open(str(absoluteLocation)+str(user)+"/livelogfile.log", "a")
         epics.caput("13SIM1:cam1:NumImages.VAL", 0, wait=True)
         print epics.caget("13SIM1:cam1:NumImages_RBV")
         #get just filename
@@ -71,9 +75,9 @@ def run(user):
         fileName = fileName[-1]
         fileName = fileName.split('.')
         fileName = fileName[0] + ".dat"
-        actualFileLoc = '/home/dwyerj/legitData/NK_dat/'+fileName
+        actualFileLoc = '../data/dat/'+fileName
 
-        location = '/home/dwyerj/sim/'+user+'/'+fileName #new location of datfiles
+        location = absoluateLocation + "raw_dat/"+fileName
         shutil.copy(actualFileLoc, location)
         print "Dat File: " + fileName + " Generated"
         
