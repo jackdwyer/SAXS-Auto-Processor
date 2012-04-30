@@ -27,6 +27,9 @@ class WorkerBufferAverage(Worker):
     
     
     def process(self, filter):
+        if (filter == "test"):
+            log(self.name, "RECIEVED - 'test' message")
+            
         if (filter == "buffer"):
             self.datFile = buffers.recv_pyobj()
             self.average()
@@ -47,7 +50,7 @@ class WorkerBufferAverage(Worker):
         Logger.log(self.name, "Averaging Completed")
         
         
-            
+    #Overidden from the connect constructor in worker
     def connect(self, pullPort, replyPort):
         self.pull.connect("tcp://127.0.0.1:"+str(pullPort))
         self.reply.bind("tcp://127.0.0.1:"+str(replyPort))
@@ -65,10 +68,8 @@ class WorkerBufferAverage(Worker):
         try:
             while True:
                 filter = self.pull.recv()
-                if (filter == 'newBuffer'):
+                if (filter == 'clear'): #Need to make it check if the next image is a buffer, or if its a request.
                     self.clear()
-                if (filter == 'test'):
-                    print "WORKING"
                 else:
                     self.process(filter)
                 

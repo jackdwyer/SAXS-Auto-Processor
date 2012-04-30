@@ -118,7 +118,7 @@ class Worker():
             
 
     
-    
+    #Overridden in WorkerBufferAverage
     def run(self):
         #if (self.reqBuffer != False):
             #replyThread = Thread(target=self.sendData)
@@ -128,8 +128,6 @@ class Worker():
                 filter = self.pull.recv()
                 if (filter == 'clear'):
                     self.clear()
-                if (str(filter) == "test"):
-                    print "TEST PUSH - WORKER"
                 else:
                     self.process(filter)
                 

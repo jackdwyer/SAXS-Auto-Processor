@@ -28,6 +28,10 @@ class WorkerRollingAverageSubtraction(Worker):
         self.addToClearList(self.subtractedErrors)
 
     def process(self, filter):
+        if (filter == "test"):
+            log(self.name, "RECIEVED - 'test' message")
+        
+        
         if (filter == "image"):
             self.datFile = self.pull.recv_pyobj()
             log(self.name, "Static Image Received")

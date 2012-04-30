@@ -44,34 +44,42 @@ class Engine3():
         
         
         #Default workers
-        self.BufferAverage = WorkerBufferAverage.WorkerBufferAverage()
-        self.StaticImage = WorkerStaticImage.WorkerStaticImage()
-        #self.RollingAverageSubtraction = WorkerRollingAverageSubtraction.WorkerRollingAverageSubtraction()
+        self.bufferAverage = WorkerBufferAverage.WorkerBufferAverage()
+        self.staticImage = WorkerStaticImage.WorkerStaticImage()
+        self.rollingAverageSubtraction = WorkerRollingAverageSubtraction.WorkerRollingAverageSubtraction()
         #self.DB = WorkerDB.WorkerDB()
         
         
         
                
-        bufferThread = Thread(target=self.BufferAverage.connect, args=(5000, 5001))
-        bufferThread.start()
+
+        
+        self.bufferRequest = self.context.socket(zmq.REQ)
+        self.bufferRequest.connect("tcp://127.0.0.1:5000")
+        log(self.name, "Connected -> BufferRequest")
 
         self.bufferPush = self.context.socket(zmq.PUSH)
-        self.bufferPush.bind("tcp://127.0.0.1:5000")
+        self.bufferPush.bind("tcp://127.0.0.1:5001")
         log(self.name, "Binded -> BufferPush")
 
         self.staticPush = self.context.socket(zmq.PUSH)
         self.staticPush.bind("tcp://127.0.0.1:5002")
         log(self.name, "Binded -> StaticPush")
-
-        self.bufferRequest = self.context.socket(zmq.REQ)
-        self.bufferRequest.connect("tcp://127.0.0.1:5001")
-        log(self.name, "Connected -> BufferRequest")
-
         
+        self.rollingPush = self.context.socket(zmq.PUSH)
+        self.rollingPush.bind("tcp://127.0.0.1:5003")
+        log(self.name, "Binded -> RollingPush")
+
+        bufferThread = Thread(target=self.bufferAverage.connect, args=(5001, 5000))
+        bufferThread.start()
         
-        staticImageThread = Thread(target=self.StaticImage.connect, args=(5002, 5001))
+        staticImageThread = Thread(target=self.staticImage.connect, args=(5002, 5000))
         staticImageThread.start()
-        #rollingAverageThread = Thread(target=self.RollingAverageSubtraction.connect, args=(4502, 4522))
+        
+        rollingAverageThread = Thread(target=self.rollingAverageSubtraction.connect, args=(5003, 5000))
+        rollingAverageThread.start()
+
+
 
         time.sleep(0.1)
         #staticImageThread.start()
@@ -87,22 +95,17 @@ class Engine3():
         #self.StaticImage.close()
         #self.RollingAverageSubtraction.close()
         
-    def testAverage(self):
-        self.bufferPush.send("test")
-        log(self.name, "TEST AVERAGE completed")
-        self.staticPush.send("testSTATIC")
-
         
-    def getAverage(self):
-        self.bufferRequest.send("testReply")
-        a = self.bufferRequest.recv_pyobj()
-        print a
+        
+    def testPush(self):
+        self.staticPush.send("test")
+        self.bufferPush.send("test")
+        self.rollingPush.send("test")
+
         
         
 
 
 if __name__ == "__main__":
     engine = Engine3("config.yaml")
-    engine.testAverage()
-    engine.getAverage()
-
+    engine.testPush();
