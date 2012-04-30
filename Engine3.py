@@ -41,18 +41,11 @@ class Engine3():
         #ZeroMQ setup stuff
         self.context = zmq.Context()
       
-        
-        
         #Default workers
         self.bufferAverage = WorkerBufferAverage.WorkerBufferAverage()
         self.staticImage = WorkerStaticImage.WorkerStaticImage()
         self.rollingAverageSubtraction = WorkerRollingAverageSubtraction.WorkerRollingAverageSubtraction()
         #self.DB = WorkerDB.WorkerDB()
-        
-        
-        
-               
-
         
         self.bufferRequest = self.context.socket(zmq.REQ)
         self.bufferRequest.connect("tcp://127.0.0.1:5000")
@@ -70,27 +63,27 @@ class Engine3():
         self.rollingPush.bind("tcp://127.0.0.1:5003")
         log(self.name, "Binded -> RollingPush")
 
+        time.sleep(0.1)
+
         bufferThread = Thread(target=self.bufferAverage.connect, args=(5001, 5000))
         bufferThread.start()
         
-        staticImageThread = Thread(target=self.staticImage.connect, args=(5002, 5000))
+        staticImageThread = Thread(target=self.staticImage.connect, args=(5002,))
         staticImageThread.start()
         
-        rollingAverageThread = Thread(target=self.rollingAverageSubtraction.connect, args=(5003, 5000))
+        rollingAverageThread = Thread(target=self.rollingAverageSubtraction.connect, args=(5003,))
         rollingAverageThread.start()
 
-
-
         time.sleep(0.1)
+
+
         #staticImageThread.start()
         #rollingAverageThread.start()
-
         
         #self.BufferAverage.connect(5000)
         #self.StaticImage.connect(5001, 5600)
         #self.RollingAverageSubtraction(5802, 4555)
-        
-        
+           
         #self.BufferAverage.close()
         #self.StaticImage.close()
         #self.RollingAverageSubtraction.close()
@@ -103,9 +96,17 @@ class Engine3():
         self.rollingPush.send("test")
 
         
+    def testRequest(self):
+        self.bufferRequest.send("test")
+        test = self.bufferRequest.recv_pyobj()
+        log(self.name, "RESPONSE RECIEVED -> " + test)
+
+
+        
         
 
 
 if __name__ == "__main__":
     engine = Engine3("config.yaml")
-    engine.testPush();
+    engine.testPush()
+    engine.testRequest()
