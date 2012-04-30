@@ -118,7 +118,7 @@ class Worker():
             
 
     
-    
+    #Overridden in WorkerBufferAverage
     def run(self):
         #if (self.reqBuffer != False):
             #replyThread = Thread(target=self.sendData)
