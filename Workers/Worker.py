@@ -128,8 +128,6 @@ class Worker():
                 filter = self.pull.recv()
                 if (filter == 'clear'):
                     self.clear()
-                if (str(filter) == "test"):
-                    print "TEST PUSH - WORKER"
                 else:
                     self.process(filter)
                 

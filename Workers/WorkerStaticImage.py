@@ -36,13 +36,8 @@ class WorkerStaticImage(Worker):
         self.addToClearList(self.subtractedErrors)
 
     def process(self, filter):
-<<<<<<< HEAD
-        if (filter == "testSTATIC"):
-            print "process worker staic image"
-=======
         if (filter == "test"):
             log(self.name, "RECIEVED - 'test' message")
->>>>>>> work
         
         if (filter == "image"):
             self.datFile = self.pull.recv_pyobj()

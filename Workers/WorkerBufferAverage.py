@@ -24,13 +24,10 @@ class WorkerBufferAverage(Worker):
         self.aveIntensities = []
         
         self.addToClearList(self.allIntensities)
-    
-<<<<<<< HEAD
         self.reply = self.context.socket(zmq.REP)
-    
-=======
+
         #self.sendDataThread = Thread(target=self.sendData())
->>>>>>> work
+
     
     def process(self, filter):
         if (filter == "test"):
@@ -40,7 +37,6 @@ class WorkerBufferAverage(Worker):
             self.datFile = buffers.recv_pyobj()
             self.average()
             
-<<<<<<< HEAD
     
     def average(self):
         self.allIntensities.append(self.datFile.intensities)
@@ -56,11 +52,10 @@ class WorkerBufferAverage(Worker):
 
         Logger.log(self.name, "Averaging Completed")
         
-        
-=======
+
         if (filter == "reqBuffer"):
             log(self.name, "Requested Buffer")
->>>>>>> work
+
             
     def connect(self, pullPort, replyPort):
         self.pull.connect("tcp://127.0.0.1:"+str(pullPort))
@@ -107,28 +102,14 @@ class WorkerBufferAverage(Worker):
                 if (filter == 'clear'): #Need to make it check if the next image is a buffer, or if its a request.
                     self.clear()
                 if (filter == 'test'):
-                    print "WORKING"
+                    log(self.name, "RECIEVED - 'test' message")
                 else:
                     self.process(filter)
                 
         except KeyboardInterrupt:
             pass
     
-<<<<<<< HEAD
-    def sendData(self):
-        try:
-            while True:
-                req = self.reply.recv() #wait for request of buffer
-                if (req == "buffer"):
-                    self.reply.send_pyobj(self.aveBuffer)
-                    
-                #Test    
-                if (req == "testReply"):
-                    self.reply.send_pyobj(req)
 
-=======
-    
-    
     
     def sendData(self):
         reply = self.context.socket(zmq.REP)
@@ -142,7 +123,7 @@ class WorkerBufferAverage(Worker):
                     log(self.name, "BufferRequested")
                 
         
->>>>>>> work
+
         except KeyboardInterrupt:
             pass   
 
