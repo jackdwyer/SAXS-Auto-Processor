@@ -10,8 +10,7 @@ def getUser(path):
 
 def userChange(char_value, **kw):
     user = getUser(char_value) #get new user
-    print "NEW USER - " + user
-
+    return user
 
 def monitorUser():
     epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=userChange)
@@ -23,5 +22,5 @@ if __name__ == "__main__":
     epics.caput("13SIM1:TIFF1:FilePath", "/jack/natha" + bytearray("\0x00"*256))
     time.sleep(0.2)
     epics.caput("13SIM1:TIFF1:FilePath", "/jack/check/that/CHECK" + bytearray("\0x00"*256))
-
+    
 
