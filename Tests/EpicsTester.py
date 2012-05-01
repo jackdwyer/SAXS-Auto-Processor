@@ -13,11 +13,15 @@ def userChange(char_value, **kw):
     print "NEW USER - " + user
 
 
-epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=userChange)
+def monitorUser():
+    epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=userChange)
 
-print epics.caget("13SIM1:TIFF1:FilePath_RBV")
 
-epics.caput("13SIM1:TIFF1:FilePath", "/jack/natha" + bytearray("\0x00"*256))
+if __name__ == "__main__":
+    print "Epics User Change Over Testing"
+    monitorUser()
+    epics.caput("13SIM1:TIFF1:FilePath", "/jack/natha" + bytearray("\0x00"*256))
+    time.sleep(0.2)
+    epics.caput("13SIM1:TIFF1:FilePath", "/jack/check/that/CHECK" + bytearray("\0x00"*256))
 
-time.sleep(0.2)
 
