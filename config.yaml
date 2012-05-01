@@ -9,3 +9,5 @@ database :
 workers : ["WorkerBufferAverage", "WorkerStaticImage", "WorkerRollingAverageSubtraction", "WorkerDB"] 
 
 location : "/home/jack/beamlinetesting/"
+
+UserChangePB : "13SIM1:TIFF1:FilePath_RBV"
