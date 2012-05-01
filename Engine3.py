@@ -88,8 +88,23 @@ class Engine3():
         #self.StaticImage.connect(5001, 5600)
         #self.RollingAverageSubtraction(5802, 4555)
 
+
+
+
+
+
+
+    def run(self):
+        epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.userChange)
+
+    def userChanger(self):
+        print "USER CHANGE"
+
         
-        
+     
+     
+     
+    #For Testing    
     def testPush(self):
         self.staticPush.send("test")
         self.bufferPush.send("test")
