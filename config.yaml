@@ -10,4 +10,4 @@ workers : ["WorkerBufferAverage", "WorkerStaticImage", "WorkerRollingAverageSubt
 
 location : "/home/jack/beamlinetesting/"
 
-UserChangePB : "13SIM1:TIFF1:FilePath_RBV"
+UserChangePV : "13SIM1:TIFF1:FilePath_RBV"
