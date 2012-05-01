@@ -94,15 +94,22 @@ class Engine3():
 
 
 
-    def run(self):
-        epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.userChange)
 
-    def userChanger(self):
-        print "USER CHANGE"
+    def getUser(path):
+        """Splits file path, and returns only user"""
+        user = path.split("/")
+        user = filter(None, user) #needed to remove the none characters from the array
+        return user[-1] #currently the user_epn is the last object in the list
+    
+    def userChange(char_value, **kw):
+        user = getUser(char_value) #get new user
+        log(self.name, "New User -> " + str(user))
 
-        
-     
-     
+
+    def monitorUserChange(self):
+        epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=userChange)
+
+
      
     #For Testing    
     def testPush(self):
@@ -115,9 +122,6 @@ class Engine3():
         self.bufferRequest.send("test")
         test = self.bufferRequest.recv_pyobj()
         log(self.name, "RESPONSE RECIEVED -> " + test)
-
-        
-        
 
 
 if __name__ == "__main__":
