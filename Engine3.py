@@ -36,8 +36,6 @@ class Engine3():
     def __init__(self, configFile):
         self.name = "Engine"
         log(self.name, "Engine Started")
-        
-
         #ZeroMQ setup stuff
         self.context = zmq.Context()
       
@@ -47,6 +45,7 @@ class Engine3():
         self.rollingAverageSubtraction = WorkerRollingAverageSubtraction.WorkerRollingAverageSubtraction()
         #self.DB = WorkerDB.WorkerDB()
         
+        #Connect Up all Workers, and have them ready
         self.bufferRequest = self.context.socket(zmq.REQ)
         self.bufferRequest.connect("tcp://127.0.0.1:5000")
         log(self.name, "Connected -> BufferRequest")
@@ -59,34 +58,24 @@ class Engine3():
         self.staticPush.bind("tcp://127.0.0.1:5002")
         log(self.name, "Binded -> StaticPush")
 
-
         time.sleep(0.1)
 
-        
         self.rollingPush = self.context.socket(zmq.PUSH)
         self.rollingPush.bind("tcp://127.0.0.1:5003")
         log(self.name, "Binded -> RollingPush")
 
         time.sleep(0.1)
-
+        
         bufferThread = Thread(target=self.bufferAverage.connect, args=(5001, 5000))
         bufferThread.start()
-        
         staticImageThread = Thread(target=self.staticImage.connect, args=(5002,))
         staticImageThread.start()
-        
         rollingAverageThread = Thread(target=self.rollingAverageSubtraction.connect, args=(5003,))
         rollingAverageThread.start()
 
         time.sleep(0.1)
 
-
-        #staticImageThread.start()
-        #rollingAverageThread.start()
-
-        #self.BufferAverage.connect(5000)
-        #self.StaticImage.connect(5001, 5600)
-        #self.RollingAverageSubtraction(5802, 4555)
+        log(self.name, "All Workers ready")
 
 
 
@@ -95,19 +84,29 @@ class Engine3():
 
 
 
-    def getUser(path):
+
+
+
+    def getUser(self, path):
         """Splits file path, and returns only user"""
         user = path.split("/")
         user = filter(None, user) #needed to remove the none characters from the array
         return user[-1] #currently the user_epn is the last object in the list
     
-    def userChange(char_value, **kw):
-        user = getUser(char_value) #get new user
+    def userChange(self, char_value, **kw):
+        user = self.getUser(char_value) #get new user
         log(self.name, "New User -> " + str(user))
 
 
-    def monitorUserChange(self):
-        epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=userChange)
+
+
+
+
+    #EPICS MONITORING
+
+    def watchForChangeOver(self):
+        epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.userChange)
+
 
 
      
@@ -128,4 +127,5 @@ if __name__ == "__main__":
     engine = Engine3("config.yaml")
     engine.testPush()
     engine.testRequest()
+    engine.watchForChangeOver()
 
