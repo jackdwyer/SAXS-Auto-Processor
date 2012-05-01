@@ -126,6 +126,13 @@ class Worker():
         try:
             while True:
                 filter = self.pull.recv()
+                if (str(filter) == "updateUser"):
+                    log(self.name, "Recieved Command - updateUser")
+                    
+                    self.user = self.pull.recv()
+                    
+                    log(self.name, "New User -> " + self.user)
+                
                 if (filter == 'clear'):
                     self.clear()
                 else:

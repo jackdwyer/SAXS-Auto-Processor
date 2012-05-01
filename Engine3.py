@@ -38,6 +38,9 @@ class Engine3():
         log(self.name, "Engine Started")
         #ZeroMQ setup stuff
         self.context = zmq.Context()
+        
+        #Currne
+        self.user = ""
       
         #Default workers
         self.bufferAverage = WorkerBufferAverage.WorkerBufferAverage()
@@ -94,18 +97,25 @@ class Engine3():
         return user[-1] #currently the user_epn is the last object in the list
     
     def userChange(self, char_value, **kw):
-        user = self.getUser(char_value) #get new user
-        log(self.name, "New User -> " + str(user))
+        self.user = self.getUser(char_value) #get new user
+        log(self.name, "User Changed -> " + str(self.user))
+        self.bufferPush.send("updateUser")
+        self.bufferPush.send(self.user)
 
 
+        
+        self.staticPush.send("updateUser")
+        self.staticPush.send(self.user)
 
+        self.rollingPush.send("updateUser")
+        self.rollingPush.send(self.user)
 
 
 
     #EPICS MONITORING
 
     def watchForChangeOver(self):
-        epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.userChange)
+        epics.camonitor("13SIM1:la:FilePath_RBV", callback=self.userChange)
 
 
 
