@@ -1,0 +1,9 @@
+absoluteLocation : "/"
+
+#Relative location of datfiles, should be data/dat/
+datFileLocation : "data/dat/"
+logFile : "data/livelog.log" 
+
+userChangePV : "13SIM1:TIFF1:FilePath" 
+imageChangePV : "13SIM1:cam1:NumImages_VALUE"
+
