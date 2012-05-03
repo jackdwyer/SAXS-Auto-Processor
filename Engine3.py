@@ -115,8 +115,8 @@ class Engine3():
     #EPICS MONITORING
 
     def watchForChangeOver(self):
-        epics.camonitor("13SIM1:la:FilePath_RBV", callback=self.userChange)
-
+        #epics.camonitor("13SIM1:la:FilePath_RBV", callback=self.userChange)
+        log(self.name, "EPICS user change over monitor")
 
 
      
@@ -137,5 +137,5 @@ if __name__ == "__main__":
     engine = Engine3("config.yaml")
     engine.testPush()
     engine.testRequest()
-    engine.watchForChangeOver()
+    #engine.watchForChangeOver()
 
