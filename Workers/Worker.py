@@ -94,9 +94,8 @@ class Worker():
         
         
     def process(self, filter):    
-        #raise Exception("You must override this method!")
-        if (str(filter) == "testPush"):
-            log(self.name, "Test Pull/Push - Completed")
+        raise Exception("You must override this method!")
+  
 
 
     
@@ -123,6 +122,12 @@ class Worker():
                 if (str(filter) == "getUser"):
                     log(self.name, "Current User : " + self.user)
                 
+                if (str(filter) == "testPush"):
+                    log(self.name, "Test Pull/Push - Completed")
+                
+                if (str(filter) == "exit"):
+                    self.close()
+                
                 if (filter == 'clear'):
                     self.clear()
                 else:
@@ -132,9 +137,12 @@ class Worker():
             pass
         
     
+    #OVERRIDE IN BUFFER
     def close(self):
+        log(self.name, "Exiting")
         """Close all zmq sockets"""
         self.pull.close()
+        sys.exit()
                 
          
 if __name__ == "__main__":
