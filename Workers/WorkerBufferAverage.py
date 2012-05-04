@@ -34,7 +34,7 @@ class WorkerBufferAverage(Worker):
             log(self.name, "RECIEVED - 'test' message")
             
         if (filter == "buffer"):
-            self.datFile = buffers.recv_pyobj()
+            self.datFile = self.pull.recv_pyobj()
             self.average()
             
     
@@ -50,7 +50,7 @@ class WorkerBufferAverage(Worker):
         
         self.datWriter.writeFile(self.absolutePath, self.name, { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
 
-        Logger.log(self.name, "Averaging Completed")
+        log(self.name, "Averaging Completed")
         
 
         if (filter == "reqBuffer"):
@@ -62,40 +62,19 @@ class WorkerBufferAverage(Worker):
         self.reply.bind("tcp://127.0.0.1:"+str(replyPort))
         log(self.name, "All Ports Connected -> pullPort: "+str(pullPort)+" - replyPort: "+str(replyPort))
         
+        replyThread = Thread(target=self.sendData)
+        replyThread.start()
+
+        
         self.run()
 
-    
-    
-    def average(self):
-        self.allIntensities.append(self.datFile.intensities)
-        self.allQ.append(self.datFile.q)
-        self.allErrors.append(self.datFile.errors)
 
-        #averaging out
-        self.aveIntensities = self.ave.average(self.allIntensities)
-        self.aveQ = self.ave.average(self.allQ)
-        self.aveErrors = self.ave.average(self.allErrors)
-        
-        self.datWriter.writeFile(self.absolutePath, self.name, { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
-
-        Logger.log(self.name, "Averaging Completed")
-        
-        
-    #Overidden from the connect constructor in worker
-    def connect(self, pullPort, replyPort):
-        self.pull.connect("tcp://127.0.0.1:"+str(pullPort))
-        
-        log(self.name, "All Ports Connected -> pullPort: "+str(pullPort)+" - replyPort: "+str(replyPort))
-        
-        #self.sendDataThread.start()
-        self.run()
 
     
     
     #Need to override the run method, as we only want the buffer to clear if there is a new buffer
     def run(self):
-        replyThread = Thread(target=self.sendData)
-        replyThread.start()
+
         try:
             while True:
                 filter = self.pull.recv()
@@ -110,15 +89,12 @@ class WorkerBufferAverage(Worker):
             pass
     
 
-    
     def sendData(self):
-        reply = self.context.socket(zmq.REP)
-        reply.bind("tcp://127.0.0.1:5000")
         try:
             while True:
-                filter = reply.recv() #wait for request of buffer
+                filter = self.reply.recv() #wait for request of buffer
                 if (filter == 'test'):
-                    reply.send_pyobj("REQUESTED DATA")
+                    self.reply.send_pyobj("REQUESTED DATA")
                 if (filter == "reqBuffer"):
                     log(self.name, "BufferRequested")
                 
@@ -126,7 +102,6 @@ class WorkerBufferAverage(Worker):
 
         except KeyboardInterrupt:
             pass   
-
         
 
 

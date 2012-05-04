@@ -89,20 +89,28 @@ class Engine3():
         time.sleep(0.1)
 
         log(self.name, "All Workers ready")
+        self.watchForChangeOver()
+        self.watchForImage()
+        log(self.name, "All Workers ready")
+
         
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        #Start this thread last
         cliThread = Thread(target=self.cli())
         cliThread.isDaemon()
         cliThread.start()
-
-
-
-
-
-
-
-
-
-
+        
 
 
     def getUser(self, path):
@@ -111,7 +119,7 @@ class Engine3():
         user = filter(None, user) #needed to remove the none characters from the array
         return user[-1] #currently the user_epn is the last object in the list
     
-    def userChange(self, char_value = False, **kw):
+    def setUser(self, char_value = False, **kw):
         if not (char_value): #needed for cli, though my kill engine, if user monitor doesnt return a valid value
             char_value = raw_input("Enter User: ")
         
@@ -132,19 +140,18 @@ class Engine3():
     #EPICS MONITORING
 
     def watchForChangeOver(self):
-        #epics.camonitor("13SIM1:la:FilePath_RBV", callback=self.userChange)
-        log(self.name, "Waiting for USERCHANGE OVER")
+        epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.setUser)
 
+    def watchForImage(self):
+        epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
+        
+    def imageTaken(self):
+        log(self.name, "image taken")
 
      
     #For Testing    
     def testPush(self):
-        try:
-            self.staticPush.send("test")
-            self.bufferPush.send("test")
-            self.rollingPush.send("test")
-        except:
-            print "neg"
+        self.sendCommand("test")
 
         
     def testRequest(self):
@@ -154,7 +161,10 @@ class Engine3():
         
     def close(self):
         self.staticImage.close()
-
+        
+    def returnUser(self):
+        log(self.name, "Current User : " + self.user)
+        self.sendCommand("getUser")
     
     
     def cli(self):
@@ -171,7 +181,7 @@ class Engine3():
     def help(self):
         print "---- Test Commands ----"
         print "testPush - Test zmq push function"
-        print "testRequest - Test zmq request funciton"
+        print "testRequest - Test zmq request function"
         
         print "---- Usage Commands ----"
         print "userChange(user)"
@@ -179,8 +189,16 @@ class Engine3():
     def exit(self):
         print threading.activeCount()
         print "exiting..."
-        sys.exit()
+        sys.exit(self)
         print threading.activeCount()
+        
+        
+    #########
+    # Helper functions
+    def sendCommand(self, command):
+        self.staticPush.send(command)
+        self.bufferPush.send(command)
+        self.rollingPush.send(command)
 
         
 

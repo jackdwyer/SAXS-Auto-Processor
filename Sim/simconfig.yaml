@@ -1,4 +1,4 @@
-absoluteLocation : "/"
+absoluteLocation : "/home/dwyerj/sim/"
 
 #Relative location of datfiles, should be data/dat/
 datFileLocation : "data/dat/"
