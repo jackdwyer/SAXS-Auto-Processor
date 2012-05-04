@@ -7,3 +7,5 @@
 
 data/
 .p*
+*.pyc
+Worker/*.pyc
