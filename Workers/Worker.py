@@ -179,7 +179,7 @@ if __name__ == "__main__":
     else:
         print "TEST OVER - Failed with reply"
         
-
+    sys.exit()
     
     
     
