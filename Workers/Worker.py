@@ -66,22 +66,11 @@ class Worker():
         self.absolutePath = absolutePath
         
     #Overriden by Buffer Average
-    def connect(self, pullPort, reqPort = False):
+    def connect(self, pullPort):
         self.pull.connect("tcp://127.0.0.1:"+str(pullPort));
-        
-        if (reqPort != False):
-            self.reqBuffer = self.context.socket(zmq.REQ)
-            self.reqBuffer.connect("tcp://127.0.0.1:"+str(reqPort))
-            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort)+" - requestPort: "+str(reqPort))
-        else:
-            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort)+" - requestPort: INACTIVE")
+        log(self.name, "All Ports Connected -> pullPort: "+str(pullPort))
         self.run()
 
-
-    def requestBuffer(self):
-        self.reqBuffer.send("buffer")
-        aveBuffer = reqBuffer.recv_pyobj()
-        return aveBuffer
     
       
       
@@ -145,10 +134,6 @@ class Worker():
     def close(self):
         """Close all zmq sockets"""
         self.pull.close()
-        try:
-            self.reply.close()
-        except KeyboardInterrupt:
-            pass 
                 
          
 if __name__ == "__main__":
@@ -160,7 +145,7 @@ if __name__ == "__main__":
     print "TEST 1 - ONLY PUSH/PULL"
     #Test 1 - Only a pull socket
     b = Worker("Worker (Sub)")
-    t = Thread(target=b.connect, args=(pushPort, False))
+    t = Thread(target=b.connect, args=(pushPort,))
     t.start()
 
     
@@ -174,8 +159,8 @@ if __name__ == "__main__":
 
     #Test 2
     print "TEST 2 - ONLY REQ/RECV"
-    b = Worker("Worker (Sub)")
-    t = Thread(target=b.connect, args=(pushPort, reqPort))
+    b = Worker("Worker")
+    t = Thread(target=b.connect, args=(pushPort,))
     t.start()
     
     testReq = context.socket(zmq.REQ)
@@ -193,6 +178,7 @@ if __name__ == "__main__":
         print "TEST OVER - Succeeded"
     else:
         print "TEST OVER - Failed with reply"
+        
 
     
     
