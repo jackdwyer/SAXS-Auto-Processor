@@ -159,8 +159,7 @@ class Engine3():
         test = self.bufferRequest.recv_pyobj()
         log(self.name, "RESPONSE RECIEVED -> " + test)
         
-    def close(self):
-        self.staticImage.close()
+
         
     def returnUser(self):
         log(self.name, "Current User : " + self.user)
@@ -186,10 +185,12 @@ class Engine3():
         print "---- Usage Commands ----"
         print "userChange(user)"
         
-    def exit(self):
+    def close(self):
+        print threading.activeCount()
+        self.sendCommand("exit")
         print threading.activeCount()
         print "exiting..."
-        sys.exit(self)
+        sys.exit()
         print threading.activeCount()
         
         

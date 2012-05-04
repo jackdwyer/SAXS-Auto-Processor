@@ -65,30 +65,12 @@ class WorkerBufferAverage(Worker):
         replyThread = Thread(target=self.sendData)
         replyThread.start()
 
-        
         self.run()
 
 
 
     
     
-    #Need to override the run method, as we only want the buffer to clear if there is a new buffer
-    def run(self):
-
-        try:
-            while True:
-                filter = self.pull.recv()
-                if (filter == 'clear'): #Need to make it check if the next image is a buffer, or if its a request.
-                    self.clear()
-                if (filter == 'test'):
-                    log(self.name, "RECIEVED - 'test' message")
-                else:
-                    self.process(filter)
-                
-        except KeyboardInterrupt:
-            pass
-    
-
     def sendData(self):
         try:
             while True:
@@ -102,6 +84,13 @@ class WorkerBufferAverage(Worker):
 
         except KeyboardInterrupt:
             pass   
+        
+        #OVERRIDE IN BUFFER
+    def exit(self):
+        """Close all zmq sockets"""
+        self.pull.close()
+        self.reply.close()
+        sys.exit()
         
 
 
