@@ -13,6 +13,7 @@ import yaml
 import epics
 import time
 import zmq
+import sys
 from Core import DatFile
 from Core import LogLine
 from Core.Logger import log
@@ -20,6 +21,7 @@ from Core import DirectoryCreator
 import MySQLdb as mysql
 
 from threading import Thread
+import threading
 
 from Workers import WorkerBufferAverage
 from Workers import WorkerDB
@@ -70,10 +72,18 @@ class Engine3():
         time.sleep(0.1)
         
         bufferThread = Thread(target=self.bufferAverage.connect, args=(5001, 5000))
+        bufferThread.isDaemon()
         bufferThread.start()
+
+            
+            
         staticImageThread = Thread(target=self.staticImage.connect, args=(5002,))
+        staticImageThread.isDaemon()
         staticImageThread.start()
+        
         rollingAverageThread = Thread(target=self.rollingAverageSubtraction.connect, args=(5003,))
+        rollingAverageThread.isDaemon()
+
         rollingAverageThread.start()
 
         time.sleep(0.1)
@@ -81,6 +91,7 @@ class Engine3():
         log(self.name, "All Workers ready")
         
         cliThread = Thread(target=self.cli())
+        cliThread.isDaemon()
         cliThread.start()
 
 
@@ -100,13 +111,15 @@ class Engine3():
         user = filter(None, user) #needed to remove the none characters from the array
         return user[-1] #currently the user_epn is the last object in the list
     
-    def userChange(self, char_value, **kw):
+    def userChange(self, char_value = False, **kw):
+        if not (char_value): #needed for cli, though my kill engine, if user monitor doesnt return a valid value
+            char_value = raw_input("Enter User: ")
+        
         self.user = self.getUser(char_value) #get new user
         log(self.name, "User Changed -> " + str(self.user))
+        
         self.bufferPush.send("updateUser")
         self.bufferPush.send(self.user)
-
-
         
         self.staticPush.send("updateUser")
         self.staticPush.send(self.user)
@@ -126,20 +139,28 @@ class Engine3():
      
     #For Testing    
     def testPush(self):
-        self.staticPush.send("test")
-        self.bufferPush.send("test")
-        self.rollingPush.send("test")
+        try:
+            self.staticPush.send("test")
+            self.bufferPush.send("test")
+            self.rollingPush.send("test")
+        except:
+            print "neg"
 
         
     def testRequest(self):
         self.bufferRequest.send("test")
         test = self.bufferRequest.recv_pyobj()
         log(self.name, "RESPONSE RECIEVED -> " + test)
+        
+    def close(self):
+        self.staticImage.close()
 
     
     
     def cli(self):
         while True:
+            time.sleep(0.1) #TODO: fixing printing output. - This is a quick fix to give enough time for all threads and workers
+                            #to print/log out there data
             command = str(raw_input(">> "))
             if not hasattr(self, command):
                 print "%s is not a valid command" % command
@@ -154,6 +175,13 @@ class Engine3():
         
         print "---- Usage Commands ----"
         print "userChange(user)"
+        
+    def exit(self):
+        print threading.activeCount()
+        print "exiting..."
+        sys.exit()
+        print threading.activeCount()
+
         
 
 if __name__ == "__main__":
