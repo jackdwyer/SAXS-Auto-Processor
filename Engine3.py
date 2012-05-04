@@ -79,6 +79,10 @@ class Engine3():
         time.sleep(0.1)
 
         log(self.name, "All Workers ready")
+        
+        cliThread = Thread(target=self.cli())
+        cliThread.start()
+
 
 
 
@@ -116,7 +120,7 @@ class Engine3():
 
     def watchForChangeOver(self):
         #epics.camonitor("13SIM1:la:FilePath_RBV", callback=self.userChange)
-        log(self.name, "EPICS user change over monitor")
+        log(self.name, "Waiting for USERCHANGE OVER")
 
 
      
@@ -132,10 +136,31 @@ class Engine3():
         test = self.bufferRequest.recv_pyobj()
         log(self.name, "RESPONSE RECIEVED -> " + test)
 
+    
+    
+    def cli(self):
+        while True:
+            command = str(raw_input(">> "))
+            if not hasattr(self, command):
+                print "%s is not a valid command" % command
+                print "user 'help' for list of commands"
+            else:
+                getattr(self, command)()
+        
+    def help(self):
+        print "---- Test Commands ----"
+        print "testPush - Test zmq push function"
+        print "testRequest - Test zmq request funciton"
+        
+        print "---- Usage Commands ----"
+        print "userChange(user)"
+        
 
 if __name__ == "__main__":
     engine = Engine3("config.yaml")
     engine.testPush()
     engine.testRequest()
-    #engine.watchForChangeOver()
+    engine.watchForChangeOver()
 
+
+    
