@@ -35,7 +35,9 @@ class WorkerBufferAverage(Worker):
             
         if (filter == "buffer"):
             self.datFile = self.pull.recv_pyobj()
-            self.average()
+            log(self.name, "RECIEVED - Buffer")
+            print self.datFile
+            #self.average()
             
     
     def average(self):
@@ -63,6 +65,7 @@ class WorkerBufferAverage(Worker):
         log(self.name, "All Ports Connected -> pullPort: "+str(pullPort)+" - replyPort: "+str(replyPort))
         
         replyThread = Thread(target=self.sendData)
+        replyThread.setDaemon(True)
         replyThread.start()
 
         self.run()
@@ -77,8 +80,10 @@ class WorkerBufferAverage(Worker):
                 filter = self.reply.recv() #wait for request of buffer
                 if (filter == 'test'):
                     self.reply.send_pyobj("REQUESTED DATA")
-                if (filter == "reqBuffer"):
+                if (filter == "buffer"):
                     log(self.name, "BufferRequested")
+                    #need to do actual averageBuffer
+                    self.reply.send_pyobj(self.datFile)
                 
         
 
@@ -86,10 +91,11 @@ class WorkerBufferAverage(Worker):
             pass   
         
         #OVERRIDE IN BUFFER
-    def exit(self):
+    def close(self):
         """Close all zmq sockets"""
         self.pull.close()
         self.reply.close()
+        log(self.name, "Closed")
         sys.exit()
         
 

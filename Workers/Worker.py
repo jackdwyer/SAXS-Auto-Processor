@@ -14,6 +14,8 @@ sys.path.append("../")
 
 import time
 from threading import Thread
+import threading
+
 
 from Core.Logger import log
 from Core import DatFileWriter
@@ -114,6 +116,7 @@ class Worker():
         try:
             while True:
                 filter = self.pull.recv()
+                
                 if (str(filter) == "updateUser"):
                     log(self.name, "Recieved Command - updateUser")
                     self.user = self.pull.recv()
@@ -124,6 +127,9 @@ class Worker():
                 
                 if (str(filter) == "testPush"):
                     log(self.name, "Test Pull/Push - Completed")
+                    
+                if (str(filter) == "static_image"):
+                    log(self.name, "Static Image - Received")
                 
                 if (str(filter) == "exit"):
                     self.close()
@@ -139,9 +145,10 @@ class Worker():
     
     #OVERRIDE IN BUFFER
     def close(self):
-        log(self.name, "Exiting")
         """Close all zmq sockets"""
-        self.pull.close()
+        #time.sleep(0.1)
+        self.pull.close()        
+        log(self.name, "Closed")
         sys.exit()
                 
          
@@ -189,9 +196,3 @@ if __name__ == "__main__":
         print "TEST OVER - Failed with reply"
         
     sys.exit()
-    
-    
-    
-    
-    
-    

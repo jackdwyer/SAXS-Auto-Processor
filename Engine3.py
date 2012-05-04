@@ -72,17 +72,17 @@ class Engine3():
         time.sleep(0.1)
         
         bufferThread = Thread(target=self.bufferAverage.connect, args=(5001, 5000))
-        bufferThread.isDaemon()
+        bufferThread.setDaemon(True)
         bufferThread.start()
 
             
             
         staticImageThread = Thread(target=self.staticImage.connect, args=(5002,))
-        staticImageThread.isDaemon()
+        staticImageThread.setDaemon(True)
         staticImageThread.start()
         
         rollingAverageThread = Thread(target=self.rollingAverageSubtraction.connect, args=(5003,))
-        rollingAverageThread.isDaemon()
+        rollingAverageThread.setDaemon(True)
 
         rollingAverageThread.start()
 
@@ -93,22 +93,10 @@ class Engine3():
         self.watchForImage()
         log(self.name, "All Workers ready")
 
-        
 
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
         #Start this thread last
         cliThread = Thread(target=self.cli())
-        cliThread.isDaemon()
+        cliThread.setDaemon(True)
         cliThread.start()
         
 
@@ -144,9 +132,22 @@ class Engine3():
 
     def watchForImage(self):
         epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
-        
+    
+    
+    #Engine Control   
     def imageTaken(self):
         log(self.name, "image taken")
+        #TEST IMAGE TYPE
+        self.sendImage()
+        
+    def bufferTaken(self):
+        t = raw_input("Enter a Test String (will be sent as an object) > ")
+        self.sendBuffer(t)
+        
+    def requestAverageBuffer(self):
+        self.bufferRequest.send("buffer")
+        f = self.bufferRequest.revc_pyobj()
+        print f
 
      
     #For Testing    
@@ -156,7 +157,7 @@ class Engine3():
         
     def testRequest(self):
         self.bufferRequest.send("test")
-        test = self.bufferRequest.recv_pyobj()
+        test = self.bufferRequest.revc_pyobj()
         log(self.name, "RESPONSE RECIEVED -> " + test)
         
 
@@ -173,25 +174,30 @@ class Engine3():
             command = str(raw_input(">> "))
             if not hasattr(self, command):
                 print "%s is not a valid command" % command
-                print "user 'help' for list of commands"
+                print "Use 'help' to list all commands"
             else:
                 getattr(self, command)()
         
     def help(self):
-        print "---- Test Commands ----"
-        print "testPush - Test zmq push function"
-        print "testRequest - Test zmq request function"
-        
-        print "---- Usage Commands ----"
-        print "userChange(user)"
+        print '%30s' % "========= Test Commands ========="
+        formatting  = '%30s %10s %1s'
+        print formatting % ("testPush", '--', "Runs push test across workers"+"\n"),
+        print formatting % ("testRequest", '--', "Runs request test against BufferAverage" +"\n"),
+        print formatting % ("setUser",'--', "Set Current User from Engine"+"\n"),
+        print formatting % ("returnUser",'--', "Returns Current User from Engine and all workers"+"\n"),
+        print formatting % ("imageTaken", '--', "Force Image Taken Routine")
+        print formatting % ("requestAverageBuffer", "--", "Request for latest average buffer")
+        print formatting % ("exit", '--', "Exit Application")
+
+
         
     def exit(self):
-        print threading.activeCount()
         self.sendCommand("exit")
-        print threading.activeCount()
-        print "exiting..."
+        time.sleep(0.1)
+        log(self.name, "Exiting")
+
         sys.exit()
-        print threading.activeCount()
+
         
         
     #########
@@ -200,7 +206,14 @@ class Engine3():
         self.staticPush.send(command)
         self.bufferPush.send(command)
         self.rollingPush.send(command)
+        
+    def sendImage(self):
+        self.staticPush.send("static_image")
+        self.rollingPush.send("static_image")
 
+    def sendBuffer(self, datFile):
+        self.bufferPush.send("buffer")
+        self.bufferPush.send_pyobj(datFile)
         
 
 if __name__ == "__main__":
