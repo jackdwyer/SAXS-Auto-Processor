@@ -185,7 +185,7 @@ class Engine3():
         print "---- Usage Commands ----"
         print "userChange(user)"
         
-    def close(self):
+    def exit(self):
         print threading.activeCount()
         self.sendCommand("exit")
         print threading.activeCount()
