@@ -168,7 +168,7 @@ class Engine3():
                 self.helpMenu()
             if not hasattr(self, command):
                 print "%s is not a valid command" % command
-                print "Use 'help' to list all commands"q
+                print "Use 'help' to list all commands"
             else:
                 getattr(self, command)()
         
