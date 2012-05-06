@@ -1,344 +1,238 @@
-#!/usr/bin/env python2.7
 """
 Jack Dwyer
-18 March 2012
+26/04/2012
 
-Engine for the SAXS/WAXS Auto Processor
+Engine v0.3
+- Loads all default workes
+
 """
 
+
+
+import yaml
 import epics
 import time
 import zmq
-from CommonLib import DatFile
-from CommonLib import LogLine
-from CommonLib import Logger
-from CommonLib import DirectoryCreator
+import sys
+from Core import DatFile
+from Core import LogLine
+from Core.Logger import log
+from Core import DirectoryCreator
 import MySQLdb as mysql
 
+from threading import Thread
+import threading
 
-class Engine():
-    def __init__(self):
-        self.name = "Engine" #For logging
+from Workers import WorkerBufferAverage
+from Workers import WorkerDB
+from Workers import WorkerRollingAverageSubtraction
+from Workers import WorkerStaticImage
 
-        self.absolutePath = "/home/ics/jack/beam/"
-        self.directoryCreator = DirectoryCreator.DirectoryCreator(self.absolutePath)
-        
+
+
+class Engine3():
+    """
+    Starts Buffer Average worker first so buffer average can bind to the correct port
+    """
+    
+    def __init__(self, configFile):
+        self.name = "Engine"
+        log(self.name, "Engine Started")
         #ZeroMQ setup stuff
         self.context = zmq.Context()
-        self.bufferWorker = self.context.socket(zmq.PUSH)
-        self.bufferWorker.bind("tcp://127.0.0.1:7881")  
-        self.sampleWorker = self.context.socket(zmq.PUSH)
-        self.sampleWorker.bind("tcp://127.0.0.1:7882")
-        #7883 is used by the WorkerBufferAverage
-        self.dbWorker = self.context.socket(zmq.PUSH)
-        self.dbWorker.bind("tcp://127.0.0.1:7884")
-        #7885 is used for WorkerRollingAverageSubtraction
-        self.rollingAverageWorker = self.context.socket(zmq.PUSH)
-        self.rollingAverageWorker.bind("tcp://127.0.0.1:7885")        
-
-        #To make sure we dont miss any loglines
-        self.index = 0
-        self.datIndex = 0
-        #User setup
+        
+        #Currne
         self.user = ""
-        self.experiment = "EXPERIMENT_1"
-        self.logFile = "/mnt/images/data/Cycle_2012_1/Pelliccia_4562/livelogfile.log"
-
-        #File Locations
-        self.logLocation = "/mnt/images/data/Cycle_2012_1/Pelliccia_4562/livelogfile.log"
-        #self.logLocation = "testDat/livelogfile.log"
-        self.datFileLocation = "/mnt/images/data/Cycle_2012_1/Pelliccia_4562/Melton_4615/dat/"
-
-
-        #For holding the data
-        self.lines = [] #List of lines already read
-        self.logLines = [] #List of LogLine Objects, that have been broken down for easy access
-        self.latestLine = ""
-        self.datFiles = []
-
-
+      
+        #Default workers
+        self.bufferAverage = WorkerBufferAverage.WorkerBufferAverage()
+        self.staticImage = WorkerStaticImage.WorkerStaticImage()
+        self.rollingAverageSubtraction = WorkerRollingAverageSubtraction.WorkerRollingAverageSubtraction()
+        #self.DB = WorkerDB.WorkerDB()
         
-        #comparision checks again datfile name
-        self.lastDatFile = ""
-        self.currentDatFile = ""
+        #Connect Up all Workers, and have them ready
+        self.bufferRequest = self.context.socket(zmq.REQ)
+        self.bufferRequest.connect("tcp://127.0.0.1:5000")
+        log(self.name, "Connected -> BufferRequest")
 
+        self.bufferPush = self.context.socket(zmq.PUSH)
+        self.bufferPush.bind("tcp://127.0.0.1:5001")
+        log(self.name, "Binded -> BufferPush")
 
-        #Make sure all sockets are created
-        time.sleep(1.0)
+        self.staticPush = self.context.socket(zmq.PUSH)
+        self.staticPush.bind("tcp://127.0.0.1:5002")
+        log(self.name, "Binded -> StaticPush")
+
+        time.sleep(0.1)
+
+        self.rollingPush = self.context.socket(zmq.PUSH)
+        self.rollingPush.bind("tcp://127.0.0.1:5003")
+        log(self.name, "Binded -> RollingPush")
+
+        time.sleep(0.1)
         
-    def clear(self):
-        """Clears out the Engine and all workers, should only occur when a new user has changed over"""
-        Logger.log(self.name, "Commencing Clear out")
-        self.index = 0
-        self.user = ""
-        self.experiment = "EXPERIMENT_1"
-        #self.logFile = ""
+        bufferThread = Thread(target=self.bufferAverage.connect, args=(5001, 5000))
+        bufferThread.setDaemon(True)
+        bufferThread.start()
 
-        self.lines = []
-        self.logLines = []
-        self.lastLine = ""
-        self.datFiles = []
-
-        self.bufferWorker.send("clear")
-        self.sampleWorker.send("clear") 
-        self.rollingAverageWorker.send("clear")
-
-        self.lastDatFile = ""
-        self.currentDatFile = ""    
-
-        Logger.log(self.name, "ENGINE and ALL WORKERS CLEARED")
+            
+            
+        staticImageThread = Thread(target=self.staticImage.connect, args=(5002,))
+        staticImageThread.setDaemon(True)
+        staticImageThread.start()
         
+        rollingAverageThread = Thread(target=self.rollingAverageSubtraction.connect, args=(5003,))
+        rollingAverageThread.setDaemon(True)
 
-    def generateDB(self):
-        self.dbWorker.send("user")
-        self.dbWorker.send(str(self.user))
-        self.dbWorker.send("Experiment")
-        self.dbWorker.send(str(self.experiment)) 
-        Logger.log(self.name, "Database Created - " + self.user)
-        
-    def updateWorkers(self):
-                self.bufferWorker.send("user")
-                self.bufferWorker.send(self.user)
-                Logger.log(self.name, "sent new user to WorkerBuffer")
-                self.bufferWorker.send(self.experiment)
-                Logger.log(self.name, "sent new experiment to WorkerBuffer")
+        rollingAverageThread.start()
 
+        time.sleep(0.1)
 
+        self.watchForChangeOver()
+        self.watchForImage()
+        log(self.name, "All Workers ready")
 
-                self.sampleWorker.send("user")
-                self.sampleWorker.send(self.user)
-                Logger.log(self.name, "Sent new user to WorkerStaticImage")
-                self.sampleWorker.send(self.experiment)
-                Logger.log(self.name, "Sent new experiment to WorkerStaticImage")
-                
-                self.rollingAverageWorker.send("user")
-                self.rollingAverageWorker.send(self.user)
-                Logger.log(self.name, "Sent new user to WorkerRollingImage")
-                self.rollingAverageWorker.send(self.experiment)
-                Logger.log(self.name, "Sent new experiment to WorkerRollingImage")
+        self.helpMenu() #Prints out command menu
 
+        #Start this thread last
+        cliThread = Thread(target=self.cli())
+        cliThread.setDaemon(True)
+        cliThread.start()
         
         
 
-        
-    
+
     def getUser(self, path):
         """Splits file path, and returns only user"""
         user = path.split("/")
         user = filter(None, user) #needed to remove the none characters from the array
         return user[-1] #currently the user_epn is the last object in the list
     
-    def userChange(self, char_value, **kw):
-        """Get the user_epn when a change over has occured, 
-        this will create a new DB for the user, create directory structure
-        and clear out all workers"""
+    def setUser(self, char_value = False, **kw):
+        if not (char_value): #needed for cli, though my kill engine, if user monitor doesnt return a valid value
+            char_value = raw_input("Enter User: ")
         
-        Logger.log(self.name, "User change over initiated")
-        self.clear() #Clear engine, and all workers
+        self.user = self.getUser(char_value) #get new user
+        log(self.name, "User Changed -> " + str(self.user))
         
-        user = self.getUser(char_value) #get new user
-        self.user = user
-        Logger.log(self.name, "NEW USER: " + str(self.user))
+        self.bufferPush.send("updateUser")
+        self.bufferPush.send(self.user)
         
-        self.generateDB() 
-        self.updateWorkers()
-        
-        self.directoryCreator.createFolderStructure(self.user, self.experiment);
-        Logger.log(self.name, "Folder Structure Created")
+        self.staticPush.send("updateUser")
+        self.staticPush.send(self.user)
+
+        self.rollingPush.send("updateUser")
+        self.rollingPush.send(self.user)
+
+
+
+    #EPICS MONITORING
+
+    def watchForChangeOver(self):
+        #epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.setUser)
+        print ("epics off")
+
+    def watchForImage(self):
+        #epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
+        print ("epics off")
 
     
-        #fix        self.logFile = "testDat/livelogfile_nk_edit.log" 
-        
-        #Setup Variables/File Locations for user
-        #self.logFile = "testDat/livelogfile_nk_edit.log"
-        
-    def getOnlyName(self, name):
-        #TODO REFACTOR        
-        b = name.split('_')
-        del b[-1]
-        return b
-
-    def checkName(self):
-        #TODO REFACTOR
-        if (self.datIndex == 1) or (self.datIndex == 0):
-            return False;
-        else:
-            previousName = self.datFiles[self.datIndex - 2].getFileName()
-            currentName = self.datFiles[self.datIndex - 1].getFileName()
-        prev = self.getOnlyName(previousName)
-        cur = self.getOnlyName(currentName)
-
-        if (cur == prev):  
-            return True
-        else:   
-            return False
-            
-
-
-
-
-    #def imageTaken(self, value, **kw):
+    #Engine Control   
     def imageTaken(self):
-        """Check Logline, get all details on latest image """
-        Logger.log(self.name, "Image Value Changed - Shot Taken")
+        log(self.name, "image taken")
+        #TEST IMAGE TYPE
+        self.sendImage()
         
-        #self.index = value #This is to foce the engine to begin where ever the experiment is
-        self.readLatestLine()
-        Logger.log(self.name, "Read Latest line from LogFile")
-        self.getDatFile()
-        Logger.log(self.name, "Retrieved DatFile")
-       
-        changeInName = self.checkName()
-        #Here to test against sample change, then slap out for if its a buffer
+    def bufferTaken(self):
+        t = raw_input("Enter a Test String (will be sent as an object) > ")
+        self.sendBuffer(t)
         
-                
-
-
-
-        try:
-            imageType = (self.logLines[self.index-1].data['SampleType'])
-        except KeyError:
-            Logger.log(self.name, "KeyError on SampleType, probably nothing")
-            imageType = "12"
-
-
-
-        if ((imageType == '0') and (changeInName)):
-            Logger.log(self.name, "Root Name Change - Idicating Sample Change")
-            Logger.log(self.name, "New Buffer Generated - Clearing Workers")
-            self.bufferWorker.send("recalculate_buffer")
-            self.sampleWorker.send("new_buffer")
-            self.rollingAverageWorker.send("new_buffer")
+    def requestAverageBuffer(self):
+        self.bufferRequest.send("reqBuffer")
+        f = self.bufferRequest.recv_pyobj()
+        print f
+  
+    def returnUser(self):
+        log(self.name, "Current User : " + self.user)
+        self.sendCommand("getUser")
         
-        if ((changeInName) and (imageType != 0)):
-            Logger.log(self.name, "Root Name Change - Idicating Sample Change")
-            self.sampleWorker.send("new_sample")
-            self.rollingAverageWorker.send("new_sample")
-
-
-
-        #print self.datFiles[self.index-1].getDatFilePath()
-        #print self.logLines[self.index-1].attributes
-        #NEW FORMAT..
-        #imageType = (self.logLines[self.index-1].data['SampleType'])
-        #imageType = (self.logLines[self.index-1].getValue("SMPL_TYPE"))
-        
-        print imageType
-        
-        Logger.log(self.name, "INDEX: " + str(self.index))
-        #if (imageType == "BUFFER"):
-        if (imageType == '0'): #Buffer
-            Logger.log(self.name, "BUFFER")
-            self.bufferWorker.send("datFile")
-            self.bufferWorker.send_pyobj(self.datFiles[self.datIndex-1])
-            Logger.log(self.name, "sent DatFile to WorkerBuffer")
-        if (imageType == '1'): #Static_image
-            Logger.log(self.name, "STATIC IMAGE")
-            self.sampleWorker.send("sample")
-            self.sampleWorker.send_pyobj(self.datFiles[self.datIndex-1])
-            Logger.log(self.name, "Sent DatFile to WorkerStaticImage")
-            
-            self.rollingAverageWorker.send("sample")
-            self.rollingAverageWorker.send_pyobj(self.datFiles[self.datIndex-1])
-            Logger.log(self.name, "Sent DatFile to WorkerRollingImage")
-
-
-    def run(self):   
-        print "in run"                    
-        #epics.camonitor("13PIL1:cam1:ArrayCounter_RBV", callback=self.imageTaken)
-        #epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.userChange)
- 
-        try:
-            while True:
-                self.imageTaken()
-                time.sleep(0.1)
-        except KeyboardInterrupt:
-            pass
-        
-
-
-
-
-
-
-
-
+    def a(self):
+        self.requestAverageBuffer()
     
-###These should go into generic methods
-    def readLatestLine(self):
-        noLines = True
-        while (noLines):          
-            try:
-                Logger.log(self.name, "Opening LogFile")
-                v = open(self.logFile, "r")
-                try:
-                    self.latestLine = v.readlines()[self.index]
-                    if (self.latestLine in self.lines):
-                        time.sleep(0.05)
-                    else:
-                        self.lines.append(self.latestLine)
-                        self.logLines.append(LogLine.LogLine(self.latestLine))
-                        self.index = self.index + 1
-                        
-                        #Send logline to be added to DB
-                        self.dbWorker.send("logLine")
-                        self.dbWorker.send_pyobj(self.logLines[self.index-1])
-                        
-                        noLines = False
-                except IndexError:
-                    Logger.log(self.name, "IndexError - trying to read last line from logfile")
-                    pass
-                                
-                v.close()
-            except IOError:
-                Logger.log(self.name, "IOERROR - trying to read last line from logfile")
-                Logger.log(self.name, self.logFile)
-                time.sleep(0.2)
-                pass
-            
+    
+    def cli(self):
+        while True:
+            time.sleep(0.1) #TODO: fixing printing output. - This is a quick fix to give enough time for all threads and workers
+                            #to print/log out there data
+            command = str(raw_input(">> "))
+            if (command == "exit"):
+                self.exitEngine()
+            if (command == "help"):
+                self.helpMenu()
+            if not hasattr(self, command):
+                print "%s is not a valid command" % command
+                print "Use 'help' to list all commands"
+            else:
+                getattr(self, command)()
         
-    def getDatFile(self):
-        _pass = 0
-        """TODO: make better... forgot the better and faster way I had the imagename
-        """
-        ##returns dat file location
-        noDatFile = True
-        #getting actual dat file name from the log line. It will only pick up that dat file
-        dat = self.logLines[self.index-1].getValue("ImageLocation")
-        #this needs to be fixed to os agnostic
-        dat = dat.split("/")
-        dat = dat[-1]
-        dat = dat.split(".")
-        dat = dat[0] + ".dat"
-        dat = str(dat)
-        while (noDatFile):
-            try:
-                datFile = (self.datFileLocation + dat)  
-                self.datFiles.append(DatFile.DatFile(datFile))
-                self.datIndex = self.datIndex + 1
-                Logger.log(self.name, "INDEX DATFILES: " + str(self.datIndex))               
-                noDatFile = False
-            except IOError:
-                if (_pass > 3):
-                    print "dunno doesnt exist ?"
-                    _pass = 0
-                    #self.index = self.index - 1
-                    break
+    def helpMenu(self):
+        print '%30s' % "==================== Commands ========="
+        formatting  = '%30s %10s %1s'
+        print formatting % ("help", '--', "Prints help menu"+"\n"),
+        print formatting % ("testPush", '--', "Runs push test across workers"+"\n"),
+        print formatting % ("testRequest", '--', "Runs request test against BufferAverage" +"\n"),
+        print formatting % ("setUser",'--', "Set Current User from Engine"+"\n"),
+        print formatting % ("returnUser",'--', "Returns Current User from Engine and all workers"+"\n"),
+        print formatting % ("imageTaken", '--', "Force Image Taken Routine")
+        print formatting % ("requestAverageBuffer", "--", "Request for latest average buffer")
+        print formatting % ("exit", '--', "Exit Application")
 
 
-                Logger.log(self.name, "IOERROR - trying to open latest datfile")
-                Logger.log(self.name, "DATFILE - " + str(datFile))
+        
+    def exitEngine(self):
+        self.sendCommand("exit")
+        time.sleep(0.1)
+        log(self.name, "Exiting")
+
+        sys.exit()
+
+        
+        
+    #########
+    # Helper functions
+    def sendCommand(self, command):
+        self.staticPush.send(command)
+        self.bufferPush.send(command)
+        self.rollingPush.send(command)
+        
+    def sendImage(self):
+        self.staticPush.send("static_image")
+        self.rollingPush.send("static_image")
+
+    def sendBuffer(self, datFile):
+        self.bufferPush.send("buffer")
+        self.bufferPush.send_pyobj(self.datFile)
+        
+        
+    #For Testing    
+    def testPush(self):
+        command = raw_input("Enter Test String (to be pushed) > ")
+        self.sendCommand("testPush")
+        self.sendCommand(command)
 
 
-                time.sleep(0.05)
-                _pass = _pass + 1
-
-
+        
+    def testRequest(self):
+        self.bufferRequest.send("test")
+        test = self.bufferRequest.recv_pyobj()
+        log(self.name, "RESPONSE RECIEVED -> " + test)
+        
 
 if __name__ == "__main__":
-    engine = Engine()
-    foo = 1
-    #/mnt/images/data/Cycle_2012_1/Melton_4615/ - experiment from sunday 1st
-    #/mnt/images/data/Cycle_2012_1/Pelliccia_4562 - experiment from today(tuesday) 3rd
-    engine.userChange("/mnt/images/data/Cycle_2012_1/Pelliccia_4562")
-    engine.run()
+    engine = Engine3("config.yaml")
+    engine.testPush()
+    engine.testRequest()
+    engine.watchForChangeOver()
+
+
+    
