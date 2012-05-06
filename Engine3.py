@@ -88,18 +88,17 @@ class Engine3():
 
         time.sleep(0.1)
 
-        log(self.name, "All Workers ready")
         self.watchForChangeOver()
         self.watchForImage()
         log(self.name, "All Workers ready")
 
+        self.helpMenu() #Prints out command menu
 
         #Start this thread last
         cliThread = Thread(target=self.cli())
         cliThread.setDaemon(True)
         cliThread.start()
         
-        self.help() #Prints out command menu
         
 
 
@@ -130,11 +129,13 @@ class Engine3():
     #EPICS MONITORING
 
     def watchForChangeOver(self):
-        epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.setUser)
+        #epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.setUser)
+        print ("epics off")
 
     def watchForImage(self):
-        epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
-    
+        #epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
+        print ("epics off")
+
     
     #Engine Control   
     def imageTaken(self):
@@ -150,9 +151,7 @@ class Engine3():
         self.bufferRequest.send("buffer")
         f = self.bufferRequest.revc_pyobj()
         print f
-
-     
-       
+  
     def returnUser(self):
         log(self.name, "Current User : " + self.user)
         self.sendCommand("getUser")
@@ -163,15 +162,20 @@ class Engine3():
             time.sleep(0.1) #TODO: fixing printing output. - This is a quick fix to give enough time for all threads and workers
                             #to print/log out there data
             command = str(raw_input(">> "))
+            if (command == "exit"):
+                self.exitEngine()
+            if (command == "help"):
+                self.helpMenu()
             if not hasattr(self, command):
                 print "%s is not a valid command" % command
-                print "Use 'help' to list all commands"
+                print "Use 'help' to list all commands"q
             else:
                 getattr(self, command)()
         
-    def help(self):
-        print '%30s' % "========= Test Commands ========="
+    def helpMenu(self):
+        print '%30s' % "==================== Commands ========="
         formatting  = '%30s %10s %1s'
+        print formatting % ("help", '--', "Prints help menu"+"\n"),
         print formatting % ("testPush", '--', "Runs push test across workers"+"\n"),
         print formatting % ("testRequest", '--', "Runs request test against BufferAverage" +"\n"),
         print formatting % ("setUser",'--', "Set Current User from Engine"+"\n"),
@@ -182,7 +186,7 @@ class Engine3():
 
 
         
-    def exit(self):
+    def exitEngine(self):
         self.sendCommand("exit")
         time.sleep(0.1)
         log(self.name, "Exiting")
