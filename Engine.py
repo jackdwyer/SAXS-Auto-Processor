@@ -30,28 +30,28 @@ from Workers import WorkerStaticImage
 
 
 
-class Engine3():
+class Engine():
     """
     Starts Buffer Average worker first so buffer average can bind to the correct port
     """
     
-    def __init__(self, configFile):
+    def __init__(self, configuration):
         self.name = "Engine"
         
         #Get Configuration settings
         try:
-            stream = file("config.yaml", 'r') 
+            stream = file(configuration, 'r') 
         except IOError:
             log(self.name, "Unable to find configuration file (config.yaml, in current directory), exiting.")
             exit()
+            
+        self.config = yaml.load(stream)
         
-        
-        
-        
+        self.rootDirectory = self.config['RootDirectory']
+        self.imageTakenPV = self.config['ImageTakenPV']
+        self.userChangePV = self.config['UserChangePV']
         
         log(self.name, "Engine Started")
-        
-        
         
         
         #ZeroMQ setup stuff
@@ -101,9 +101,11 @@ class Engine3():
         rollingAverageThread.start()
 
         time.sleep(0.1)
-
+        
+        self.setRootDirectory()
         self.watchForChangeOver()
-        self.watchForImage()
+        self.watchForImage()      
+        
         log(self.name, "All Workers ready")
 
         self.helpMenu() #Prints out command menu
@@ -113,7 +115,22 @@ class Engine3():
         cliThread.setDaemon(True)
         cliThread.start()
         
-
+    def setRootDirectory(self):
+        self.sendCommand("rootDirectory")
+        self.sendCommand(self.rootDirectory)
+        
+        #EPICS MONITORING
+    def watchForChangeOver(self):
+        epics.camonitor(self.userChangePV, callback=self.setUser)
+        
+    def watchForImage(self):
+        epics.camonitor(self.imageTakenPV, callback=self.imageTaken)
+        
+    def imageTaken(self, **kw):
+        log(self.name, "image taken")
+        #TEST IMAGE TYPE
+        self.sendImage()
+        
     def getUser(self, path):
         """Splits file path, and returns only user"""
         user = path.split("/")
@@ -128,36 +145,16 @@ class Engine3():
         self.user = self.getUser(char_value) #get new user
         log(self.name, "User Changed -> " + str(self.user))
         
-        self.bufferPush.send("updateUser")
-        self.bufferPush.send(self.user)
-        
-        self.staticPush.send("updateUser")
-        self.staticPush.send(self.user)
-
-        self.rollingPush.send("updateUser")
-        self.rollingPush.send(self.user)
-
-
-
-    #EPICS MONITORING
-
-    def watchForChangeOver(self):
-        epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.setUser)
-        
-    def watchForImage(self):
-        epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
-
+        self.sendCommand("updateUser")
+        self.sendCommand(self.user)
     
-    #Engine Control   
-    def imageTaken(self):
-        log(self.name, "image taken")
-        #TEST IMAGE TYPE
-        self.sendImage()
-        
+
+       
     def bufferTaken(self):
         t = raw_input("Enter a Test String (will be sent as an object) > ")
         self.sendBuffer(t)
-        
+    
+    #Engine Control       
     def requestAverageBuffer(self):
         self.bufferRequest.send("reqBuffer")
         f = self.bufferRequest.recv_pyobj()
@@ -168,7 +165,8 @@ class Engine3():
         self.sendCommand("getUser")
         
     def a(self):
-        self.requestAverageBuffer()
+        self.epicImageTaken()
+        
     
     
     def cli(self):
@@ -197,15 +195,14 @@ class Engine3():
         print formatting % ("imageTaken", '--', "Force Image Taken Routine")
         print formatting % ("requestAverageBuffer", "--", "Request for latest average buffer")
         print formatting % ("epicSetUser", '--', "Force Epics to have a new user")
-        print formatting % ("exit", '--', "Exit Application")
+        print formatting % ("exit", '--', "Exit Engine")
 
 
         
     def exitEngine(self):
         self.sendCommand("exit")
-        time.sleep(0.1)
+        time.sleep(0.2)
         log(self.name, "Exiting")
-
         sys.exit()
 
         
@@ -240,16 +237,16 @@ class Engine3():
     def epicSetUser(self):
         user = raw_input("Enter new user > ")
         epics.caput("13SIM1:TIFF1:FilePath", "/some/where/on/the/" + user + bytearray("\0x00"*256))
+        
+    def epicImageTaken(self):
+        epics.caput("13SIM1:cam1:NumImages.VAL", 1, wait=True)
 
         
 
         
 
 if __name__ == "__main__":
-    engine = Engine3("config.yaml")
+    engine = Engine("config.yaml")
     engine.testPush()
     engine.testRequest()
     engine.watchForChangeOver()
-
-
-    

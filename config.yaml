@@ -4,10 +4,7 @@ database :
     password : "a"
 
 
-#These worker always need to be loaded for subtraction and web interface to occur
-#WorkerDB will always load
-workers : ["WorkerBufferAverage", "WorkerStaticImage", "WorkerRollingAverageSubtraction", "WorkerDB"] 
-
-AbsoluteLocation : "/home/jack/beamlinetesting/"
+RootDirectory : "/home/jack/beamlinetesting/"
 
 UserChangePV : "13SIM1:TIFF1:FilePath_RBV"
+ImageTakenPV : "13SIM1:cam1:NumImages_RBV"

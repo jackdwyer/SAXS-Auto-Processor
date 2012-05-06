@@ -100,7 +100,7 @@ class WorkerBufferAverage(Worker):
         """Close all zmq sockets"""
         self.pull.close()
         self.reply.close()
-        log(self.name, "Closed")
+        log(self.name, "Sockets Closed")
         sys.exit()
         
 

@@ -30,7 +30,7 @@ class Worker():
         #need this to be able to save data etc
         self.user = ""
         self.experiment = ""
-        self.absolutePath = ""
+        self.rootDirectory = ""
         
         self.aveBuffer = []
         self.needBuffer = True
@@ -92,14 +92,14 @@ class Worker():
        
         
         
-    def process(self, filter):    
+    def process(self, _filter):    
         raise Exception("You must override this method!")
   
 
 
     
     def test(self):
-        log(self.name, "Test Method Preformed") 
+        log(self.name, "Test Method preformed") 
         
 
             
@@ -112,30 +112,39 @@ class Worker():
             #replyThread.start()
         try:
             while True:
-                filter = self.pull.recv()
+                _filter = self.pull.recv()
                 
-                if (str(filter) == "updateUser"):
+                #Generic Worker Control
+                if (str(_filter) == "updateUser"):
                     log(self.name, "Received Command - updateUser")
                     self.user = self.pull.recv()
                     log(self.name, "New User -> " + self.user)
                 
-                if (str(filter) == "getUser"):
+                if (str(_filter) == "getUser"):
                     log(self.name, "Current User : " + self.user)
                 
-                if (str(filter) == "testPush"):
+                if (str(_filter) == "rootDirectory"):
+                    self.rootDirectory = self.pull.recv()
+                    log(self.name, "Root Experiment Directory -> " + self.rootDirectory)
+                
+                if (str(_filter) == "returnDirectory"):
+                    log(self.name, "Current Root Directory : " + self.rootDirectory)
+                
+                if (str(_filter) == 'clear'):
+                    self.clear()
+                
+                if (str(_filter) == "exit"):
+                    self.close()
+                    
+                    
+                #Test shit   
+                if (str(_filter) == "testPush"):
                     testString = self.pull.recv();
                     log(self.name, "Test Pull/Push - Completed - String Received : " + testString)
-                    
-                if (str(filter) == "static_image"):
-                    log(self.name, "Static Image - Received")
                 
-                if (str(filter) == "exit"):
-                    self.close()
-                
-                if (filter == 'clear'):
-                    self.clear()
+
                 else:
-                    self.process(filter)
+                    self.process(_filter)
                 
         except KeyboardInterrupt:
             pass
@@ -146,7 +155,7 @@ class Worker():
         """Close all zmq sockets"""
         #time.sleep(0.1)
         self.pull.close()        
-        log(self.name, "Closed")
+        log(self.name, "Sockets Closed")
         sys.exit()
                 
          
