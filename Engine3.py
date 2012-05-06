@@ -99,6 +99,8 @@ class Engine3():
         cliThread.setDaemon(True)
         cliThread.start()
         
+        self.help() #Prints out command menu
+        
 
 
     def getUser(self, path):
@@ -150,18 +152,7 @@ class Engine3():
         print f
 
      
-    #For Testing    
-    def testPush(self):
-        self.sendCommand("test")
-
-        
-    def testRequest(self):
-        self.bufferRequest.send("test")
-        test = self.bufferRequest.revc_pyobj()
-        log(self.name, "RESPONSE RECIEVED -> " + test)
-        
-
-        
+       
     def returnUser(self):
         log(self.name, "Current User : " + self.user)
         self.sendCommand("getUser")
@@ -214,6 +205,20 @@ class Engine3():
     def sendBuffer(self, datFile):
         self.bufferPush.send("buffer")
         self.bufferPush.send_pyobj(datFile)
+        
+        
+    #For Testing    
+    def testPush(self):
+        command = raw_input("Enter Test String (to be pushed) > ")
+        self.sendCommand("testPush")
+        self.sendCommand(command)
+
+
+        
+    def testRequest(self):
+        self.bufferRequest.send("test")
+        test = self.bufferRequest.revc_pyobj()
+        log(self.name, "RESPONSE RECIEVED -> " + test)
         
 
 if __name__ == "__main__":
