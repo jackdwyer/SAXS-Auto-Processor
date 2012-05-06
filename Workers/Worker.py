@@ -14,7 +14,6 @@ sys.path.append("../")
 
 import time
 from threading import Thread
-import threading
 
 
 from Core.Logger import log
@@ -118,7 +117,7 @@ class Worker():
                 filter = self.pull.recv()
                 
                 if (str(filter) == "updateUser"):
-                    log(self.name, "Recieved Command - updateUser")
+                    log(self.name, "Received Command - updateUser")
                     self.user = self.pull.recv()
                     log(self.name, "New User -> " + self.user)
                 
