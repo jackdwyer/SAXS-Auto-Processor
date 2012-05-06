@@ -17,10 +17,7 @@ def monitorUser():
 
 
 if __name__ == "__main__":
-    print "Epics User Change Over Testing"
-    monitorUser()
     epics.caput("13SIM1:TIFF1:FilePath", "/jack/natha" + bytearray("\0x00"*256))
-    time.sleep(0.2)
-    epics.caput("13SIM1:TIFF1:FilePath", "/jack/check/that/CHECK" + bytearray("\0x00"*256))
+    epics.caput("13SIM1:TIFF1:FilePath", "/jack/yahooo" + bytearray("\0x00"*256))
     
 

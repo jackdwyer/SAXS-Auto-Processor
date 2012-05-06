@@ -25,9 +25,7 @@ class Worker():
     def __init__(self, name):
         self.name = name
         
-        self.aveIntensities = []
-        self.aveQ = []
-        self.aveErrors = []
+
         
         #need this to be able to save data etc
         self.user = ""
@@ -54,7 +52,7 @@ class Worker():
 
 
 
-        self.dataList = [self.aveBuffer, self.aveIntensities, self.aveQ,  self.aveErrors]        
+        self.dataList = []     
         log(self.name, "Generated")
         
         
@@ -77,9 +75,9 @@ class Worker():
       
       
       
-    def addToClearList(self, data):
+    def addToClearList(self, dataList):
         """Slap all lists in here to be cleared when needed"""
-        self.dataList.append(data)
+        self.dataList.append(dataList)
         
 
     

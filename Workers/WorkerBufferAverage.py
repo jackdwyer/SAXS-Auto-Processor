@@ -5,8 +5,9 @@ refactored WorkerBufferAverage
 """
 
 import sys
-import time
+import time 
 from threading import Thread
+
 sys.path.append("../")
 import zmq
 from Core import AverageList
@@ -14,16 +15,20 @@ from Core.Logger import log
 from Core import DatFile
 
 from Worker import Worker
-from threading import Thread
 
 
 class WorkerBufferAverage(Worker):
     def __init__(self):
         Worker.__init__(self, "WorkerBufferAverage")
         self.allIntensities = []
-        self.aveIntensities = []
+        self.allErrors = []
+        self.allQ = []
         
-        self.addToClearList(self.allIntensities)
+        self.avIntensities = []
+        self.avErrors = []
+        self.avQ = []
+        
+        #self.addToClearList(self.allIntensities, self.allErrors, self.allQ)
         self.reply = self.context.socket(zmq.REP)
 
         #self.sendDataThread = Thread(target=self.sendData())
@@ -40,15 +45,17 @@ class WorkerBufferAverage(Worker):
             #self.average()
             
     
-    def average(self):
-        self.allIntensities.append(self.datFile.intensities)
-        self.allQ.append(self.datFile.q)
-        self.allErrors.append(self.datFile.errors)
+    def average(self, datBuffer):
+        self.allIntensities.append(datBuffer.intensities)
+        self.allErrors.append(datBuffer.errors)
+        self.allQ.append(datBuffer.q)
+
 
         #averaging out
-        self.aveIntensities = self.ave.average(self.allIntensities)
-        self.aveQ = self.ave.average(self.allQ)
-        self.aveErrors = self.ave.average(self.allErrors)
+        self.avIntensities = self.ave.average(self.allIntensities)
+        self.avErrors = self.ave.average(self.allErrors)
+        self.avQ = self.ave.average(self.allQ)
+
         
         self.datWriter.writeFile(self.absolutePath, self.name, { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
 
@@ -68,7 +75,8 @@ class WorkerBufferAverage(Worker):
         self.run()
 
 
-
+    def getAverageBuffer(self):
+        return {'intensities' : self.avIntensities, 'errors' : self.avErrors, 'q' : self.avQ}
     
     
     def sendData(self):
@@ -79,10 +87,9 @@ class WorkerBufferAverage(Worker):
                     self.reply.send_pyobj("REQUESTED DATA")
                 if (_filter == "reqBuffer"):
                     log(self.name, "BufferRequested")
-                    t = [1, 2, 4]
-                    #need to do actual averageBuffer
-                    self.reply.send_pyobj(t)
-                
+                    self.reply.send_pyobj(self.getAverageBuffer())
+                    
+
         
 
         except KeyboardInterrupt:

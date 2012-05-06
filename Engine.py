@@ -37,11 +37,27 @@ class Engine3():
     
     def __init__(self, configFile):
         self.name = "Engine"
+        
+        #Get Configuration settings
+        try:
+            stream = file("config.yaml", 'r') 
+        except IOError:
+            log(self.name, "Unable to find configuration file (config.yaml, in current directory), exiting.")
+            exit()
+        
+        
+        
+        
+        
         log(self.name, "Engine Started")
+        
+        
+        
+        
         #ZeroMQ setup stuff
         self.context = zmq.Context()
         
-        #Currne
+        #Current User
         self.user = ""
       
         #Default workers
@@ -73,9 +89,7 @@ class Engine3():
         
         bufferThread = Thread(target=self.bufferAverage.connect, args=(5001, 5000))
         bufferThread.setDaemon(True)
-        bufferThread.start()
-
-            
+        bufferThread.start()  
             
         staticImageThread = Thread(target=self.staticImage.connect, args=(5002,))
         staticImageThread.setDaemon(True)
@@ -99,8 +113,6 @@ class Engine3():
         cliThread.setDaemon(True)
         cliThread.start()
         
-        
-
 
     def getUser(self, path):
         """Splits file path, and returns only user"""
@@ -109,6 +121,7 @@ class Engine3():
         return user[-1] #currently the user_epn is the last object in the list
     
     def setUser(self, char_value = False, **kw):
+        #TODO remove this, need another way to pass user directly
         if not (char_value): #needed for cli, though my kill engine, if user monitor doesnt return a valid value
             char_value = raw_input("Enter User: ")
         
@@ -129,12 +142,10 @@ class Engine3():
     #EPICS MONITORING
 
     def watchForChangeOver(self):
-        #epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.setUser)
-        print ("epics off")
-
+        epics.camonitor("13SIM1:TIFF1:FilePath_RBV", callback=self.setUser)
+        
     def watchForImage(self):
-        #epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
-        print ("epics off")
+        epics.camonitor("13SIM1:cam1:NumImages_RBV", callback=self.imageTaken)
 
     
     #Engine Control   
@@ -185,6 +196,7 @@ class Engine3():
         print formatting % ("returnUser",'--', "Returns Current User from Engine and all workers"+"\n"),
         print formatting % ("imageTaken", '--', "Force Image Taken Routine")
         print formatting % ("requestAverageBuffer", "--", "Request for latest average buffer")
+        print formatting % ("epicSetUser", '--', "Force Epics to have a new user")
         print formatting % ("exit", '--', "Exit Application")
 
 
@@ -219,13 +231,18 @@ class Engine3():
         command = raw_input("Enter Test String (to be pushed) > ")
         self.sendCommand("testPush")
         self.sendCommand(command)
-
-
         
     def testRequest(self):
         self.bufferRequest.send("test")
         test = self.bufferRequest.recv_pyobj()
         log(self.name, "RESPONSE RECIEVED -> " + test)
+        
+    def epicSetUser(self):
+        user = raw_input("Enter new user > ")
+        epics.caput("13SIM1:TIFF1:FilePath", "/some/where/on/the/" + user + bytearray("\0x00"*256))
+
+        
+
         
 
 if __name__ == "__main__":

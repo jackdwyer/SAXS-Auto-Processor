@@ -8,6 +8,6 @@ database :
 #WorkerDB will always load
 workers : ["WorkerBufferAverage", "WorkerStaticImage", "WorkerRollingAverageSubtraction", "WorkerDB"] 
 
-location : "/home/jack/beamlinetesting/"
+AbsoluteLocation : "/home/jack/beamlinetesting/"
 
 UserChangePV : "13SIM1:TIFF1:FilePath_RBV"
