@@ -33,10 +33,10 @@ class WorkerBufferAverage(Worker):
         if (filter == "test"):
             log(self.name, "RECIEVED - 'test' message")
             
-        if (filter == "buffer"):
-            self.datFile = self.pull.recv_pyobj()
+        if (filter == "reqBuffer"):
+            #self.datFile = self.pull.recv_pyobj()
             log(self.name, "RECIEVED - Buffer")
-            print self.datFile
+            #print self.datFile
             #self.average()
             
     
@@ -82,8 +82,10 @@ class WorkerBufferAverage(Worker):
                     self.reply.send_pyobj("REQUESTED DATA")
                 if (filter == "buffer"):
                     log(self.name, "BufferRequested")
+                    t = [1, 2, 4]
+
                     #need to do actual averageBuffer
-                    self.reply.send_pyobj(self.datFile)
+                    self.reply.send_pyobj(t)
                 
         
 

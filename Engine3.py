@@ -148,7 +148,7 @@ class Engine3():
         self.sendBuffer(t)
         
     def requestAverageBuffer(self):
-        self.bufferRequest.send("buffer")
+        self.bufferRequest.send("reqBuffer")
         f = self.bufferRequest.revc_pyobj()
         print f
   
