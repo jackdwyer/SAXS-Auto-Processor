@@ -29,11 +29,11 @@ class WorkerBufferAverage(Worker):
         #self.sendDataThread = Thread(target=self.sendData())
 
     
-    def process(self, filter):
-        if (filter == "test"):
+    def process(self, _filter):
+        if (_filter == "test"):
             log(self.name, "RECIEVED - 'test' message")
             
-        if (filter == "reqBuffer"):
+        if (_filter == "reqBuffer"):
             #self.datFile = self.pull.recv_pyobj()
             log(self.name, "RECIEVED - Buffer")
             #print self.datFile
@@ -53,10 +53,7 @@ class WorkerBufferAverage(Worker):
         self.datWriter.writeFile(self.absolutePath, self.name, { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
 
         log(self.name, "Averaging Completed")
-        
 
-        if (filter == "reqBuffer"):
-            log(self.name, "Requested Buffer")
 
             
     def connect(self, pullPort, replyPort):
@@ -77,13 +74,12 @@ class WorkerBufferAverage(Worker):
     def sendData(self):
         try:
             while True:
-                filter = self.reply.recv() #wait for request of buffer
-                if (filter == 'test'):
+                _filter = self.reply.recv() #wait for request of buffer
+                if (_filter == 'test'):
                     self.reply.send_pyobj("REQUESTED DATA")
-                if (filter == "buffer"):
+                if (_filter == "reqBuffer"):
                     log(self.name, "BufferRequested")
                     t = [1, 2, 4]
-
                     #need to do actual averageBuffer
                     self.reply.send_pyobj(t)
                 

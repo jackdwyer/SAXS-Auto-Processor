@@ -149,12 +149,15 @@ class Engine3():
         
     def requestAverageBuffer(self):
         self.bufferRequest.send("reqBuffer")
-        f = self.bufferRequest.revc_pyobj()
+        f = self.bufferRequest.recv_pyobj()
         print f
   
     def returnUser(self):
         log(self.name, "Current User : " + self.user)
         self.sendCommand("getUser")
+        
+    def a(self):
+        self.requestAverageBuffer()
     
     
     def cli(self):
@@ -208,7 +211,7 @@ class Engine3():
 
     def sendBuffer(self, datFile):
         self.bufferPush.send("buffer")
-        self.bufferPush.send_pyobj(datFile)
+        self.bufferPush.send_pyobj(self.datFile)
         
         
     #For Testing    
@@ -221,7 +224,7 @@ class Engine3():
         
     def testRequest(self):
         self.bufferRequest.send("test")
-        test = self.bufferRequest.revc_pyobj()
+        test = self.bufferRequest.recv_pyobj()
         log(self.name, "RESPONSE RECIEVED -> " + test)
         
 
