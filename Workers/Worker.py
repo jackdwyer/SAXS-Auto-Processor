@@ -126,7 +126,8 @@ class Worker():
                     log(self.name, "Current User : " + self.user)
                 
                 if (str(filter) == "testPush"):
-                    log(self.name, "Test Pull/Push - Completed")
+                    testString = self.pull.recv();
+                    log(self.name, "Test Pull/Push - Completed - String Received : " + testString)
                     
                 if (str(filter) == "static_image"):
                     log(self.name, "Static Image - Received")
