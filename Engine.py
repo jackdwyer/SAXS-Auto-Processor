@@ -53,7 +53,6 @@ class Engine():
         
         log(self.name, "Engine Started")
         
-        
         #ZeroMQ setup stuff
         self.context = zmq.Context()
         

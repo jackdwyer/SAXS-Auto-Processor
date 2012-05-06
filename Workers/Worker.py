@@ -99,10 +99,7 @@ class Worker():
 
     
     def test(self):
-        log(self.name, "Test Method preformed") 
-        
-
-            
+        log(self.name, "Test Method preformed")     
 
     
     #Overridden in WorkerBufferAverage
