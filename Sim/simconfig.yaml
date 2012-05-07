@@ -1,4 +1,5 @@
-absoluteLocation : "/home/dwyerj/sim/"
+RootDirectory : "/home/dwyerj/beamlinetesting/"
+Experiment : "experiment1"
 
 #Relative location of datfiles, should be data/dat/
 datFileLocation : "data/dat/"

@@ -146,6 +146,8 @@ class Engine():
         
         self.sendCommand("updateUser")
         self.sendCommand(self.user)
+        
+        self.generateDirectoryStructure()
     
 
        
@@ -220,6 +222,11 @@ class Engine():
     def sendBuffer(self, datFile):
         self.bufferPush.send("buffer")
         self.bufferPush.send_pyobj(self.datFile)
+        
+    def generateDirectoryStructure(self):
+        dirCreator = DirectoryCreator.DirectoryCreator(self.rootDirectory)
+        dirCreator.createFolderStructure(self.user, "experiment1")
+        log(self.name, "Generated Directory Structure")
         
         
     #For Testing    

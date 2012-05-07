@@ -4,7 +4,7 @@ database :
     password : "a"
 
 
-RootDirectory : "/home/jack/beamlinetesting/"
+RootDirectory : "/home/dwyerj/beamlinetesting/"
 
 UserChangePV : "13SIM1:TIFF1:FilePath_RBV"
 ImageTakenPV : "13SIM1:cam1:NumImages_RBV"

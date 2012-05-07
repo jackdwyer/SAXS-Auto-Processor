@@ -21,7 +21,7 @@ class Sim:
 
     def __init__(self, configFile):
         self.name = "Simulator"
-        #Load simulation configurationfile
+        #Load simulation configuration file
         try:
             stream = file(configFile, 'r') 
         except IOError:
@@ -30,7 +30,8 @@ class Sim:
             
         self.config = yaml.load(stream)
         self.datFileLocation = self.config["datFileLocation"]
-        self.absoluteLocation = self.config["absoluteLocation"]
+        self.experiment = self.config["Experiment"]
+        self.RootDirectory = self.config["RootDirectory"]
         self.logFileLocation = self.config["logFileLocation"]
         self.imageChangePV = self.config["imageChangePV"]
         self.userChangePV = self.config["userChangePV"]
@@ -41,14 +42,26 @@ class Sim:
         self.setUser()
         
         self.setImageLocationEpics()
+        
+        log(self.name, "Sleeping 1second before generation of log")
+        time.sleep(1)
+        self.generateLog()
+        
+    
+    def run(self):
+        log(self.name, "Started")
+        log = open(self.realLog)
+        line = log.readline()
+        print line
+    
     
         
         
     def setRelative(self):
-        self.relative = self.user + "/raw_dat/"
+        self.relative =  self.user + "/" + self.experiment + "/raw_dat/"
     
     def setFullPath(self):
-        self.fullPath = self.absoluteLocation + self.user
+        self.fullPath = self.RootDirectory + self.user
 
 
     def pause(self):
@@ -66,11 +79,11 @@ class Sim:
     def setImageLocationEpics(self):
         epics.caput("13SIM1:TIFF1:FilePath", self.fullPath + bytearray("\0x00"*256))
 
-
-            
     def generateLog(self):
-        log = open(self.absoluteLocation + self.relative + "livelog.log", "w")
+        log = open(self.RootDirectory + self.relative + "livelog.log", "w")
         log.close()
+        
+    
 
 if __name__ == "__main__":
     sim = Sim("simconfig.yaml")
