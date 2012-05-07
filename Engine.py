@@ -139,8 +139,16 @@ class Engine():
         log(self.name, "image taken")
         self.readLatestLogLine()
         
+        
+    def readLatestLogLine(self):
+        while True:
+            try:
+                logFile = open(self.logLocation, "r")
+                print logFile.read()
+            except KeyboardInterrupt:
+                break
     
-    
+    """
     def readLatestLogLine(self):
         noLines = True
         while (noLines):          
@@ -148,18 +156,27 @@ class Engine():
                 log(self.name, "Opening LogFile")
                 v = open(self.logLocation, "r")
                 try:
-                    self.latestLine = v.readlines()[self.index]
+                    LOL = v.readline
+                    print LOL
+                    print self.index
+                    self.latestLine = v.readline()[self.index]
                     if (self.latestLine in self.lines):
-                        time.sleep(0.05)
+                        time.sleep(1)
                     else:
-                        self.latestLine = v.readlines()[self.index]
+                        print self.logLocation
+                        print v.readline()
+                        self.latestLine = v.readline()[self.index]
                         self.lines.append(self.latestLine)
                         self.logLines.append(LogLine.LogLine(self.latestLine))
-                        self.index = self.index + 1            
+                        self.index = self.index + 1      
+                              
                         noLines = False
+                except KeyboardInterrupt:
+                    raise
                     
                 except IndexError:
                     log(self.name, "IndexError - trying to read last line from logfile")
+                    time.sleep(1)
                     pass
                                 
                 v.close()
@@ -171,7 +188,7 @@ class Engine():
                 time.sleep(1)
                 pass
 
-        
+     """   
         
         
         
