@@ -27,7 +27,7 @@ class DatFile:
         
     
     def openDatFile(self):
-        f = open(self.datFilePath)
+        f = open(self.datFilePath, "r")
         return f    
     
     def closeDatFile(self, f):

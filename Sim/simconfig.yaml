@@ -2,8 +2,8 @@ RootDirectory : "/home/dwyerj/beamlinetesting/"
 Experiment : "experiment1"
 
 #Relative location of datfiles, should be data/dat/
-datFileLocation : "data/dat/"
-logFileLocation : "data/livelog.log" 
+datFileLocation : "../data/dat/"
+LogFileLocation : "../data/livelogfile.log" 
 
 userChangePV : "13SIM1:TIFF1:FilePath" 
 imageChangePV : "13SIM1:cam1:NumImages_VALUE"

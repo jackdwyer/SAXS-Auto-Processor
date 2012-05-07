@@ -190,11 +190,6 @@ class Engine():
        
         changeInName = self.checkName()
         #Here to test against sample change, then slap out for if its a buffer
-        
-                
-
-
-
         try:
             imageType = (self.logLines[self.index-1].data['SampleType'])
         except KeyError:
@@ -306,6 +301,8 @@ class Engine():
         #getting actual dat file name from the log line. It will only pick up that dat file
         dat = self.logLines[self.index-1].getValue("ImageLocation")
         #this needs to be fixed to os agnostic
+        
+        #change to os.path.basename
         dat = dat.split("/")
         dat = dat[-1]
         dat = dat.split(".")
@@ -330,7 +327,7 @@ class Engine():
                 Logger.log(self.name, "DATFILE - " + str(datFile))
 
 
-                time.sleep(0.05)
+                time.sleep(0.3)
                 _pass = _pass + 1
 
 

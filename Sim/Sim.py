@@ -7,6 +7,9 @@ import os
 import sys
 import time
 import epics
+import glob
+import shutil
+
 sys.path.append("../")
 
 
@@ -20,6 +23,8 @@ class Sim:
     
 
     def __init__(self, configFile):
+        #TODO Get the RBV then set X to that, so that we dont get a miss image taken
+
         self.name = "Simulator"
         #Load simulation configuration file
         try:
@@ -32,30 +37,60 @@ class Sim:
         self.datFileLocation = self.config["datFileLocation"]
         self.experiment = self.config["Experiment"]
         self.RootDirectory = self.config["RootDirectory"]
-        self.logFileLocation = self.config["logFileLocation"]
+        self.logFileLocation = self.config["LogFileLocation"]
         self.imageChangePV = self.config["imageChangePV"]
         self.userChangePV = self.config["userChangePV"]
         self.user = ""
         self.relative = self.user + "/raw_dat/"
         self.fullPath = ""
+        self.liveLog = ""
         
         self.setUser()
         
         self.setImageLocationEpics()
         
         log(self.name, "Sleeping 1second before generation of log")
-        time.sleep(1)
+        time.sleep(0.3)
         self.generateLog()
+        self.run()
         
     
     def run(self):
         log(self.name, "Started")
-        log = open(self.realLog)
-        line = log.readline()
-        print line
-    
-    
+        self.logFile = open(self.logFileLocation)
         
+        line = self.logFile.readline()
+        datFiles = glob.glob(self.datFileLocation)
+        
+        x = epics.caget("13SIM1:cam1:NumImages.VAL")
+        time.sleep(1)
+        while True:
+            lineData = LogLine.LogLine(line)
+            fileLoc = lineData.data["ImageLocation"]
+            #get just filename
+        
+            fileName = fileLoc.split('/')
+            fileName = fileName[-1]
+            fileName = fileName.split('.')
+            fileName = fileName[0] + ".dat"
+            actualFileLoc = self.datFileLocation+fileName
+
+            location = self.RootDirectory + self.relative + fileName
+            shutil.copy(actualFileLoc, location)
+            log(self.name, "Dat File, " + fileName + " Generated")
+        
+            #write a line out to the 'live' log    
+            liveLog = open(self.RootDirectory + self.relative + "livelogfile.log", "a")
+            print self.RootDirectory + self.relative
+            liveLog.write(line)
+            liveLog.close()
+            print "Line: " + line +  "- written to live log"  
+            
+            #throw some data out to epics to let the actual python script know that there has been some images/shit happened
+            epics.caput("13SIM1:cam1:NumImages.VAL", x + 1, wait=True)              
+            line = self.logFile.readline()
+            x = x + 1
+            time.sleep(2)  
         
     def setRelative(self):
         self.relative =  self.user + "/" + self.experiment + "/raw_dat/"
@@ -80,8 +115,8 @@ class Sim:
         epics.caput("13SIM1:TIFF1:FilePath", self.fullPath + bytearray("\0x00"*256))
 
     def generateLog(self):
-        log = open(self.RootDirectory + self.relative + "livelog.log", "w")
-        log.close()
+        self.liveLog = open(self.RootDirectory + self.relative + "livelogfile.log", "w")
+        self.liveLog.close()
         
     
 

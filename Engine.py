@@ -50,6 +50,16 @@ class Engine():
         self.rootDirectory = self.config['RootDirectory']
         self.imageTakenPV = self.config['ImageTakenPV']
         self.userChangePV = self.config['UserChangePV']
+        self.relativeLogFileLocation = self.config['RelativeLogFileLocation']
+        self.experimentName = self.config['ExperimentName']
+        
+        
+        self.index = 0
+        self.logLines = []
+        self.lines = []
+        
+        self.absoluteLocation = "" #Properly Created with setuser, it is a concatenation of rootDirectory & user
+        self.logLocation = "" #Properly set in setUser also
         
         log(self.name, "Engine Started")
         
@@ -127,8 +137,43 @@ class Engine():
         
     def imageTaken(self, **kw):
         log(self.name, "image taken")
-        #TEST IMAGE TYPE
-        self.sendImage()
+        self.readLatestLogLine()
+        
+    
+    
+    def readLatestLogLine(self):
+        noLines = True
+        while (noLines):          
+            try:
+                log(self.name, "Opening LogFile")
+                v = open(self.logLocation, "r")
+                try:
+                    self.latestLine = v.readlines()[self.index]
+                    if (self.latestLine in self.lines):
+                        time.sleep(0.05)
+                    else:
+                        self.latestLine = v.readlines()[self.index]
+                        self.lines.append(self.latestLine)
+                        self.logLines.append(LogLine.LogLine(self.latestLine))
+                        self.index = self.index + 1            
+                        noLines = False
+                    
+                except IndexError:
+                    log(self.name, "IndexError - trying to read last line from logfile")
+                    pass
+                                
+                v.close()
+            except KeyboardInterrupt:
+                raise
+            except IOError:
+                log(self.name, "IOERROR - trying to read last line from logfile")
+                log(self.name, self.logLocation)
+                time.sleep(1)
+                pass
+
+        
+        
+        
         
     def getUser(self, path):
         """Splits file path, and returns only user"""
@@ -148,12 +193,40 @@ class Engine():
         self.sendCommand(self.user)
         
         self.generateDirectoryStructure()
+        
+        
+        self.absoluteLocation = self.rootDirectory + self.user + "/" +self.experimentName
+        self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
     
 
        
     def bufferTaken(self):
         t = raw_input("Enter a Test String (will be sent as an object) > ")
         self.sendBuffer(t)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     #Engine Control       
     def requestAverageBuffer(self):
