@@ -36,21 +36,20 @@ class WorkerStaticImage(Worker):
         self.addToClearList(self.subtractedErrors)
 
     def process(self, filter):
+        if (filter == "average_buffer"):
+            self.aveBuffer = self.pull.recv_pyobj()
+            print self.aveBuffer
+            
+        if (filter == "clear_buffer"):
+            log(self.name, "TOLD TO CLEAR TEH BUFFER")
+        
         if (filter == "test"):
             log(self.name, "RECIEVED - 'test' message")
         
-        if (filter == "image"):
+        if (filter == "static_image"):
             self.datFile = self.pull.recv_pyobj()
             log(self.name, "Static Image Received")
-            
-            if (self.needBuffer):
-                self.reqBuffer.send("bufferRequest")
-                self.aveBuffer = self.reqBuffer.recv_pyobj()
-                self.imageSubtraction(self.datFile, self.aveBuffer)
-                self.needBuffer = False
-
-            else:
-                self.imageSubtraction(self.datFile, self.aveBuffer)
+            #self.imageSubtraction(self.datFile, self.aveBuffer)
 
 
     def imageSubtraction(self, datFile, aveBuffer):

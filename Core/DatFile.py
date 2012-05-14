@@ -40,6 +40,17 @@ class DatFile:
 
     def getFileName(self):
         return os.path.basename(self.datFilePath)
+    
+    def getBaseFileName(self):
+        #Dirty function to loose the numbers in a file name
+        #Will be fixed once actual file naming convention is known
+        fileName = self.getFileName()
+        h = fileName.split("_")
+        del h[-1]
+        g = ""
+        for i in h:
+            g = g + i + "_"
+        return g
 
     def getDatFilePath(self):
         return self.datFilePath

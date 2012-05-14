@@ -6,7 +6,7 @@ def log(name, message):
     
     
     logFile = "engine.log"
-    formatting  = '%s %2s %10s %1s'
+    formatting  = '%2s %2s %35s %10s'
     #print str(now)
     print formatting % (str(now), ' -- ['+name+']','--', message+"\n"),
     f = open(logFile, 'a')

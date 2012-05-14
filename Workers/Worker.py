@@ -31,19 +31,14 @@ class Worker():
         self.user = ""
         self.experiment = ""
         self.rootDirectory = ""
+        self.absoluteLocation = ""
         
         self.aveBuffer = []
-        self.needBuffer = True
         
-        #Set so that a reply socket is not always started
-        self.reqBuffer = False        
         #ZMQ stuff
         self.context = zmq.Context()
         self.pull = self.context.socket(zmq.PULL)
-        
-        #for requesting Buffer
-        #self.reqBuffer = self.context.socket(zmq.REQ)
-        
+
         
         #DatFile writer
         self.datWriter = DatFileWriter.DatFileWriter()
@@ -70,10 +65,7 @@ class Worker():
         log(self.name, "All Ports Connected -> pullPort: "+str(pullPort))
         self.run()
 
-    
-      
-      
-      
+
       
     def addToClearList(self, dataList):
         """Slap all lists in here to be cleared when needed"""
@@ -116,6 +108,9 @@ class Worker():
                     log(self.name, "Received Command - updateUser")
                     self.user = self.pull.recv()
                     log(self.name, "New User -> " + self.user)
+               
+                if (str(_filter) == "absolute_location"):
+                    self.absoluteLocation = self.pull.recv()
                 
                 if (str(_filter) == "getUser"):
                     log(self.name, "Current User : " + self.user)

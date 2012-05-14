@@ -38,11 +38,10 @@ class WorkerBufferAverage(Worker):
         if (_filter == "test"):
             log(self.name, "RECIEVED - 'test' message")
             
-        if (_filter == "reqBuffer"):
-            #self.datFile = self.pull.recv_pyobj()
+        if (_filter == "buffer"):
+            buffer = self.pull.recv_pyobj()
             log(self.name, "RECIEVED - Buffer")
-            #print self.datFile
-            #self.average()
+            self.average(buffer)
             
     
     def average(self, datBuffer):
@@ -55,9 +54,8 @@ class WorkerBufferAverage(Worker):
         self.avIntensities = self.ave.average(self.allIntensities)
         self.avErrors = self.ave.average(self.allErrors)
         self.avQ = self.ave.average(self.allQ)
-
         
-        self.datWriter.writeFile(self.absolutePath, self.name, { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
+        self.datWriter.writeFile(self.absoluteLocation+"/avg/", datBuffer.getBaseFileName(), { 'q': self.avQ, 'i' : self.avIntensities, 'errors':self.avErrors})
 
         log(self.name, "Averaging Completed")
 

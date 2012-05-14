@@ -28,23 +28,24 @@ class WorkerRollingAverageSubtraction(Worker):
         self.addToClearList(self.subtractedErrors)
 
     def process(self, filter):
+        if (filter == "average_buffer"):
+            self.aveBuffer = self.pull.recv_pyobj()
+            log(self.name, "Buffer received")
+            print self.aveBuffer
+            
+        if (filter == "clear_buffer"):
+            log(self.name, "TOLD TO CLEAR TEH BUFFER")
+        
         if (filter == "test"):
             log(self.name, "RECIEVED - 'test' message")
         
         
-        if (filter == "image"):
+        if (filter == "static_image"):
             self.datFile = self.pull.recv_pyobj()
             log(self.name, "Static Image Received")
-            
-            if (self.needBuffer):
-                self.reqBuffer.send("bufferRequest")
-                self.aveBuffer = self.reqBuffer.recv_pyobj()
-                self.needBuffer = False
-                self.average()
-                self.imageSubtraction()
-            else:
-                self.average()
-                self.imageSubtraction()
+            #self.average()
+            #self.imageSubtraction()
+
                 
     def average(self):
         self.allIntensities.append(self.datFile.intensities)
@@ -57,9 +58,9 @@ class WorkerRollingAverageSubtraction(Worker):
         self.aveErrors = self.ave.average(self.allErrors)
         
 
-        Logger.log(self.name, "Averaging Completed")
+        log(self.name, "Averaging Completed")
         
-        self.subtract(aveBuffer)
+        self.subtract(self.aveBuffer)
         
         self.datWriter.writeFile("/home/ics/jack/beam/", self.name, { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
         
@@ -86,7 +87,7 @@ class WorkerRollingAverageSubtraction(Worker):
         self.subtractedDatq = subtractedDatq
         self.subtractedErrors = subtractedErrors
 
-        fileName = datFile.getFileName()
+        fileName = self.datFile.getFileName()
         
         self.datWriter.writeFile(self.absolutePath + "sub/raw_sub" , str(fileName) , { 'q' : self.subtractedDatq, 'i' : self.subtractedDatIntensities, 'errors' : self.subtractedErrors})
         log(self.name, "Static Image Written ->" + fileName)
@@ -105,7 +106,7 @@ if __name__ == "__main__":
 
     print "TEST 1 - ONLY PUSH/PULL"
     #Test 1 - Only a pull socket
-    b = WorkerStaticImage()
+    b = WorkerRollingAverageSubtraction()
     t = Thread(target=b.connect, args=(pushPort, False))
     t.start()
 
@@ -119,7 +120,7 @@ if __name__ == "__main__":
 
     #Test 2
     print "TEST 2 - ONLY REQ/RECV"
-    b = Worker()
+    b = WorkerRollingAverageSubtraction()
     t = Thread(target=b.connect, args=(pushPort, reqPort))
     t.start()
     

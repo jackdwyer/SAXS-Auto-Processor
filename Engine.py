@@ -61,6 +61,7 @@ class Engine():
         self.lines = []
         #Will hold the latest created dat file
         self.datFile = ""
+
         
         self.absoluteLocation = "" #Properly Created with setuser, it is a concatenation of rootDirectory & user
         self.logLocation = "" #Properly set in setUser also
@@ -197,6 +198,7 @@ class Engine():
         
         log(self.name, "Retrieved: %s" % imageName)
         self.datFile = DatFile.DatFile(self.datFileLocation +  imageName)
+        
         self.processDatFile(self.datFile, self.logLines[-1])
         
         
@@ -210,18 +212,46 @@ class Engine():
         """
         print logLine.getValue('SampleType')
         
-        #if (logLine.getValue == 0 or logLine.getValue("SampleType")):
-        try:
-            print os.path.basename(self.logLines[-1].getValue("ImageLocation"))
-            print os.path.basename(self.logLines[-2].getValue("ImageLocation"))
-                                   
-            if (changeInRootName(os.path.basename(self.logLines[-1].getValue("ImageLocation")), os.path.basename(self.logLines[-2].getValue("ImageLocation")))):
-                log(self.name, "Change in root names")
-            else:
-                log(self.name, "No change in root name")
-        except(IndexError):
-            log(self.name, "index error, must be first pass")
+        if (logLine.getValue("SampleType") == "0"):
+            log(self.name, "BUFFER")
+            self.sendBuffer(datFile)
+        if (logLine.getValue("SampleType") == "1"):
+            d = self.requestAverageBuffer()
+            print d
         
+        """       
+        if (logLine.getValue("SampleType") == "0" or logLine.getValue("SampleType") == "1"):
+            try:
+                #Check if a new sample type                                    
+                if (changeInRootName(os.path.basename(self.logLines[-1].getValue("ImageLocation")), os.path.basename(self.logLines[-2].getValue("ImageLocation")))):
+                    log(self.name, "Change in root names")
+                    
+                    if (logLine.getValue("SampleType") == "0"):
+                        #New Sample, and a new buffer - all workers need to clear out.
+                        self.sendCommand("clear")
+                        self.sendBuffer(datFile)
+                    
+                    
+                    if (logLine.getValue("SampleType") == "1"):
+                        buffer_ = self.requestAverageBuffer()
+                        
+                        self.sendCommand("clear_buffer")
+                        self.sendAverageBuffer(buffer_)
+                        self.sendImage(datFile)
+                
+                else:
+                    #No root name change
+                    if (logLine.getValue("SampleType") == "0"):
+                        log(self.name, "Buffer Sent")
+                        self.sendBuffer(datFile)
+
+                    if (logLine.getValue("SampleType") == "1"):
+                        log(self.name, "Static_image")
+                        self.sendImage(datFile)
+                                        
+            except(IndexError):
+                log(self.name, "index error, must be first pass")
+        """
         
     def getUser(self, path):
         """Splits file path, and returns only user"""
@@ -247,41 +277,18 @@ class Engine():
         self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
         self.datFileLocation = self.absoluteLocation + "/raw_dat/"
     
+        self.sendCommand("absolute_location")
+        self.sendCommand(self.absoluteLocation)
 
        
     def bufferTaken(self):
         t = raw_input("Enter a Test String (will be sent as an object) > ")
         self.sendBuffer(t)
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     #Engine Control       
     def requestAverageBuffer(self):
         self.bufferRequest.send("reqBuffer")
-        f = self.bufferRequest.recv_pyobj()
-        print f
+        return self.bufferRequest.recv_pyobj()
   
     def returnUser(self):
         log(self.name, "Current User : " + self.user)
@@ -334,9 +341,11 @@ class Engine():
         self.bufferPush.send(command)
         self.rollingPush.send(command)
         
-    def sendImage(self):
+    def sendImage(self, datFile):
         self.staticPush.send("static_image")
+        self.staticPush.send_pyobj(datFile)
         self.rollingPush.send("static_image")
+        self.rollingPush.send_pyobj(datFile)
 
     def sendBuffer(self, datFile):
         self.bufferPush.send("buffer")
@@ -346,6 +355,12 @@ class Engine():
         dirCreator = DirectoryCreator.DirectoryCreator(self.rootDirectory)
         dirCreator.createFolderStructure(self.user, "experiment1")
         log(self.name, "Generated Directory Structure")
+        
+    def sendAverageBuffer(self, datFile):
+        self.staticPush.send("average_buffer")
+        self.staticPush.send_pyobj(datFile)
+        self.rollingPush.send("average_buffer")
+        self.rollingPush.send_pyobj(datFile)
         
         
     #For Testing    

@@ -90,7 +90,7 @@ class Sim:
             epics.caput("13SIM1:cam1:NumImages.VAL", x + 1, wait=True)              
             line = self.logFile.readline()
             x = x + 1
-            time.sleep(0.7)  
+            time.sleep(0.4)  
         
     def setRelative(self):
         self.relative =  self.user + "/" + self.experiment + "/raw_dat/"
