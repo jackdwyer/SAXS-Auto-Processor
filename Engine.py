@@ -186,6 +186,8 @@ class Engine():
         log(self.name, "getImage called, with %s" % imageName) 
         
         #Try and get the file
+        #Could also it
+        
         while not os.path.isfile(self.datFileLocation + imageName):
             log(self.name, "Waiting for: %s" % imageName)
             time.sleep(0.5)
