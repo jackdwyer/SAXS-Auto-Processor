@@ -14,14 +14,14 @@ import epics
 import time
 import zmq
 import sys
+import os
 from Core import DatFile
 from Core import LogLine
 from Core.Logger import log
 from Core import DirectoryCreator
-import MySQLdb as mysql
+#import MySQLdb as mysql
 
 from threading import Thread
-import threading
 
 from Workers import WorkerBufferAverage
 from Workers import WorkerDB
@@ -58,6 +58,8 @@ class Engine():
         self.latestLogLine = ""
         self.logLines = []
         self.lines = []
+        #Will hold the latest created dat file
+        self.datFile = ""
         
         self.absoluteLocation = "" #Properly Created with setuser, it is a concatenation of rootDirectory & user
         self.logLocation = "" #Properly set in setUser also
@@ -78,7 +80,7 @@ class Engine():
         
         #Connect Up all Workers, and have them ready
         self.bufferRequest = self.context.socket(zmq.REQ)
-        self.bufferRequest.connect("tcp://127.0.0.1:5000")
+        self.bufferRequest.connect("tcp://127.0.datFile0.1:5000")
         log(self.name, "Connected -> BufferRequest")
 
         self.bufferPush = self.context.socket(zmq.PUSH)
@@ -141,11 +143,13 @@ class Engine():
         epics.camonitor(self.imageTakenPV, callback=self.imageTaken)
         
     """
-    Engine Functions, for monitoring epics, and controlling flow
+    Engine Functions
+    - Reading log, creating log objects that can be passed around
+    - Getting Image/Dat File - same again creating them into objects to be thrown around
+    - 
     """    
        
     def imageTaken(self, **kw):
-        log(self.name, "image taken")
         self.readLatestLogLine()
         
         
@@ -156,11 +160,46 @@ class Engine():
                 self.latestLogLine = logFile.readlines()[self.index]
                 self.logLines.append(LogLine.LogLine(self.latestLogLine))
                 self.index = self.index + 1
-                log(self.name, "LogLine read : " + self.latestLogLine)
-                break
+                log(self.name, "LogLine read : %s" % self.latestLogLine)
+                
+                #Get image location
+                imageFileName = os.path.basename(self.logLines[-1].getValue("ImageLocation"))
+                log(self.name, "Image : %s" % imageFileName)
+                self.getImage(imageFileName)
+                return
             except KeyboardInterrupt:
-                log(self.name, "Error: Logline reading")
-                break
+                log(self.name, "Error: Unable to read Log File")
+                return False
+    
+    def getImage(self, imageFileName):
+        start_time = time.time()
+        
+        #Get jsut the image/dat nme without extension
+        imageName = os.path.splitext(imageFileName)[0]
+    
+        #add the .dat to image name, so it knows what its looking for
+        imageName = imageName + ".dat"
+        time.sleep(0.1) #Give it a little break to write out the dat file
+        
+        log(self.name, "getImage called, with %s" % imageName) 
+        
+        log(self.name, self.absoluteLocation)
+        
+        log(self.name, self.logLocation)
+        print self.absoluteLocation + "/raw_dat/" + imageName
+        
+        #Try and get the file
+        while not os.path.isfile(self.absoluteLocation + "/raw_dat/" + imageName):
+            print "Waiting for: %s" % imageName
+            time.sleep(0.5)
+            if time.time()-start_time > 5.0: 
+                print "Timeout waiting for: %s" % imageName 
+                return
+            
+        log(self.name, "Retrieved: %s" % imageName)
+        self.datFile = DatFile.DatFile(self.absoluteLocation + "/raw_dat/" + imageName)
+        
+        print self.datFile.getIntensities()
     
     
      

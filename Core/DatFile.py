@@ -18,13 +18,13 @@ class DatFile:
         self.q = []
         self.intensities = []
         self.errors = []
-        self.processDatFile()
         self.numLines
         self.IQL = 0.0
         self.IHQ = 0.0
         self.valid = False
         self.nonAir = False
-        
+        self.processDatFile()
+
     
     def openDatFile(self):
         f = open(self.datFilePath, "r")
