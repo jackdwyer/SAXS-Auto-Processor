@@ -6,25 +6,32 @@ def changeInRootName(current, previous):
     del previous[-1]
     
     if (previous == current):
-        return True
-    else:
         return False
+    else:
+        return True
     
 
 if __name__ == "__main__":
     changeInRootName("1A10_C1_BFIB_HMP_PH3_20_NACL_0363.dat", "1A10_C1_BFIB_HMP_PH3_20_NACL_0363.dat")
     result = 0
+    """
+    P1A1_WATER_0005.tif
+    P1A1_WATER_0004.tif
+    """ 
+    print changeInRootName("P1A1_WATER_0005.tif", "P1A1_WATER_0004.tif")
 
     #Unit Tests
     
     #TEST 1 - Same Root Names
     #Expected Result - True
     test = changeInRootName("1A10_C1_BFIB_HMP_PH3_20_NACL_0363.dat", "1A10_C1_BFIB_HMP_PH3_20_NACL_0363.dat")
+    #Should return False as tehre is no change
     if (test):
-        print "TEST 1 - PASSED - SAME ROOT NAMES"
-    else:
         print "TEST 1 - FAILED - SAME ROOT NAMES"
         result = result + 1
+
+    else:
+        print "TEST 1 - True - SAME ROOT NAMES"
 
 
     #TEST 2 - Different Root Names
@@ -32,9 +39,10 @@ if __name__ == "__main__":
     test = changeInRootName("P1A12_C2_BFIB_HMP_PH3_20_NACL_0433.dat", "water_cap2_0004.dat")
     if (test):
         print "TEST 2 - PASSED - DIFFERENT ROOT NAMES"
-        result = i + 1
     else:
-        print "TEST 2 - PASSED - DIFFERENT ROOT NAMES"
+        print "TEST 2 - FAILED - DIFFERENT ROOT NAMES"
+        result = result + 1
+
 
 
     l = ["P1A10_C1_BFIB_HMP_PH3_20_NACL_0363.dat", 
