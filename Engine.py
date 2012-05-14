@@ -112,12 +112,11 @@ class Engine():
         time.sleep(0.1)
         
         self.setRootDirectory()
-        self.watchForChangeOver()
+        self.watchForUserChangeOver()
         self.watchForImage()      
         
         log(self.name, "All Workers ready")
 
-        self.helpMenu() #Prints out command menu
 
         #Start this thread last
         cliThread = Thread(target=self.cli())
@@ -128,9 +127,14 @@ class Engine():
         self.sendCommand("rootDirectory")
         self.sendCommand(self.rootDirectory)
         
-        #EPICS MONITORING
-    def watchForChangeOver(self):
+        
+    """
+    Engine Functions, for monitoring epics, and controlling flow
+    """
+    
+    def watchForUserChangeOver(self):
         epics.camonitor(self.userChangePV, callback=self.setUser)
+        
         
     def watchForImage(self):
         epics.camonitor(self.imageTakenPV, callback=self.imageTaken)
@@ -254,13 +258,10 @@ class Engine():
     def returnUser(self):
         log(self.name, "Current User : " + self.user)
         self.sendCommand("getUser")
-        
-    def a(self):
-        self.epicImageTaken()
-        
     
     
-    def cli(self):
+    def cli(self):        
+        self.helpMenu() #Prints out command menu
         while True:
             time.sleep(0.1) #TODO: fixing printing output. - This is a quick fix to give enough time for all threads and workers
                             #to print/log out there data
