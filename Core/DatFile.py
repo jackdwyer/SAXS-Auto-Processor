@@ -18,14 +18,15 @@ class DatFile:
         self.q = []
         self.intensities = []
         self.errors = []
-        self.numLines
+
+        self.numLines = 0 
         self.IQL = 0.0
         self.IHQ = 0.0
         self.valid = False
         self.nonAir = False
+
         self.processDatFile()
 
-    
     def openDatFile(self):
         f = open(self.datFilePath, "r")
         return f    
@@ -87,7 +88,7 @@ class DatFile:
             Reads each line of .dat file, and enters each data value into its correct list"""
         f  = self.openDatFile()
         line = f.readline()
-        numLines = 10
+        numLines = 0
         while line:
             b =  line.split()
             try:
