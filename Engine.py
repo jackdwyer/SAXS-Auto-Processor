@@ -20,6 +20,7 @@ from Core import LogLine
 from Core.Logger import log
 from Core import DirectoryCreator
 #import MySQLdb as mysql
+from Core.RootName import changeInRootName
 
 from threading import Thread
 
@@ -63,6 +64,7 @@ class Engine():
         
         self.absoluteLocation = "" #Properly Created with setuser, it is a concatenation of rootDirectory & user
         self.logLocation = "" #Properly set in setUser also
+        self.datFileLocation = "" #Properly set in setUser
         
         log(self.name, "Engine Started")
         
@@ -80,7 +82,7 @@ class Engine():
         
         #Connect Up all Workers, and have them ready
         self.bufferRequest = self.context.socket(zmq.REQ)
-        self.bufferRequest.connect("tcp://127.0.datFile0.1:5000")
+        self.bufferRequest.connect("tcp://127.0.0.1:5000")
         log(self.name, "Connected -> BufferRequest")
 
         self.bufferPush = self.context.socket(zmq.PUSH)
@@ -170,10 +172,10 @@ class Engine():
             except KeyboardInterrupt:
                 log(self.name, "Error: Unable to read Log File")
                 return False
+                
     
     def getImage(self, imageFileName):
-        start_time = time.time()
-        
+        start_time = time.time() 
         #Get jsut the image/dat nme without extension
         imageName = os.path.splitext(imageFileName)[0]
     
@@ -183,27 +185,40 @@ class Engine():
         
         log(self.name, "getImage called, with %s" % imageName) 
         
-        log(self.name, self.absoluteLocation)
-        
-        log(self.name, self.logLocation)
-        print self.absoluteLocation + "/raw_dat/" + imageName
-        
         #Try and get the file
-        while not os.path.isfile(self.absoluteLocation + "/raw_dat/" + imageName):
-            print "Waiting for: %s" % imageName
+        while not os.path.isfile(self.datFileLocation + imageName):
+            log(self.name, "Waiting for: %s" % imageName)
             time.sleep(0.5)
-            if time.time()-start_time > 5.0: 
-                print "Timeout waiting for: %s" % imageName 
-                return
-            
+            if time.time()-start_time > 3.0: 
+                log(self.name, "Timeout waiting for: %s" % imageName)
+                return            
+        
         log(self.name, "Retrieved: %s" % imageName)
-        self.datFile = DatFile.DatFile(self.absoluteLocation + "/raw_dat/" + imageName)
+        self.datFile = DatFile.DatFile(self.datFileLocation +  imageName)
+        self.processDatFile(self.datFile, self.logLines[-1])
         
-        print self.datFile.getIntensities()
-    
-    
-     
         
+        
+    def processDatFile(self, datFile, logLine):
+        """
+        Sample Types:
+        6 - Water
+        0 - Buffer
+        1 - Static Sample
+        """
+        print logLine.getValue('SampleType')
+        
+        #if (logLine.getValue == 0 or logLine.getValue("SampleType")):
+        try:
+            print os.path.basename(self.logLines[-1].getValue("ImageLocation"))
+            print os.path.basename(self.logLines[-2].getValue("ImageLocation"))
+                                   
+            if (changeInRootName(os.path.basename(self.logLines[-1].getValue("ImageLocation")), os.path.basename(self.logLines[-2].getValue("ImageLocation")))):
+                log(self.name, "Change in root names")
+            else:
+                log(self.name, "No change in root name")
+        except(IndexError):
+            log(self.name, "index error, must be first pass")
         
         
     def getUser(self, path):
@@ -228,6 +243,7 @@ class Engine():
         
         self.absoluteLocation = self.rootDirectory + self.user + "/" +self.experimentName
         self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
+        self.datFileLocation = self.absoluteLocation + "/raw_dat/"
     
 
        
