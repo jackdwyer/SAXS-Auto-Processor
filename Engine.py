@@ -55,6 +55,7 @@ class Engine():
         
         
         self.index = 0
+        self.latestLogLine = ""
         self.logLines = []
         self.lines = []
         
@@ -127,18 +128,22 @@ class Engine():
         self.sendCommand("rootDirectory")
         self.sendCommand(self.rootDirectory)
         
-        
-    """
-    Engine Functions, for monitoring epics, and controlling flow
-    """
+       
+    #ENGINE Specific stuff -
     
+    """
+    Epics Monitoring
+    """
     def watchForUserChangeOver(self):
         epics.camonitor(self.userChangePV, callback=self.setUser)
-        
-        
+            
     def watchForImage(self):
         epics.camonitor(self.imageTakenPV, callback=self.imageTaken)
         
+    """
+    Engine Functions, for monitoring epics, and controlling flow
+    """    
+       
     def imageTaken(self, **kw):
         log(self.name, "image taken")
         self.readLatestLogLine()
@@ -148,51 +153,17 @@ class Engine():
         while True:
             try:
                 logFile = open(self.logLocation, "r")
-                print logFile.read()
+                self.latestLogLine = logFile.readlines()[self.index]
+                self.logLines.append(LogLine.LogLine(self.latestLogLine))
+                self.index = self.index + 1
+                log(self.name, "LogLine read : " + self.latestLogLine)
+                break
             except KeyboardInterrupt:
+                log(self.name, "Error: Logline reading")
                 break
     
-    """
-    def readLatestLogLine(self):
-        noLines = True
-        while (noLines):          
-            try:
-                log(self.name, "Opening LogFile")
-                v = open(self.logLocation, "r")
-                try:
-                    LOL = v.readline
-                    print LOL
-                    print self.index
-                    self.latestLine = v.readline()[self.index]
-                    if (self.latestLine in self.lines):
-                        time.sleep(1)
-                    else:
-                        print self.logLocation
-                        print v.readline()
-                        self.latestLine = v.readline()[self.index]
-                        self.lines.append(self.latestLine)
-                        self.logLines.append(LogLine.LogLine(self.latestLine))
-                        self.index = self.index + 1      
-                              
-                        noLines = False
-                except KeyboardInterrupt:
-                    raise
-                    
-                except IndexError:
-                    log(self.name, "IndexError - trying to read last line from logfile")
-                    time.sleep(1)
-                    pass
-                                
-                v.close()
-            except KeyboardInterrupt:
-                raise
-            except IOError:
-                log(self.name, "IOERROR - trying to read last line from logfile")
-                log(self.name, self.logLocation)
-                time.sleep(1)
-                pass
-
-     """   
+    
+     
         
         
         
