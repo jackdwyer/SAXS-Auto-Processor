@@ -61,7 +61,9 @@ class Engine():
         self.lines = []
         #Will hold the latest created dat file
         self.datFile = ""
-
+        
+        self.needBuffer = True #Switch for requesting a new buffer
+        self.aveBuffer = "" #For holding the latest averaged buffer
         
         self.absoluteLocation = "" #Properly Created with setuser, it is a concatenation of rootDirectory & user
         self.logLocation = "" #Properly set in setUser also
@@ -186,8 +188,7 @@ class Engine():
         
         log(self.name, "getImage called, with %s" % imageName) 
         
-        #Try and get the file
-        #Could also it
+
         
         while not os.path.isfile(self.datFileLocation + imageName):
             log(self.name, "Waiting for: %s" % imageName)
@@ -212,46 +213,59 @@ class Engine():
         """
         print logLine.getValue('SampleType')
         
-        if (logLine.getValue("SampleType") == "0"):
-            log(self.name, "BUFFER")
-            self.sendBuffer(datFile)
-        if (logLine.getValue("SampleType") == "1"):
-            d = self.requestAverageBuffer()
-            print d
-        
-        """       
-        if (logLine.getValue("SampleType") == "0" or logLine.getValue("SampleType") == "1"):
-            try:
-                #Check if a new sample type                                    
-                if (changeInRootName(os.path.basename(self.logLines[-1].getValue("ImageLocation")), os.path.basename(self.logLines[-2].getValue("ImageLocation")))):
-                    log(self.name, "Change in root names")
-                    
-                    if (logLine.getValue("SampleType") == "0"):
-                        #New Sample, and a new buffer - all workers need to clear out.
-                        self.sendCommand("clear")
-                        self.sendBuffer(datFile)
-                    
-                    
-                    if (logLine.getValue("SampleType") == "1"):
-                        buffer_ = self.requestAverageBuffer()
-                        
-                        self.sendCommand("clear_buffer")
-                        self.sendAverageBuffer(buffer_)
-                        self.sendImage(datFile)
+        try:
+            if (changeInRootName(os.path.basename(self.logLines[-1].getValue("ImageLocation")), os.path.basename(self.logLines[-2].getValue("ImageLocation")))):
                 
-                else:
-                    #No root name change
-                    if (logLine.getValue("SampleType") == "0"):
-                        log(self.name, "Buffer Sent")
-                        self.sendBuffer(datFile)
+                log(self.name, "Change in root names")
+                
+                if (logLine.getValue("SampleType") == "0"):
+                    self.needBuffer = True
+                    log(self.name, "Buffer Received")
+                    self.sendBuffer(datFile)
+    
+                if (logLine.getValue("SampleType") == "1"):
+                    
+                    if (self.needBuffer):
+                        log(self.name, "Need A Buffer")
+                        self.avebuffer = self.requestAverageBuffer()
+                        self.needBuffer = False
+                        
+                        #send buffer and the new image
+                        
+                    else:
+                        log(self.name, "Just Image Sent")
+    
+                
+            else:
+                log(self.name, "NO CHANGE in root names")
+    
+                if (logLine.getValue("SampleType") == "0"):
+                    self.sendBuffer(datFile)
+                    log(self.name, "BUFFER SENT")
+    
+                if (logLine.getValue("SampleType") == "1"):
+                    
+                    if (self.needBuffer):
+                        log(self.name, "Need A Buffer")
 
-                    if (logLine.getValue("SampleType") == "1"):
-                        log(self.name, "Static_image")
-                        self.sendImage(datFile)
-                                        
-            except(IndexError):
-                log(self.name, "index error, must be first pass")
-        """
+                        d = self.requestAverageBuffer()
+                        log(self.name, "BUFFER REQUESTED")
+                        self.needBuffer = False
+                        
+                        #send buffer and the new image
+                        
+                    else:
+                        log(self.name, "No buffer needed")
+
+                        #send just the image
+                        
+
+
+        except(IndexError):
+            log(self.name, "index error, must be first pass")
+        
+        
+        
         
     def getUser(self, path):
         """Splits file path, and returns only user"""
