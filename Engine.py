@@ -219,21 +219,24 @@ class Engine():
                 log(self.name, "Change in root names")
                 
                 if (logLine.getValue("SampleType") == "0"):
+                    self.sendCommand("new_buffer")
                     self.needBuffer = True
-                    log(self.name, "Buffer Received")
+                    #log(self.name, "Buffer Received")
                     self.sendBuffer(datFile)
     
                 if (logLine.getValue("SampleType") == "1"):
                     
                     if (self.needBuffer):
                         log(self.name, "Need A Buffer")
-                        self.avebuffer = self.requestAverageBuffer()
+                        self.requestAverageBuffer()
+                        self.sendAverageBuffer(self.aveBuffer)
                         self.needBuffer = False
-                        
-                        #send buffer and the new image
+                        self.sendImage(datFile)
                         
                     else:
+                        self.sendImage(datFile)
                         log(self.name, "Just Image Sent")
+                        
     
                 
             else:
@@ -248,13 +251,15 @@ class Engine():
                     if (self.needBuffer):
                         log(self.name, "Need A Buffer")
 
-                        d = self.requestAverageBuffer()
-                        log(self.name, "BUFFER REQUESTED")
-                        self.needBuffer = False
+                        self.requestAverageBuffer()
                         
-                        #send buffer and the new image
+                        self.sendAverageBuffer(self.aveBuffer)
+
+                        self.needBuffer = False
+                        self.sendImage(datFile)
                         
                     else:
+                        self.sendImage(datFile)
                         log(self.name, "No buffer needed")
 
                         #send just the image
@@ -290,6 +295,7 @@ class Engine():
         self.absoluteLocation = self.rootDirectory + self.user + "/" +self.experimentName
         self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
         self.datFileLocation = self.absoluteLocation + "/raw_dat/"
+        self.index = 0
     
         self.sendCommand("absolute_location")
         self.sendCommand(self.absoluteLocation)
@@ -301,8 +307,10 @@ class Engine():
     
     #Engine Control       
     def requestAverageBuffer(self):
-        self.bufferRequest.send("reqBuffer")
-        return self.bufferRequest.recv_pyobj()
+        self.bufferRequest.send("request_buffer")
+        self.aveBuffer = self.bufferRequest.recv_pyobj()
+        print "SELF average Buffer"
+        print self.aveBuffer
   
     def returnUser(self):
         log(self.name, "Current User : " + self.user)
@@ -360,7 +368,13 @@ class Engine():
         self.staticPush.send_pyobj(datFile)
         self.rollingPush.send("static_image")
         self.rollingPush.send_pyobj(datFile)
-
+    
+    def sendAverageBuffer(self, datFile):
+        self.staticPush.send("average_buffer")
+        self.staticPush.send_pyobj(datFile)
+        self.rollingPush.send("average_buffer")
+        self.rollingPush.send_pyobj(datFile)
+        
     def sendBuffer(self, datFile):
         self.bufferPush.send("buffer")
         self.bufferPush.send_pyobj(self.datFile)
@@ -369,13 +383,7 @@ class Engine():
         dirCreator = DirectoryCreator.DirectoryCreator(self.rootDirectory)
         dirCreator.createFolderStructure(self.user, "experiment1")
         log(self.name, "Generated Directory Structure")
-        
-    def sendAverageBuffer(self, datFile):
-        self.staticPush.send("average_buffer")
-        self.staticPush.send_pyobj(datFile)
-        self.rollingPush.send("average_buffer")
-        self.rollingPush.send_pyobj(datFile)
-        
+                
         
     #For Testing    
     def testPush(self):

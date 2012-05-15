@@ -22,29 +22,29 @@ class WorkerRollingAverageSubtraction(Worker):
         self.subtractedDatq = []
         self.subtractedErrors = []
         
+        self.allIntensities = []
+        self.allQ = []
+        self.allErrors = []
+        
+        
         #For adding to be cleared when new user/sample
         self.addToClearList(self.subtractedDatIntensities)
         self.addToClearList(self.subtractedDatq)
         self.addToClearList(self.subtractedErrors)
 
-    def process(self, filter):
-        if (filter == "average_buffer"):
-            self.aveBuffer = self.pull.recv_pyobj()
-            log(self.name, "Buffer received")
-            print self.aveBuffer
-            
-        if (filter == "clear_buffer"):
+    def process(self, test):
+        if (str(test) == "clear_buffer"):
             log(self.name, "TOLD TO CLEAR TEH BUFFER")
         
-        if (filter == "test"):
+        if (str(test) == "test"):
             log(self.name, "RECIEVED - 'test' message")
         
         
-        if (filter == "static_image"):
+        if (str(test) == "static_image"):
             self.datFile = self.pull.recv_pyobj()
             log(self.name, "Static Image Received")
-            #self.average()
-            #self.imageSubtraction()
+            self.average()
+            self.imageSubtraction()
 
                 
     def average(self):
@@ -59,10 +59,8 @@ class WorkerRollingAverageSubtraction(Worker):
         
 
         log(self.name, "Averaging Completed")
-        
-        self.subtract(self.aveBuffer)
-        
-        self.datWriter.writeFile("/home/ics/jack/beam/", self.name, { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
+                
+        self.datWriter.writeFile(self.absoluteLocation+"/avg/", "sample" + "_" + self.datFile.getBaseFileName(), { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
         
         
 
@@ -74,9 +72,9 @@ class WorkerRollingAverageSubtraction(Worker):
         subtractedDatIntensities = []
         subtractedDatq = []
         subtractedErrors = []
-        for i in range(len(self.dateFile.intensities)):
+        for i in range(len(self.datFile.intensities)):
             #Intensities
-            value = self.datFile.intensities[i] - self.aveBuffer[i]
+            value = self.datFile.intensities[i] - self.aveBuffer["intensities"][i]
             subtractedDatIntensities.insert(i, value)
             #Q Values
             subtractedDatq.insert(i, self.datFile.q[i])
@@ -89,7 +87,7 @@ class WorkerRollingAverageSubtraction(Worker):
 
         fileName = self.datFile.getFileName()
         
-        self.datWriter.writeFile(self.absolutePath + "sub/raw_sub" , str(fileName) , { 'q' : self.subtractedDatq, 'i' : self.subtractedDatIntensities, 'errors' : self.subtractedErrors})
+        self.datWriter.writeFile(self.absoluteLocation + "/sub/average_" , self.datFile.getBaseFileName() , { 'q' : self.subtractedDatq, 'i' : self.subtractedDatIntensities, 'errors' : self.subtractedErrors})
         log(self.name, "Static Image Written ->" + fileName)
 
 

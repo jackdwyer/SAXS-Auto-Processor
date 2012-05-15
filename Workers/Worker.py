@@ -32,6 +32,8 @@ class Worker():
         self.experiment = ""
         self.rootDirectory = ""
         self.absoluteLocation = ""
+        self.sampleIndex = 0
+
         
         self.aveBuffer = []
         
@@ -79,6 +81,8 @@ class Worker():
             self.dataList[i] = []
         self.needBuffer = True
         print self.dataList
+        self.sampleIndex = 0
+
         log(self.name, "Cleared")
        
        
@@ -87,7 +91,10 @@ class Worker():
     def process(self, _filter):    
         raise Exception("You must override this method!")
   
+    def newBuffer(self):
+        self.sampleIndex = self.sampleIndex + 1
 
+        self.aveBuffer = []
 
     
     def test(self):
@@ -101,42 +108,51 @@ class Worker():
             #replyThread.start()
         try:
             while True:
-                _filter = self.pull.recv()
+                test = self.pull.recv()
                 
                 #Generic Worker Control
-                if (str(_filter) == "updateUser"):
+                if (str(test) == "updateUser"):
                     log(self.name, "Received Command - updateUser")
                     self.user = self.pull.recv()
                     log(self.name, "New User -> " + self.user)
                
-                if (str(_filter) == "absolute_location"):
+                if (str(test) == "absolute_location"):
+                    log(self.name, "Received Command - absolute_location")
                     self.absoluteLocation = self.pull.recv()
                 
-                if (str(_filter) == "getUser"):
+                if (str(test) == "getUser"):
                     log(self.name, "Current User : " + self.user)
                 
-                if (str(_filter) == "rootDirectory"):
+                if (str(test) == "rootDirectory"):
                     self.rootDirectory = self.pull.recv()
                     log(self.name, "Root Experiment Directory -> " + self.rootDirectory)
                 
-                if (str(_filter) == "returnDirectory"):
+                if (str(test) == "returnDirectory"):
                     log(self.name, "Current Root Directory : " + self.rootDirectory)
                 
-                if (str(_filter) == 'clear'):
-                    self.clear()
+                if (str(test) == "new_buffer"):
+                    self.newBuffer()
                 
-                if (str(_filter) == "exit"):
+                if (str(test) == "average_buffer"):
+                    self.aveBuffer = self.pull.recv_pyobj()
+                    print self.aveBuffer
+                    log(self.name, "Received average buffer")
+                
+                if (str(test) == 'clear'):
+                    self.clear()
+
+                if (str(test) == "exit"):
                     self.close()
                     
                     
                 #Test shit   
-                if (str(_filter) == "testPush"):
+                if (str(test) == "testPush"):
                     testString = self.pull.recv();
                     log(self.name, "Test Pull/Push - Completed - String Received : " + testString)
                 
 
                 else:
-                    self.process(_filter)
+                    self.process(test)
                 
         except KeyboardInterrupt:
             pass

@@ -35,21 +35,14 @@ class WorkerStaticImage(Worker):
         self.addToClearList(self.subtractedDatq)
         self.addToClearList(self.subtractedErrors)
 
-    def process(self, filter):
-        if (filter == "average_buffer"):
-            self.aveBuffer = self.pull.recv_pyobj()
-            print self.aveBuffer
-            
-        if (filter == "clear_buffer"):
-            log(self.name, "TOLD TO CLEAR TEH BUFFER")
-        
-        if (filter == "test"):
+    def process(self, test):       
+        if (str(test) == "test"):
             log(self.name, "RECIEVED - 'test' message")
         
-        if (filter == "static_image"):
+        if (str(test) == "static_image"):
             self.datFile = self.pull.recv_pyobj()
             log(self.name, "Static Image Received")
-            #self.imageSubtraction(self.datFile, self.aveBuffer)
+            self.imageSubtraction(self.datFile, self.aveBuffer)
 
 
     def imageSubtraction(self, datFile, aveBuffer):
@@ -58,7 +51,7 @@ class WorkerStaticImage(Worker):
         subtractedErrors = []
         for i in range(len(datFile.intensities)):
             #Intensities
-            value = datFile.intensities[i] - aveBuffer[i]
+            value = datFile.intensities[i] - aveBuffer["intensities"][i]
             subtractedDatIntensities.insert(i, value)
             #Q Values
             subtractedDatq.insert(i, datFile.q[i])
@@ -71,7 +64,7 @@ class WorkerStaticImage(Worker):
 
         fileName = datFile.getFileName()
         
-        self.datWriter.writeFile(self.absolutePath + "sub/raw_sub" , str(fileName) , { 'q' : self.subtractedDatq, 'i' : self.subtractedDatIntensities, 'errors' : self.subtractedErrors})
+        self.datWriter.writeFile(self.absoluteLocation + "/sub/raw_sub/" , "sub_"+str(fileName) , { 'q' : self.subtractedDatq, 'i' : self.subtractedDatIntensities, 'errors' : self.subtractedErrors})
         log(self.name, "Static Image Written ->" + fileName)
 
 

@@ -32,16 +32,38 @@ class WorkerBufferAverage(Worker):
         self.reply = self.context.socket(zmq.REP)
 
         #self.sendDataThread = Thread(target=self.sendData())
+        
+        self.bufferIndex = 0
 
     
-    def process(self, _filter):
-        if (_filter == "test"):
+    def process(self, test):       
+        if (test == "test"):
             log(self.name, "RECIEVED - 'test' message")
             
-        if (_filter == "buffer"):
+            
+            
+        if (test == "buffer"):
             buffer = self.pull.recv_pyobj()
             log(self.name, "RECIEVED - Buffer")
             self.average(buffer)
+            
+    def newBuffer(self):
+        self.bufferIndex = self.bufferIndex + 1
+        self.allIntensities = []
+        self.allErrors = []
+        self.allQ = []
+        self.avIntensities = []
+        self.avErrors = []
+        self.avQ = []
+        
+    def clear(self):
+        self.bufferIndex = 0
+        self.allIntensities = []
+        self.allErrors = []
+        self.allQ = []
+        self.avIntensities = []
+        self.avErrors = []
+        self.avQ = []
             
     
     def average(self, datBuffer):
@@ -55,7 +77,7 @@ class WorkerBufferAverage(Worker):
         self.avErrors = self.ave.average(self.allErrors)
         self.avQ = self.ave.average(self.allQ)
         
-        self.datWriter.writeFile(self.absoluteLocation+"/avg/", datBuffer.getBaseFileName(), { 'q': self.avQ, 'i' : self.avIntensities, 'errors':self.avErrors})
+        self.datWriter.writeFile(self.absoluteLocation+"/avg/", "buffer" + str(self.bufferIndex) + "_" + "avg_" + datBuffer.getBaseFileName(), { 'q': self.avQ, 'i' : self.avIntensities, 'errors':self.avErrors})
 
         log(self.name, "Averaging Completed")
 
@@ -80,10 +102,10 @@ class WorkerBufferAverage(Worker):
     def sendData(self):
         try:
             while True:
-                _filter = self.reply.recv() #wait for request of buffer
-                if (_filter == 'test'):
+                test = self.reply.recv() #wait for request of buffer
+                if (test == 'test'):
                     self.reply.send_pyobj("REQUESTED DATA")
-                if (_filter == "reqBuffer"):
+                if (test == "request_buffer"):
                     log(self.name, "BufferRequested")
                     self.reply.send_pyobj(self.getAverageBuffer())
                     
