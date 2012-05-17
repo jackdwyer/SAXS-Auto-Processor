@@ -10,3 +10,5 @@ ExperimentName : "experiment1"
 
 UserChangePV : "13SIM1:TIFF1:FilePath_RBV"
 ImageTakenPV : "13SIM1:cam1:NumImages_RBV"
+
+locationPilatus : /data/pilatus1M/data/Cycle_2012_1
