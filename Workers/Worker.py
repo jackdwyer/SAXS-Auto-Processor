@@ -7,7 +7,6 @@ Will also be abstract/interface for what methods need to be overridden etc
 """
 
 
-
 import zmq
 import sys
 sys.path.append("../")
@@ -40,6 +39,8 @@ class Worker():
         #ZMQ stuff
         self.context = zmq.Context()
         self.pull = self.context.socket(zmq.PULL)
+        
+        self.dbPush = self.context.socket(zmq.PUSH)
 
         
         #DatFile writer
@@ -62,9 +63,19 @@ class Worker():
         self.absolutePath = absolutePath
         
     #Overriden by Buffer Average
-    def connect(self, pullPort):
-        self.pull.connect("tcp://127.0.0.1:"+str(pullPort));
-        log(self.name, "All Ports Connected -> pullPort: "+str(pullPort))
+    def connect(self, pullPort, dbPushPort = None):
+        self.pull.connect("tcp://127.0.0.1:"+str(pullPort))
+        
+        
+        if (dbPushPort):
+            self.dbPush.connect("tcp://127.0.0.1:"+str(dbPushPort))
+            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort) + " -> dbPushPort: "+str(dbPushPort))
+        
+        else:
+            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort))
+        
+            
+
         self.run()
 
 
@@ -87,10 +98,11 @@ class Worker():
        
        
         
-        
+    
     def process(self, _filter):    
         raise Exception("You must override this method!")
-  
+        
+      
     def newBuffer(self):
         self.sampleIndex = self.sampleIndex + 1
 
@@ -109,9 +121,9 @@ class Worker():
         try:
             while True:
                 test = self.pull.recv()
-                
+                                
                 #Generic Worker Control
-                if (str(test) == "updateUser"):
+                if (str(test) == "update_user"):
                     log(self.name, "Received Command - updateUser")
                     self.user = self.pull.recv()
                     log(self.name, "New User -> " + self.user)
@@ -143,6 +155,9 @@ class Worker():
 
                 if (str(test) == "exit"):
                     self.close()
+                    
+                if (str(test) == "test"):
+                    log(self.name, "Received TEST")
                     
                     
                 #Test shit   

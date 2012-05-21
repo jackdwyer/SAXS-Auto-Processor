@@ -33,7 +33,7 @@ class WorkerBufferAverage(Worker):
 
         #self.sendDataThread = Thread(target=self.sendData())
         
-        self.bufferIndex = 0
+        self.index = 0
 
     
     def process(self, test):       
@@ -48,7 +48,7 @@ class WorkerBufferAverage(Worker):
             self.average(buffer)
             
     def newBuffer(self):
-        self.bufferIndex = self.bufferIndex + 1
+        self.index = self.index + 1
         self.allIntensities = []
         self.allErrors = []
         self.allQ = []
@@ -57,7 +57,7 @@ class WorkerBufferAverage(Worker):
         self.avQ = []
         
     def clear(self):
-        self.bufferIndex = 0
+        self.index = 0
         self.allIntensities = []
         self.allErrors = []
         self.allQ = []
@@ -77,16 +77,34 @@ class WorkerBufferAverage(Worker):
         self.avErrors = self.ave.average(self.allErrors)
         self.avQ = self.ave.average(self.allQ)
         
-        self.datWriter.writeFile(self.absoluteLocation+"/avg/", "buffer" + str(self.bufferIndex) + "_" + "avg_" + datBuffer.getBaseFileName(), { 'q': self.avQ, 'i' : self.avIntensities, 'errors':self.avErrors})
+        fileName = "buffer" + str(self.index) + "_" + "avg_" + datBuffer.getBaseFileName()
+
+        self.dbPush.send("buffer_file")
+        self.dbPush.send_pyobj(fileName)
+        
+        self.datWriter.writeFile(self.absoluteLocation+"/avg/", fileName, { 'q': self.avQ, 'i' : self.avIntensities, 'errors':self.avErrors})
 
         log(self.name, "Averaging Completed")
 
 
             
-    def connect(self, pullPort, replyPort):
-        self.pull.connect("tcp://127.0.0.1:"+str(pullPort))
+    def connect(self, pullPort, dbPushPort, replyPort):
+        
+        self.pull.connect("tcp://127.0.0.1:"+str(pullPort));
         self.reply.bind("tcp://127.0.0.1:"+str(replyPort))
-        log(self.name, "All Ports Connected -> pullPort: "+str(pullPort)+" - replyPort: "+str(replyPort))
+
+        
+        if (dbPushPort):
+            self.dbPush.connect("tcp://127.0.0.1:"+str(dbPushPort))
+            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort) + "-> replyPort: "+str(replyPort)+" -> dbPushPort: "+str(dbPushPort))
+        
+        else:
+            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort) + "-> replyPort: "+str(replyPort))
+        
+            
+
+
+        log(self.name, "All Ports Connected -> replyPort: "+str(replyPort))
         
         replyThread = Thread(target=self.sendData)
         replyThread.setDaemon(True)

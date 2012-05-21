@@ -81,7 +81,7 @@ class Engine():
         self.bufferAverage = WorkerBufferAverage.WorkerBufferAverage()
         self.staticImage = WorkerStaticImage.WorkerStaticImage()
         self.rollingAverageSubtraction = WorkerRollingAverageSubtraction.WorkerRollingAverageSubtraction()
-        #self.DB = WorkerDB.WorkerDB()
+        self.dbWorker = WorkerDB.WorkerDB()
         
         #Connect Up all Workers, and have them ready
         self.bufferRequest = self.context.socket(zmq.REQ)
@@ -95,35 +95,58 @@ class Engine():
         self.staticPush = self.context.socket(zmq.PUSH)
         self.staticPush.bind("tcp://127.0.0.1:5002")
         log(self.name, "Binded -> StaticPush")
+        
+        self.dbPush = self.context.socket(zmq.PUSH)
+        self.dbPush.connect("tcp://127.0.0.1:5003")
+        log(self.name, "Binded -> dbPush")
 
-        time.sleep(0.1)
-
-        self.rollingPush = self.context.socket(zmq.PUSH)
-        self.rollingPush.bind("tcp://127.0.0.1:5003")
-        log(self.name, "Binded -> RollingPush")
 
         time.sleep(0.1)
         
-        bufferThread = Thread(target=self.bufferAverage.connect, args=(5001, 5000))
+
+
+        self.rollingPush = self.context.socket(zmq.PUSH)
+        self.rollingPush.bind("tcp://127.0.0.1:5004")
+        log(self.name, "Binded -> RollingPush")
+
+        time.sleep(0.5)
+        
+
+        
+        bufferThread = Thread(target=self.bufferAverage.connect, args=(5001, 5003, 5000))
         bufferThread.setDaemon(True)
         bufferThread.start()  
-            
-        staticImageThread = Thread(target=self.staticImage.connect, args=(5002,))
+        
+        time.sleep(0.1)
+    
+        
+        staticImageThread = Thread(target=self.staticImage.connect, args=(5002, 5003 ))
         staticImageThread.setDaemon(True)
         staticImageThread.start()
         
-        rollingAverageThread = Thread(target=self.rollingAverageSubtraction.connect, args=(5003,))
-        rollingAverageThread.setDaemon(True)
-
-        rollingAverageThread.start()
-
         time.sleep(0.1)
+
+        
+        rollingAverageThread = Thread(target=self.rollingAverageSubtraction.connect, args=(5004, 5003))
+        rollingAverageThread.setDaemon(True)
+        rollingAverageThread.start()
+        
+        time.sleep(0.1)
+
+        
+        dbThread = Thread(target=self.dbWorker.connect, args=(5003, ))
+        dbThread.setDaemon(True)
+        dbThread.start()
+
+        time.sleep(0.5)
         
         self.setRootDirectory()
         self.watchForUserChangeOver()
-        self.watchForImage()      
+        self.watchForImage() 
         
         log(self.name, "All Workers ready")
+        
+        self.dbPush.send("test")
 
 
         #Start this thread last
@@ -166,6 +189,7 @@ class Engine():
                 self.logLines.append(LogLine.LogLine(self.latestLogLine))
                 self.index = self.index + 1
                 log(self.name, "LogLine read : %s" % self.latestLogLine)
+                self.sendLogLine(LogLine.LogLine(self.latestLogLine))
                 
                 #Get image location
                 imageFileName = os.path.basename(self.logLines[-1].getValue("ImageLocation"))
@@ -268,7 +292,11 @@ class Engine():
 
         except(IndexError):
             log(self.name, "index error, must be first pass")
+ 
         
+    def sentTest(self):
+        self.sendCommand("update_user")   
+        self.sendCommand("jack")
         
         
         
@@ -286,7 +314,7 @@ class Engine():
         self.user = self.getUser(char_value) #get new user
         log(self.name, "User Changed -> " + str(self.user))
         
-        self.sendCommand("updateUser")
+        self.sendCommand("update_user")
         self.sendCommand(self.user)
         
         self.generateDirectoryStructure()
@@ -359,9 +387,12 @@ class Engine():
     #########
     # Helper functions
     def sendCommand(self, command):
+        self.dbPush.send(command)
         self.staticPush.send(command)
         self.bufferPush.send(command)
         self.rollingPush.send(command)
+
+
         
     def sendImage(self, datFile):
         self.staticPush.send("static_image")
@@ -378,6 +409,10 @@ class Engine():
     def sendBuffer(self, datFile):
         self.bufferPush.send("buffer")
         self.bufferPush.send_pyobj(self.datFile)
+        
+    def sendLogLine(self, logLine):
+        self.dbPush.send("log_line")
+        self.dbPush.send_pyobj(logLine)
         
     def generateDirectoryStructure(self):
         dirCreator = DirectoryCreator.DirectoryCreator(self.rootDirectory)

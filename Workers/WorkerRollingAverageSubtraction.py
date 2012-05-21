@@ -32,10 +32,7 @@ class WorkerRollingAverageSubtraction(Worker):
         self.addToClearList(self.subtractedDatq)
         self.addToClearList(self.subtractedErrors)
 
-    def process(self, test):
-        if (str(test) == "clear_buffer"):
-            log(self.name, "TOLD TO CLEAR TEH BUFFER")
-        
+    def process(self, test):       
         if (str(test) == "test"):
             log(self.name, "RECIEVED - 'test' message")
         
@@ -59,15 +56,16 @@ class WorkerRollingAverageSubtraction(Worker):
         
 
         log(self.name, "Averaging Completed")
+        
+        fileName = "sample_"+self.datFile.getBaseFileName()
                 
-        self.datWriter.writeFile(self.absoluteLocation+"/avg/", "sample" + "_" + self.datFile.getBaseFileName(), { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
+        self.dbPush.send("average_image")
+        self.dbPush.send(fileName)
         
         
-
-
-
-
-
+        self.datWriter.writeFile(self.absoluteLocation+"/avg/", fileName, { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
+        
+        
     def imageSubtraction(self):
         subtractedDatIntensities = []
         subtractedDatq = []
@@ -85,9 +83,12 @@ class WorkerRollingAverageSubtraction(Worker):
         self.subtractedDatq = subtractedDatq
         self.subtractedErrors = subtractedErrors
 
-        fileName = self.datFile.getFileName()
+        fileName = "average_"+self.datFile.getFileName()
         
-        self.datWriter.writeFile(self.absoluteLocation + "/sub/average_" , self.datFile.getBaseFileName() , { 'q' : self.subtractedDatq, 'i' : self.subtractedDatIntensities, 'errors' : self.subtractedErrors})
+        self.dbPush.send("subtracted_average_image")
+        self.dbPush.send(fileName)
+        
+        self.datWriter.writeFile(self.absoluteLocation + "/sub/" , fileName , { 'q' : self.subtractedDatq, 'i' : self.subtractedDatIntensities, 'errors' : self.subtractedErrors})
         log(self.name, "Static Image Written ->" + fileName)
 
 

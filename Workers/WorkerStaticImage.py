@@ -64,6 +64,9 @@ class WorkerStaticImage(Worker):
 
         fileName = datFile.getFileName()
         
+        self.dbPush.send("sub_static_image")
+        self.dbPush.send("sub_"+fileName)
+        
         self.datWriter.writeFile(self.absoluteLocation + "/sub/raw_sub/" , "sub_"+str(fileName) , { 'q' : self.subtractedDatq, 'i' : self.subtractedDatIntensities, 'errors' : self.subtractedErrors})
         log(self.name, "Static Image Written ->" + fileName)
 
