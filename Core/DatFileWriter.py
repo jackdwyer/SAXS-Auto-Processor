@@ -31,7 +31,7 @@ class DatFileWriter:
         if not os.path.exists(self.location):
             os.makedirs(self.location)
                    
-        loc = self.location+self.datName+".dat"                
+        loc = self.location+self.datName                
         f = open(loc, 'w')
         f.write(self.datName + "\n")
         formatting  = '%'+str(4 + self.accuracy)+'s %'+str(6 + self.accuracy)+'s %'+str(6 + self.accuracy)+'s \n'

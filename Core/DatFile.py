@@ -50,7 +50,7 @@ class DatFile:
         g = ""
         for i in h:
             g = g + i + "_"
-        return g
+        return g + ".dat"
 
     def getDatFilePath(self):
         return self.datFilePath
@@ -124,6 +124,8 @@ class DatFile:
     def reprocessDatFile(self):
         self.processDatFile()
 
-
+if __name__ == "__main__":
+    b = DatFile("../data/dat/air_1_0001.dat")
+    print b.getFileName()
 
     

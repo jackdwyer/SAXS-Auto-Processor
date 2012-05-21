@@ -24,6 +24,9 @@ class Worker():
     def __init__(self, name):
         self.name = name
         
+        self.newSample = True #For writting out to db
+        self.newSample_sub = True
+        
 
         
         #need this to be able to save data etc
@@ -104,6 +107,9 @@ class Worker():
         
       
     def newBuffer(self):
+        self.newSample = True
+        self.newSample_sub = True
+
         self.sampleIndex = self.sampleIndex + 1
 
         self.aveBuffer = []

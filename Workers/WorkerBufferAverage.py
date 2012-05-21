@@ -34,6 +34,8 @@ class WorkerBufferAverage(Worker):
         #self.sendDataThread = Thread(target=self.sendData())
         
         self.index = 0
+        
+        self.changeInBuffer = True
 
     
     def process(self, test):       
@@ -48,6 +50,7 @@ class WorkerBufferAverage(Worker):
             self.average(buffer)
             
     def newBuffer(self):
+        self.changeInBuffer = True
         self.index = self.index + 1
         self.allIntensities = []
         self.allErrors = []
@@ -77,10 +80,12 @@ class WorkerBufferAverage(Worker):
         self.avErrors = self.ave.average(self.allErrors)
         self.avQ = self.ave.average(self.allQ)
         
-        fileName = "buffer" + str(self.index) + "_" + "avg_" + datBuffer.getBaseFileName()
+        fileName = "buffer" + str(self.index) + "_avg_" + str(datBuffer.getBaseFileName())
 
-        self.dbPush.send("buffer_file")
-        self.dbPush.send_pyobj(fileName)
+        if (self.changeInBuffer):
+            self.dbPush.send("buffer_file")
+            self.dbPush.send(fileName)
+            self.changeInBuffer = False
         
         self.datWriter.writeFile(self.absoluteLocation+"/avg/", fileName, { 'q': self.avQ, 'i' : self.avIntensities, 'errors':self.avErrors})
 

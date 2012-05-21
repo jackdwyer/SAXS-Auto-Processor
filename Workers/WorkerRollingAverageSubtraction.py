@@ -58,9 +58,11 @@ class WorkerRollingAverageSubtraction(Worker):
         log(self.name, "Averaging Completed")
         
         fileName = "sample_"+self.datFile.getBaseFileName()
-                
-        self.dbPush.send("average_image")
-        self.dbPush.send(fileName)
+        
+        if (self.newSample):      
+            self.dbPush.send("average_image")
+            self.dbPush.send(fileName)
+            self.newSample = False
         
         
         self.datWriter.writeFile(self.absoluteLocation+"/avg/", fileName, { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
@@ -83,10 +85,12 @@ class WorkerRollingAverageSubtraction(Worker):
         self.subtractedDatq = subtractedDatq
         self.subtractedErrors = subtractedErrors
 
-        fileName = "average_"+self.datFile.getFileName()
+        fileName = "average_"+self.datFile.getBaseFileName()
         
-        self.dbPush.send("subtracted_average_image")
-        self.dbPush.send(fileName)
+        if (self.newSample_sub):
+            self.dbPush.send("subtracted_average_image")
+            self.dbPush.send(fileName)
+            self.newSample_sub = False
         
         self.datWriter.writeFile(self.absoluteLocation + "/sub/" , fileName , { 'q' : self.subtractedDatq, 'i' : self.subtractedDatIntensities, 'errors' : self.subtractedErrors})
         log(self.name, "Static Image Written ->" + fileName)
