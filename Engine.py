@@ -54,6 +54,9 @@ class Engine():
         self.relativeLogFileLocation = self.config['RelativeLogFileLocation']
         self.experimentName = self.config['ExperimentName']
         
+        self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
+        self.datFileLocation = self.absoluteLocation + "/raw_dat/"
+        
         
         self.index = 0
         self.latestLogLine = ""
