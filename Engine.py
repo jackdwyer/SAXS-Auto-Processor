@@ -358,7 +358,7 @@ class Engine():
         self.generateDirectoryStructure()
         
         
-        self.absoluteLocation = self.rootDirectory + self.user + "/" 
+        self.absoluteLocation = self.rootDirectory + self.user 
         self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
         self.datFileLocation = self.absoluteLocation + "/raw_dat/"
         self.index = 0
