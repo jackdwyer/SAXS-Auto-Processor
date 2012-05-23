@@ -229,6 +229,7 @@ class Engine():
                     print "trying to open log file"
                     logFile = open(self.logLocation, "r")
                     time.sleep(0.5)
+                    print "slept for 0.5 seconds"
                 except IOError:
                     if time.time()-start_time > 10.0: 
                         log(self.name, "Timeout waiting for: LOG FILE")
