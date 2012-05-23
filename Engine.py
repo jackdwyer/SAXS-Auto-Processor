@@ -224,16 +224,13 @@ class Engine():
 
         while True:
             try:
-                
-                try:
-                    print "trying to open log file"
-                    logFile = open(self.logLocation, "r")
-                    time.sleep(0.5)
-                    print "slept for 0.5 seconds"
-                except KeyboardInterrupt:
-                    if time.time()-start_time > 10.0: 
-                        log(self.name, "Timeout waiting for: LOG FILE")
-                        log(self.name, "Shutting down...")
+                print "trying to open log file"
+                logFile = open(self.logLocation, "r")
+                time.sleep(0.5)
+                print "slept for 0.5 seconds"
+                if time.time()-start_time > 10.0: 
+                    log(self.name, "Timeout waiting for: LOG FILE")
+                    log(self.name, "Shutting down...")
                     sys.exit()      
             
                 self.latestLogLine = logFile.readlines()[self.index]
