@@ -24,24 +24,12 @@ class WorkerEMBLmolSize(Worker):
         
         self.run()
     
-    
-    def run(self):
-        try:
-            while True:
-                test = self.pull.recv()                   
-                                        
-                #Test shit   
-                if (str(test) == "testPush"):
-                    testString = self.pull.recv()
-                    log(self.name, "Test Pull/Push - Completed - String Received : " + testString)
+    def process(self, test):  
+        if (str(test) == "subtracted_dat"):
+            datFile = self.pull.recv()
+            log(self.name, "About to process DatFile: " + str(datFile))
+            self.processDatFile(datFile)  
 
-                if (str(test) == "subtracted_dat"):
-                    datFile = self.pull.recv()
-                    log(self.name, "About to process DatFile: " + str(datFile))
-                    self.processDatFile(datFile)
-                
-        except KeyboardInterrupt:
-            pass
 
 
     def processDatFile(self, datFile):
