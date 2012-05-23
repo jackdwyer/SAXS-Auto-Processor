@@ -230,7 +230,7 @@ class Engine():
                     logFile = open(self.logLocation, "r")
                     time.sleep(0.5)
                     print "slept for 0.5 seconds"
-                except IOError:
+                except KeyboardInterrupt:
                     if time.time()-start_time > 10.0: 
                         log(self.name, "Timeout waiting for: LOG FILE")
                         log(self.name, "Shutting down...")
