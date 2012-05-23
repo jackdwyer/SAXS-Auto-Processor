@@ -34,6 +34,24 @@ class WorkerStaticImage(Worker):
         self.addToClearList(self.subtractedDatIntensities)
         self.addToClearList(self.subtractedDatq)
         self.addToClearList(self.subtractedErrors)
+        
+    def connect(self, pullPort, dbPushPort = None, EMBLmolSizePushPort = None):
+        
+        self.pull.bind("tcp://127.0.0.1:"+str(pullPort))
+        if (EMBLmolSizePushPort):
+            self.EMBLmolSizePush.connect("tcp://127.0.0.1:"+str(EMBLmolSizePushPort))
+            log(self.name, "EMBL mol Size push connected")
+        
+        if (dbPushPort):
+            self.dbPush.connect("tcp://127.0.0.1:"+str(dbPushPort))
+            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort) + " -> dbPushPort: "+str(dbPushPort))
+        
+        else:
+            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort))
+        
+            
+
+        self.run()
 
     def process(self, test):       
         if (str(test) == "test"):
@@ -65,7 +83,10 @@ class WorkerStaticImage(Worker):
         fileName = "sub_" + str(datFile.getFileName())
         
         self.dbPush.send("sub_static_image")
-        self.dbPush.send("sub_"+fileName)
+        self.dbPush.send(fileName)
+        
+        self.EMBLmolSizePush.send("subtracted_dat")
+        self.EMBLmolSizePush.send(fileName)
         
         self.datWriter.writeFile(self.absoluteLocation + "/sub/raw_sub/" , fileName , { 'q' : self.subtractedDatq, 'i' : self.subtractedDatIntensities, 'errors' : self.subtractedErrors})
         log(self.name, "Static Image Written ->" + fileName)

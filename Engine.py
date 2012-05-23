@@ -29,6 +29,9 @@ from Workers import WorkerDB
 from Workers import WorkerRollingAverageSubtraction
 from Workers import WorkerStaticImage
 
+from Workers import WorkerEMBLmolSize
+
+
 
 
 class Engine():
@@ -54,8 +57,7 @@ class Engine():
         self.relativeLogFileLocation = self.config['RelativeLogFileLocation']
         self.experimentName = self.config['ExperimentName']
         
-        self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
-        self.datFileLocation = self.absoluteLocation + "/raw_dat/"
+
         
         
         self.index = 0
@@ -72,6 +74,19 @@ class Engine():
         self.logLocation = "" #Properly set in setUser also
         self.datFileLocation = "" #Properly set in setUser
         
+        
+        #self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
+        #self.datFileLocation = self.absoluteLocation + "/raw_dat/"
+        
+        
+        """
+        # /data/pilatus1M/data/Cycle_2012_2  -- correct location, with user on the end
+        """
+        
+        self.logLocation = "/home/dwyerj/sim/data/livelogfile.log"
+        self.datFileLocation = "/home/dwyerj/sim/data/"
+
+        
         log(self.name, "Engine Started")
         
         #ZeroMQ setup stuff
@@ -85,6 +100,7 @@ class Engine():
         self.staticImage = WorkerStaticImage.WorkerStaticImage()
         self.rollingAverageSubtraction = WorkerRollingAverageSubtraction.WorkerRollingAverageSubtraction()
         self.dbWorker = WorkerDB.WorkerDB()
+        self.WorkerEMBLmolSize = WorkerEMBLmolSize.WorkerEMBLmolSize()
         
         #Connect Up all Workers, and have them ready
         self.bufferRequest = self.context.socket(zmq.REQ)
@@ -96,41 +112,49 @@ class Engine():
         log(self.name, "Binded -> BufferPush")
 
         self.staticPush = self.context.socket(zmq.PUSH)
-        self.staticPush.bind("tcp://127.0.0.1:5002")
+        self.staticPush.connect("tcp://127.0.0.1:5002")
         log(self.name, "Binded -> StaticPush")
+        
         
         self.dbPush = self.context.socket(zmq.PUSH)
         self.dbPush.connect("tcp://127.0.0.1:5003")
         log(self.name, "Binded -> dbPush")
-
-
-        time.sleep(0.1)
-        
-
+     
 
         self.rollingPush = self.context.socket(zmq.PUSH)
         self.rollingPush.bind("tcp://127.0.0.1:5004")
         log(self.name, "Binded -> RollingPush")
+        
+        self.EMBLmolSizePush = self.context.socket(zmq.PUSH)
+        self.EMBLmolSizePush.connect("tcp://127.0.0.1:5005")
+        log(self.name, "Binded -> EMBL1Push")
 
         time.sleep(0.5)
         
 
         
-        bufferThread = Thread(target=self.bufferAverage.connect, args=(5001, 5003, 5000))
+        time.sleep(0.1)
+
+        
+        bufferThread = Thread(target=self.bufferAverage.connect, args=(5001, 5003, 5000,))
         bufferThread.setDaemon(True)
         bufferThread.start()  
         
         time.sleep(0.1)
+        
+        EMBL1Thread = Thread(target=self.WorkerEMBLmolSize.connect, args=(5005, 5003, ))
+        EMBL1Thread.setDaemon(True)
+        EMBL1Thread.start()
     
         
-        staticImageThread = Thread(target=self.staticImage.connect, args=(5002, 5003 ))
+        staticImageThread = Thread(target=self.staticImage.connect, args=(5002, 5003, 5005, ))
         staticImageThread.setDaemon(True)
         staticImageThread.start()
         
         time.sleep(0.1)
 
         
-        rollingAverageThread = Thread(target=self.rollingAverageSubtraction.connect, args=(5004, 5003))
+        rollingAverageThread = Thread(target=self.rollingAverageSubtraction.connect, args=(5004, 5003,))
         rollingAverageThread.setDaemon(True)
         rollingAverageThread.start()
         
@@ -157,9 +181,20 @@ class Engine():
         cliThread.setDaemon(True)
         cliThread.start()
         
+        #self.live()
+        
+        
+    def live(self):
+        while True:
+            self.imageTaken()
+            time.sleep(1)
+    
+                
     def setRootDirectory(self):
         self.sendCommand("rootDirectory")
         self.sendCommand(self.rootDirectory)
+       
+       
         
        
     #ENGINE Specific stuff -
@@ -324,8 +359,8 @@ class Engine():
         
         
         self.absoluteLocation = self.rootDirectory + self.user + "/" +self.experimentName
-        self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
-        self.datFileLocation = self.absoluteLocation + "/raw_dat/"
+        #self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
+        #self.datFileLocation = self.absoluteLocation + "/raw_dat/"
         self.index = 0
     
         self.sendCommand("absolute_location")
@@ -394,6 +429,7 @@ class Engine():
         self.staticPush.send(command)
         self.bufferPush.send(command)
         self.rollingPush.send(command)
+        self.EMBLmolSizePush.send(command)
 
 
         
@@ -447,6 +483,6 @@ class Engine():
 
 if __name__ == "__main__":
     engine = Engine("config.yaml")
-    engine.testPush()
-    engine.testRequest()
-    engine.watchForChangeOver()
+    #engine.testPush()
+    #engine.testRequest()
+    #engine.watchForChangeOver()

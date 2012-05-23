@@ -44,6 +44,8 @@ class Worker():
         self.pull = self.context.socket(zmq.PULL)
         
         self.dbPush = self.context.socket(zmq.PUSH)
+        self.EMBLmolSizePush = self.context.socket(zmq.PUSH)
+
 
         
         #DatFile writer
@@ -66,9 +68,12 @@ class Worker():
         self.absolutePath = absolutePath
         
     #Overriden by Buffer Average
-    def connect(self, pullPort, dbPushPort = None):
-        self.pull.connect("tcp://127.0.0.1:"+str(pullPort))
+    def connect(self, pullPort, dbPushPort = None, EMBLmolSizePushPort = None):
         
+        self.pull.connect("tcp://127.0.0.1:"+str(pullPort))
+        if (EMBLmolSizePushPort):
+            self.EMBLmolSizePush.connect("tcp://127.0.0.1:"+str(pullPort))
+            log(self.name, "EMBL mol Size push connected")
         
         if (dbPushPort):
             self.dbPush.connect("tcp://127.0.0.1:"+str(dbPushPort))
