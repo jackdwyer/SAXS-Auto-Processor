@@ -75,8 +75,8 @@ class Engine():
         self.datFileLocation = "" #Properly set in setUser
         
         
-        #self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
-        #self.datFileLocation = self.absoluteLocation + "/raw_dat/"
+        self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
+        self.datFileLocation = self.absoluteLocation + "/raw_dat/"
         
         
         """
@@ -355,7 +355,7 @@ class Engine():
         """Splits file path, and returns only user"""
         user = path.split("/")
         user = filter(None, user) #needed to remove the none characters from the array
-        return user[-1] #currently the user_epn is the last object in the list
+        return user[-2] #currently the user_epn is the last object in the list
     
     def setUser(self, char_value = False, **kw):
         #TODO remove this, need another way to pass user directly
@@ -490,7 +490,8 @@ class Engine():
     def epicImageTaken(self):
         epics.caput("13SIM1:cam1:NumImages.VAL", 1, wait=True)
 
-        
+    def getLogLoc(self):
+	print self.logLocation    
 
         
 
