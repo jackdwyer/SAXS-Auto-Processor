@@ -19,7 +19,7 @@ class DirectoryCreator:
         
     def createFolderStructure(self, user, experiment):
         self.user = user
-        self.fullPath = self.absolutePath + str(user) + "/" + str(experiment) + "/"
+        self.fullPath = self.absolutePath + str(user) + "/"
         
         #Base Folder
         try:
