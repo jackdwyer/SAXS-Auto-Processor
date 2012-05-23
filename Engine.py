@@ -225,6 +225,7 @@ class Engine():
         while True:
             try:
                 try:
+                    print "trying to open log file"
                     logFile = open(self.logLocation, "r")
                     time.sleep(0.5)
                 except IOError:
