@@ -85,6 +85,8 @@ class Engine():
         
         #self.logLocation = "/home/dwyerj/sim/data/livelogfile.log"
         #self.datFileLocation = "/home/dwyerj/sim/data/"
+        
+        
 
         
         log(self.name, "Engine Started")
@@ -174,6 +176,12 @@ class Engine():
         log(self.name, "All Workers ready")
         
         self.dbPush.send("test")
+
+
+        #TODO: REMOVE this, shouldnt really be set here
+        self.absoluteLocation = self.rootDirectory + self.user 
+        self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
+        self.datFileLocation = self.absoluteLocation + "/raw_dat/"
 
 
         #Start this thread last
