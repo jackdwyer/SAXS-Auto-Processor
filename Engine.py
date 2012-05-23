@@ -220,9 +220,18 @@ class Engine():
         
         
     def readLatestLogLine(self):
+        start_time = time.time() 
+
         while True:
             try:
-                logFile = open(self.logLocation, "r")
+                try:
+                    logFile = open(self.logLocation, "r")
+                    time.sleep(0.5)
+                except IOError:
+                    if time.time()-start_time > 3.0: 
+                        log(self.name, "Timeout waiting for: LOG FILE")
+                    return      
+            
                 self.latestLogLine = logFile.readlines()[self.index]
                 self.logLines.append(LogLine.LogLine(self.latestLogLine))
                 self.index = self.index + 1
