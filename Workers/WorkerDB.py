@@ -103,14 +103,14 @@ class WorkerDB(Worker):
     def buildTables(self):
         collumAttributes = ['WashType', 'SampleOmega', 'FilePluginDestination', 'Temperature2', 'Temperature1', 'WellNumber', 'SamplePhi', 'NumericTimeStamp', 'I0', 'SampleY', 'SampleX', 'SampleChi', 'TimeStamp', 'SampleType', 'ImageCounter', 'Ibs', 'exptime', 'FilePluginFileName', 'Energy', 'It', 'SampleTableX', 'SampleTableY', 'NORD', 'ImageLocation']
 
-        collumAttributes_old = ['I0', 'NumericTimeStamp', 'WashType', 'FilePluginDestination', 'TimeStamp', 'Energy', 'NORD', 'SampleType', 'It', 'SampleTableX', 'SampleTableY', 'Temperature2', 'Temperature1', 'WellNumber', 'Ibs', 'exptime', 'FilePluginFileName', 'ImageLocation']
+        #collumAttributes_old = ['I0', 'NumericTimeStamp', 'WashType', 'FilePluginDestination', 'TimeStamp', 'Energy', 'NORD', 'SampleType', 'It', 'SampleTableX', 'SampleTableY', 'Temperature2', 'Temperature1', 'WellNumber', 'Ibs', 'exptime', 'FilePluginFileName', 'ImageLocation']
         self.logTable = TableBuilder.TableBuilder(self.user, "Log", collumAttributes)
         
         #This needs to bs fixed to support different sample types
         bufferRows = ['buffer_location']
         self.bufferTable = TableBuilder.TableBuilder(self.user, 'buffers', bufferRows)
         
-        subtractedRows = ['subtracted_location']
+        subtractedRows = ['subtracted_location', 'avg-low-q', 'avg-high-q', 'valid']
         self.subtractedTable = TableBuilder.TableBuilder(self.user, 'subtracted_images', subtractedRows)
         
         averagedRows = ['average_location']
