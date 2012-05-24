@@ -77,8 +77,13 @@ class Sim:
             location = self.RootDirectory + self.relative + fileName
             shutil.copy(actualFileLoc, location)
             logger(self.name, "Dat File, " + fileName + " Generated")
+
+            epics.caput("13SIM1:cam1:NumImages.VAL", x + 1, wait=True)              
+
         
-            #write a line out to the 'live' log    
+            #write a line out to the 'live' log  
+            time.sleep(3)
+              
             liveLog = open(self.RootDirectory + self.relative + "livelogfile.log", "a")
             print self.RootDirectory + self.relative
             liveLog.write(line)
@@ -86,10 +91,9 @@ class Sim:
             print "Line: " + line +  "- written to live log"  
             
             #throw some data out to epics to let the actual python script know that there has been some images/shit happened
-            epics.caput("13SIM1:cam1:NumImages.VAL", x + 1, wait=True)              
             line = self.logFile.readline()
             x = x + 1
-            time.sleep(10)  
+            time.sleep(0.3)  
         
     def setRelative(self):
         self.relative =  self.user  + "/raw_dat/"
