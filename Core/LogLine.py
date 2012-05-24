@@ -58,8 +58,10 @@ class LogLine:
                 
 
 if __name__ == "__main__":
+    lineNew = '<LOGLINE TimeStamp = "Wed May 23 2012 16:18:33.038" NumericTimeStamp = "119168313.038" ImageCounter = "1" exptime = "1.000000" SampleTableX = "0.000000" SampleTableY = "0.000000" Energy = "12.000001" Temperature1 = "27.170000" Temperature2 = "-270.000000" WellNumber = "1.000000" SampleType = "1" WashType = "3" SamplePhi = "1.000000" SampleOmega = "-0.085000" SampleChi = "1.400000" SampleX = "208.015625" SampleY = "-7.210000" FilePluginDestination = "FileLOGWRITER1 FileASCII1" FilePluginFileName = "/home/det/p2_det/images/data/Cycle_2012_2/Devlin_5155A/images/dark_5_0018.tif" NORD = "0" Ibs = "0" I0 = "0" It = "0" >/home/det/p2_det/images/data/Cycle_2012_2/Devlin_5155A/images/dark_5_0018.tif</LOGLINE>'
+	
     line = '<LOGLINE TimeStamp = "Sun Apr 01 2012 17:25:45.715" NumericTimeStamp = "114679545.715" exptime = "1" SampleTableX = "0" SampleTableY = "-0.00204353" Energy = "12" Temperature1 = "30.548" Temperature2 = "-270" WellNumber = "19" SampleType = "0" WashType = "0" FilePluginDestination = "all" FilePluginFileName = "/home/det/p2_det/images/data/Cycle_2012_1/Melton_4615/P1B7_HCL_PH3_100_NACL_0586.tif" NORD = "9" Ibs = "31460" I0 = "59688" It = "0" >/home/det/p2_det/images/data/Cycle_2012_1/Melton_4615/P1B7_HCL_PH3_100_NACL_0586.tif</LOGLINE>'
-    a = LogLine(line)
+    a = LogLine(lineNew)
     #print a.line
     #a.getAttributes()
     #print a.data

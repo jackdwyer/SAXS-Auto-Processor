@@ -33,8 +33,9 @@ class WorkerEMBLmolSize(Worker):
 
 
     def processDatFile(self, datFile):
-        """
-        process = subprocess.Popen(['autorg', '-f', 'ssv', str(datFile)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	loc = self.rootDirectory +"/" + self.user + "sub/raw_sub/" + str(datFile)
+  
+        process = subprocess.Popen(['autorg', '-f', 'ssv', str(loc)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output,errorOutput = process.communicate()
         
         print output
@@ -42,16 +43,18 @@ class WorkerEMBLmolSize(Worker):
         valuePoints = output.split(" ")
         rg = valuePoints[0]
         
-        process = subprocess.Popen(['datgnom', '-r', str(rg), '-s', '12', str(datFile)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(['datgnom', '-r', str(rg), '-s', '12', str(loc)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output,errorOutput = process.communicate()
         
         print output
-        
-        process = subprocess.Popen(['datporod', 'sample_data/sum_data_4.out'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  	
+	f = datFile.split(".")
+	outFile = self.rootDirectory + self.user + "sub/raw_sub/" + str(f[0]) + ".out"
+        process = subprocess.Popen(['datporod', outFile], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output,errorOutput = process.communicate()
         
         print output       
-        """
+  
         print "in PROCESS DAT FILE FUNCTION, this needs to get correct directory"
         print "THE DAT FILE IS: " + str(datFile)    
         f = datFile.split(".")

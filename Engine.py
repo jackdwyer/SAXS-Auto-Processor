@@ -75,8 +75,8 @@ class Engine():
         self.datFileLocation = "" #Properly set in setUser
         
         
-        #self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
-        #self.datFileLocation = self.absoluteLocation + "/raw_dat/"
+        self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
+        self.datFileLocation = self.absoluteLocation + "/raw_dat/"
         
         
         """
@@ -173,7 +173,11 @@ class Engine():
         self.watchForUserChangeOver()
         self.watchForImage() 
         
-        log(self.name, "All Workers ready")
+ 	time.sleep(0.1) 
+        self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
+        self.datFileLocation = self.absoluteLocation + "/raw_dat/"
+
+	log(self.name, "All Workers ready")
         
         self.dbPush.send("test")
 
@@ -215,7 +219,7 @@ class Engine():
             
     def watchForImage(self):
         epics.camonitor(self.imageTakenPV, callback=self.imageTaken)
-        
+         
     """
     Engine Functions
     - Reading log, creating log objects that can be passed around
@@ -223,11 +227,13 @@ class Engine():
     - 
     """    
        
-    def imageTaken(self, **kw):
-        self.readLatestLogLine()
+    def imageTaken(self, char_value, **kw):
+        print "imageTaken()"
+        self.readLatestLogLine(char_value)
         
         
-    def readLatestLogLine(self):
+    def readLatestLogLine(self, image_name):
+        print "read lastest log line"
         start_time = time.time() 
 
         while True:
@@ -240,9 +246,13 @@ class Engine():
                     log(self.name, "Timeout waiting for: LOG FILE")
                     log(self.name, "Shutting down...")
                     sys.exit()      
-            
-                self.latestLogLine = logFile.readlines()[self.index]
-                self.logLines.append(LogLine.LogLine(self.latestLogLine))
+            	
+                self.latestLogLine = logFile.readlines()[-1]
+                tempLogLine = LogLine.LogLine(self.latestLogLine)
+                if(tempLogLine.getValue('ImageLocation') != image_name):
+                    print("Image doesnt match latest line")
+                    continue
+                self.logLines.append(tempLogLine)
                 self.index = self.index + 1
                 log(self.name, "LogLine read : %s" % self.latestLogLine)
                 self.sendLogLine(LogLine.LogLine(self.latestLogLine))
@@ -308,11 +318,12 @@ class Engine():
                     
                     if (self.needBuffer):
                         log(self.name, "Need A Buffer")
-                        self.requestAverageBuffer()
-                        self.sendAverageBuffer(self.aveBuffer)
-                        self.needBuffer = False
-                        self.sendImage(datFile)
-                        
+                        if (self.requestAverageBuffer()):
+                            self.sendAverageBuffer(self.aveBuffer)
+                            self.needBuffer = False
+                            self.sendImage(datFile)
+                        else:
+   			    log(self.name, "Request for averaged buffer failed, subtraction unable to occurr")
                     else:
                         self.sendImage(datFile)
                         log(self.name, "Just Image Sent")
@@ -331,12 +342,12 @@ class Engine():
                     if (self.needBuffer):
                         log(self.name, "Need A Buffer")
 
-                        self.requestAverageBuffer()
-                        
-                        self.sendAverageBuffer(self.aveBuffer)
-
-                        self.needBuffer = False
-                        self.sendImage(datFile)
+                        if (self.requestAverageBuffer()):
+                            self.sendAverageBuffer(self.aveBuffer)
+                            self.needBuffer = False
+                            self.sendImage(datFile)
+		        else:
+                            log(self.name, "Request for averaged buffer failed, can not subtract datfile")
                         
                     else:
                         self.sendImage(datFile)
@@ -360,7 +371,7 @@ class Engine():
         """Splits file path, and returns only user"""
         user = path.split("/")
         user = filter(None, user) #needed to remove the none characters from the array
-        return user[-1] #currently the user_epn is the last object in the list
+        return user[-2] #currently the user_epn is the last object in the list
     
     def setUser(self, char_value = False, **kw):
         #TODO remove this, need another way to pass user directly
@@ -395,7 +406,11 @@ class Engine():
         self.aveBuffer = self.bufferRequest.recv_pyobj()
         print "SELF average Buffer"
         print self.aveBuffer
-  
+	if (self.aveBuffer == "no_buffer"):
+	    return False
+	else:
+	    return True  	
+
     def returnUser(self):
         log(self.name, "Current User : " + self.user)
         self.sendCommand("getUser")
@@ -449,7 +464,8 @@ class Engine():
         self.rollingPush.send(command)
         self.EMBLmolSizePush.send(command)
 
-
+    def testImageTaken(self):
+        self.imageTaken(epics.caget(self.imageTakenPV, as_string=True))
         
     def sendImage(self, datFile):
         self.staticPush.send("static_image")
@@ -495,7 +511,18 @@ class Engine():
     def epicImageTaken(self):
         epics.caput("13SIM1:cam1:NumImages.VAL", 1, wait=True)
 
-        
+    def getLogLoc(self):
+	print self.logLocation    
+    
+    def getVariables(self):
+	print "Absolute Location: ", str(self.absoluteLocation)
+        print "LogLocation: ", str(self.logLocation)
+        print "DatFile Location: ", str(self.datFileLocation)
+	print "SELF-Index: ", str(self.index)
+
+    def forceCommand(self):
+	command = raw_input("Enter Command >>")
+	self.sendCommand(command)
 
         
 

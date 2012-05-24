@@ -130,7 +130,11 @@ class WorkerBufferAverage(Worker):
                     self.reply.send_pyobj("REQUESTED DATA")
                 if (test == "request_buffer"):
                     log(self.name, "BufferRequested")
-                    self.reply.send_pyobj(self.getAverageBuffer())
+                    v = self.getAverageBuffer()
+		    if (v['intensities']):
+			self.reply.send_pyobj(self.getAverageBuffer())
+		    else:
+			self.reply.send_pyobj("no_buffer")
                     
 
         
