@@ -534,7 +534,7 @@ class Engine():
         print "Absolute Location: ", str(self.absoluteLocation)
         print "LogLocation: ", str(self.logLocation)
         print "DatFile Location: ", str(self.datFileLocation)
-        print "SELF-Index: ", str(self.index)
+        print "SELF-Index: ", str(self.lineIndex)
 
     def forceCommand(self):
         command = raw_input("Enter Command >>")
