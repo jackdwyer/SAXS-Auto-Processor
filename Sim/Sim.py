@@ -13,7 +13,7 @@ import shutil
 sys.path.append("../")
 
 
-from Core.Logger import log as log
+from Core.Logger import logger
 import yaml
 from threading import Thread
 from Core import LogLine
@@ -30,12 +30,11 @@ class Sim:
         try:
             stream = file(configFile, 'r') 
         except IOError:
-            log(self.name, "Unable to find configuration, exiting.")
+            logger(self.name, "Unable to find configuration, exiting.")
             exit()
             
         self.config = yaml.load(stream)
         self.datFileLocation = self.config["datFileLocation"]
-        self.experiment = self.config["Experiment"]
         self.RootDirectory = self.config["RootDirectory"]
         self.logFileLocation = self.config["LogFileLocation"]
         self.imageChangePV = self.config["imageChangePV"]
@@ -49,14 +48,14 @@ class Sim:
         
         self.setImageLocationEpics()
         
-        log(self.name, "Sleeping 1second before generation of log")
+        logger(self.name, "Sleeping 1second before generation of log")
         time.sleep(0.3)
         self.generateLog()
         self.run()
         
     
     def run(self):
-        log(self.name, "Started")
+        logger(self.name, "Started")
         self.logFile = open(self.logFileLocation)
         
         line = self.logFile.readline()
@@ -77,7 +76,7 @@ class Sim:
 
             location = self.RootDirectory + self.relative + fileName
             shutil.copy(actualFileLoc, location)
-            log(self.name, "Dat File, " + fileName + " Generated")
+            logger(self.name, "Dat File, " + fileName + " Generated")
         
             #write a line out to the 'live' log    
             liveLog = open(self.RootDirectory + self.relative + "livelogfile.log", "a")
@@ -93,17 +92,17 @@ class Sim:
             time.sleep(10)  
         
     def setRelative(self):
-        self.relative =  self.user + "/" + self.experiment + "/raw_dat/"
+        self.relative =  self.user  + "/raw_dat/"
     
     def setFullPath(self):
         self.fullPath = self.RootDirectory + self.user
 
 
     def pause(self):
-        log(self.name, "Function for pausing simulator")
+        logger(self.name, "Function for pausing simulator")
             
     def start(self):
-        log(self.name, "starting simulator")
+        logger(self.name, "starting simulator")
         
     def setUser(self):
         #For setting current EPN user

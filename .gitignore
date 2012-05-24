@@ -9,3 +9,4 @@ data/
 .p*
 *.pyc
 Worker/*.pyc
+config.yaml

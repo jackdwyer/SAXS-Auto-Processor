@@ -236,12 +236,33 @@ class Engine():
                     self.log = open(self.logLocation, 'r')
     
         numLines = len(self.log.readlines())
-        while True:
-            if (self.lineIndex < numLines):
-                logger(self.name, "Behind current logFile/experiment -- TURBO MODE ENABLED")
+        #if its behind
+        while (self.lineIndex < numLines):
+            logger(self.name, "Behind current logFile/experiment -- TURBO MODE ENABLED")
+            for i in (len(self.log.readlines()) - self.lineIndex ):
+                self.latestLogLine = LogLine.LogLine(self.log.readlines()[i])
+                self.logLines.append(self.latestLogLine)
+                imageFileName = os.path.basename(self.latestLogLine.getValue("ImageLocation"))
+                self.sendLogLine(self.latestLogLine)
+                self.getImage(imageFileName)
+                self.lineIndex = self.lineIndex + 1
+        
+        while (self.lineIndex > numLines):
+            logger(self.name, "Ahead of current log lines, sleeping for 0.5seconds")
+            time.sleep(0.5)
+            continue
+            
+        if (self.lineIndex == numLines):
+            self.latestLogLine = LogLine.LogLine(self.log.readlines()[i])
+            self.logLines.append(self.latestLogLine)
+            imageFileName = os.path.basename(self.latestLogLine.getValue("ImageLocation"))
+            self.sendLogLine(self.latestLogLine)
+            self.getImage(imageFileName)
+            self.lineIndex = self.lineIndex + 1
+        else:
+            logger(self.name, "self.lineIndex some how failed.")
                 
-        
-        
+    """    
     def readLatestLogLine2(self, image_name):
         start_time = time.time()
     
@@ -307,7 +328,7 @@ class Engine():
                 logger(self.name, "Error: Unable to read Log File")
                 return False
                 
-    
+    """
     def getImage(self, imageFileName):
         start_time = time.time() 
         #Get jsut the image/dat nme without extension

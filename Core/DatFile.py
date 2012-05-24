@@ -123,6 +123,7 @@ class DatFile:
         
     def reprocessDatFile(self):
         self.processDatFile()
+        
 
 if __name__ == "__main__":
     b = DatFile("../data/dat/air_1_0001.dat")
