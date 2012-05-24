@@ -385,7 +385,7 @@ class Engine():
                             self.needBuffer = False
                             self.sendImage(datFile)
                         else:
-   			    logger(self.name, "Request for averaged buffer failed, subtraction unable to occurr")
+                            logger(self.name, "Request for averaged buffer failed, subtraction unable to occurr")
                     else:
                         self.sendImage(datFile)
                         logger(self.name, "Just Image Sent")
@@ -408,7 +408,7 @@ class Engine():
                             self.sendAverageBuffer(self.aveBuffer)
                             self.needBuffer = False
                             self.sendImage(datFile)
-		        else:
+                        else:
                             logger(self.name, "Request for averaged buffer failed, can not subtract datfile")
                         
                     else:
@@ -471,10 +471,10 @@ class Engine():
         self.aveBuffer = self.bufferRequest.recv_pyobj()
         print "SELF average Buffer"
         print self.aveBuffer
-	if (self.aveBuffer == "no_buffer"):
-	    return False
-	else:
-	    return True  	
+        if (self.aveBuffer == "no_buffer"):
+            return False
+        else:
+            return True  	
 
     def returnUser(self):
         logger(self.name, "Current User : " + self.user)
@@ -577,17 +577,17 @@ class Engine():
         epics.caput("13SIM1:cam1:NumImages.VAL", 1, wait=True)
 
     def getLogLoc(self):
-	print self.logLocation    
+        print self.logLocation    
     
     def getVariables(self):
-	print "Absolute Location: ", str(self.absoluteLocation)
+        print "Absolute Location: ", str(self.absoluteLocation)
         print "LogLocation: ", str(self.logLocation)
         print "DatFile Location: ", str(self.datFileLocation)
-	print "SELF-Index: ", str(self.index)
+        print "SELF-Index: ", str(self.index)
 
     def forceCommand(self):
-	command = raw_input("Enter Command >>")
-	self.sendCommand(command)
+        command = raw_input("Enter Command >>")
+        self.sendCommand(command)
 
         
 
