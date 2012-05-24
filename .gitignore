@@ -10,3 +10,5 @@ data/
 *.pyc
 Worker/*.pyc
 config.yaml
+Core/testData
+Core/testData/*
