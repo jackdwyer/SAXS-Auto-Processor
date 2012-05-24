@@ -62,7 +62,6 @@ class Engine():
         self.lineIndex = 0        
         self.log = ""
 
-        self.latestLogLine = ""
         self.logLines = []
         self.lines = []
         #Will hold the latest created dat file
@@ -220,15 +219,16 @@ class Engine():
        
     def imageTaken(self, **kw):
         print "imageTaken()"
-        self.readLatestLogLine()
+        self.readLatestLogLine(**kw)
     
     
-    def openLogFile(self):
+    
+    def readLatestLogLine(self, **kw):
         if not (self.log):
             start_time = time.time()
             logger(self.name, "Log File")
             while not (self.log):
-                if ((time.time() - start_time) == 30.0):
+                if ((time.time() - start_time) > 30.0):
                     logger(self.name, "Error: can not open log file at location: " + self.logLocation)
                     logger(self.name, "FATAL ERROR")
                     logger(self.name, "Shutting down")
@@ -238,147 +238,42 @@ class Engine():
                     time.sleep(0.1)
                     self.log = open(self.logLocation, 'r')
                     
-    def closeLogFile(self):
-        try:
-            self.log.close()
-            self.log = ""
-        except ValueError:
-            raise Exception("Dat File did not close")
-
-    def getLogLines(self):
-        self.openLogFile()
         lines = self.log.readlines()
-        self.closeLogFile()
-        return lines
-    
-    
-    def readLatestLogLine(self):
-                    
-        lines = self.getLogLines()
-        numLines = len(lines)
-        print lines
         
-        print numLines
-        
-        print "SELF INDEX"
-        print self.lineIndex 
-        
-        
-        if (self.lineIndex == (numLines)):
-            logger(self.name, "Im all good")
-            print "line index"
-            print self.lineIndex
-            print "numlines"
-            print numLines
-            
-            self.latestLogLine = LogLine.LogLine(lines[1 - self.lineIndex])
-            self.logLines.append(self.latestLogLine)
-            imageFileName = os.path.basename(self.latestLogLine.getValue("ImageLocation"))
-            self.sendLogLine(self.latestLogLine)
-            self.getImage(imageFileName)
-            self.lineIndex = self.lineIndex + 1
-        else:
-            logger(self.name, "self.lineIndex some how failed.")
-    
-       
-        #if its behind
-        
-        
-        while (self.lineIndex < (numLines)):
-            for index in range(numLines - self.lineIndex):
-                logger(self.name, "Behind current logFile/experiment -- TURBO MODE ENABLED")
-                print "index"
-                print index
-                self.latestLogLine = LogLine.LogLine(1 - lines[index])
-                self.logLines.append(self.latestLogLine)
-                imageFileName = os.path.basename(self.latestLogLine.getValue("ImageLocation"))
-                self.sendLogLine(self.latestLogLine)
-                self.getImage(imageFileName)
-                
-                self.lineIndex = self.lineIndex + 1
-                print "self lne index"
-                print self.lineIndex
-        
-        while (self.lineIndex > (numLines)):
-            print "self.lineindex"
-            print self.lineIndex
-            print "numLines"
-            print numLines
-            logger(self.name, "Ahead of current log lines, sleeping for 0.5seconds")
+        while (len(lines) == 0):
+            logger(self.name, "Waiting for a log line to appear, sleeping for 0.5 seconds")
             time.sleep(0.5)
-            lines = self.getLogLines()
-            numLines = len(lines)
-            continue
-            
-
-                
-    """    
-    def readLatestLogLine2(self, image_name):
+            lines = self.log.readlines()
+        
+        
         start_time = time.time()
-    
-        if not (self.logLine):
-            logger(self.name, "Opening Log File")
-            while start_time < 30:
-                time.sleep(0.2)
-                self.logLine = open(self.logLocation, 'r')
-            logger(self.name, "ERROR: can not open log file at location: %s - Shutting down", self.logLocation)
-            sys.exit()
-            
         while True:
-            if (self.index < len(self.log.readlines())):
-                logger(self.name, "Behind Current logFile - Need to catch up! Turbo mode enabled.")
-                for i in range(self.index - (len(self.log.readlines()))):
-                    print i
-        
-        
-        #Test if above the current engines index
-            if (self.index > len(self.log.readlines())):
-                logger(self.name, "Ahead of current log line, sleeping for 0.5seconds")
-                time.sleep(0.5)
-                continue
-        
-        print "Dropping out of readLastLogline_2"
-        print self.index
-        
-    
-    
-    
-        
-    def readLatestLogLine(self, image_name):
-        print "read lastest log line"
-        start_time = time.time() 
-
-        while True:
-            try:
-                print "trying to open log file"
-                logFile = open(self.logLocation, "r")
-                time.sleep(0.5)
-                print "slept for 0.5 seconds"
-                if time.time()-start_time > 10.0: 
-                    logger(self.name, "Timeout waiting for: LOG FILE")
-                    logger(self.name, "Shutting down...")
-                    sys.exit()      
-            	
-                self.latestLogLine = logFile.readlines()[-1]
-                tempLogLine = LogLine.LogLine(self.latestLogLine)
-                if(tempLogLine.getValue('ImageLocation') != image_name):
-                    print("Image doesnt match latest line")
-                    continue
-                self.logLines.append(tempLogLine)
-                self.index = self.index + 1
-                logger(self.name, "LogLine read : %s" % self.latestLogLine)
-                self.sendLogLine(LogLine.LogLine(self.latestLogLine))
-                
-                #Get image location
-                imageFileName = os.path.basename(self.logLines[-1].getValue("ImageLocation"))
-                logger(self.name, "Image : %s" % imageFileName)
+            for i in range(len(lines)):
+                logger(self.name, "1 or more lines avilable to be read - TURBO MODE")
+                latestLogLine = LogLine.LogLine(lines[i])
+                self.logLines.append(latestLogLine)
+                imageFileName = os.path.basename(latestLogLine.getValue("ImageLocation"))
+                self.sendLogLine(latestLogLine)
                 self.getImage(imageFileName)
-                return
-            except KeyboardInterrupt:
-                logger(self.name, "Error: Unable to read Log File")
-                return False
+                self.lineIndex = self.lineIndex + 1
+
                 
-    """
+            #TODO if epics starts crashing have a timeout
+            if ((time.time() - start_time) > 5.0):
+                logger(self.name, "Error: Could not find image: " + kw['char_value'])
+                break
+            
+            try:
+                if (kw['char_value'] == latestLogLine.getValue):
+                    break
+                else:
+                    time.sleep(0.2)
+                    lines = self.log.readlines()
+                    
+            except KeyError:
+                break
+
+
     def getImage(self, imageFileName):
         start_time = time.time() 
         #Get jsut the image/dat nme without extension
@@ -510,7 +405,7 @@ class Engine():
         self.datFileLocation = self.absoluteLocation + "/raw_dat/"
         
         #Clear out some variables to be ready for the new user
-        self.lineIndex = 1
+        self.lineIndex = 0
         self.log = ""
     
         self.sendCommand("absolute_location")
