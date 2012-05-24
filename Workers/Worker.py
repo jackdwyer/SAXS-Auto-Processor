@@ -142,7 +142,8 @@ class Worker():
                 if (str(test) == "absolute_location"):
                     log(self.name, "Received Command - absolute_location")
                     self.absoluteLocation = self.pull.recv()
-                
+       		    log(self.name, "Absolute Location: " + str(self.absoluteLocation))
+         
                 if (str(test) == "getUser"):
                     log(self.name, "Current User : " + self.user)
                 
