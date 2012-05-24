@@ -239,8 +239,8 @@ class Engine():
         #if its behind
         while (self.lineIndex < numLines):
             logger(self.name, "Behind current logFile/experiment -- TURBO MODE ENABLED")
-            for i in (len(self.log.readlines()) - self.lineIndex ):
-                self.latestLogLine = LogLine.LogLine(self.log.readlines()[i])
+            for index in range(len(self.log.readlines()) - self.lineIndex ):
+                self.latestLogLine = LogLine.LogLine(self.log.readlines()[index])
                 self.logLines.append(self.latestLogLine)
                 imageFileName = os.path.basename(self.latestLogLine.getValue("ImageLocation"))
                 self.sendLogLine(self.latestLogLine)
