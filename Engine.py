@@ -530,7 +530,7 @@ class Engine():
         self.EMBLmolSizePush.send(command)
 
     def testImageTaken(self):
-        self.imageTaken(epics.caget(self.imageTakenPV, as_string=True))
+        self.imageTaken()
         
     def sendImage(self, datFile):
         self.staticPush.send("static_image")
