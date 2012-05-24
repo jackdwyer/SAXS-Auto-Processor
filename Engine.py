@@ -218,7 +218,7 @@ class Engine():
     - 
     """    
        
-    def imageTaken(self, char_value, **kw):
+    def imageTaken(self, **kw):
         print "imageTaken()"
         self.readLatestLogLine()
     
