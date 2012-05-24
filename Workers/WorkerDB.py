@@ -12,13 +12,12 @@ from threading import Thread
 sys.path.append("../")
 import zmq
 from Core import AverageList
-from Core.Logger import log
+from Core.Logger import logger
 from Core import DatFile
 
 from Worker import Worker
 
 from Core import TableBuilder
-from Core import Logger
 import MySQLdb as mysql
 
 
@@ -39,13 +38,13 @@ class WorkerDB(Worker):
                                 
                 #Generic Worker Control
                 if (str(test) == "update_user"):
-                    log(self.name, "Received Command - updateUser")
+                    logger(self.name, "Received Command - updateUser")
                     self.user = self.pull.recv()
                     self.forceDBCreation(self.user)
                     self.buildTables()
                 
                 if (str(test) == "getUser"):
-                    log(self.name, "Current User : " + self.user)
+                    logger(self.name, "Current User : " + self.user)
 
 
                 if (str(test) == "log_line"):
@@ -76,13 +75,13 @@ class WorkerDB(Worker):
                     self.close()
                     
                 if (str(test) == "test"):
-                    log(self.name, "Received TEST")
+                    logger(self.name, "Received TEST")
                     
                                         
                 #Test shit   
                 if (str(test) == "testPush"):
                     testString = self.pull.recv();
-                    log(self.name, "Test Pull/Push - Completed - String Received : " + testString)
+                    logger(self.name, "Test Pull/Push - Completed - String Received : " + testString)
 
                 
         except KeyboardInterrupt:
@@ -90,19 +89,19 @@ class WorkerDB(Worker):
 
     
     def forceDBCreation(self, user):
-        Logger.log(self.name, "Forcing Database Creation")
+        logger(self.name, "Forcing Database Creation")
         try:
             db = mysql.connect(user="root", host="localhost", passwd="a")
             c = db.cursor()
             cmd = "CREATE DATABASE IF NOT EXISTS " + str(user) + ";"
             c.execute(cmd)      
-            Logger.log(self.name, "Database Created for user: " + str(user))
+            logger(self.name, "Database Created for user: " + str(user))
         except Exception:
-            Logger.log(self.name, "Database CREATION FAILED for user:" + str(user))
+            logger(self.name, "Database CREATION FAILED for user:" + str(user))
             raise
     
     def buildTables(self):
-	collumAttributes = ['WashType', 'SampleOmega', 'FilePluginDestination', 'Temperature2', 'Temperature1', 'WellNumber', 'SamplePhi', 'NumericTimeStamp', 'I0', 'SampleY', 'SampleX', 'SampleChi', 'TimeStamp', 'SampleType', 'ImageCounter', 'Ibs', 'exptime', 'FilePluginFileName', 'Energy', 'It', 'SampleTableX', 'SampleTableY', 'NORD', 'ImageLocation']
+        collumAttributes = ['WashType', 'SampleOmega', 'FilePluginDestination', 'Temperature2', 'Temperature1', 'WellNumber', 'SamplePhi', 'NumericTimeStamp', 'I0', 'SampleY', 'SampleX', 'SampleChi', 'TimeStamp', 'SampleType', 'ImageCounter', 'Ibs', 'exptime', 'FilePluginFileName', 'Energy', 'It', 'SampleTableX', 'SampleTableY', 'NORD', 'ImageLocation']
 
         collumAttributes_old = ['I0', 'NumericTimeStamp', 'WashType', 'FilePluginDestination', 'TimeStamp', 'Energy', 'NORD', 'SampleType', 'It', 'SampleTableX', 'SampleTableY', 'Temperature2', 'Temperature1', 'WellNumber', 'Ibs', 'exptime', 'FilePluginFileName', 'ImageLocation']
         self.logTable = TableBuilder.TableBuilder(self.user, "Log", collumAttributes)

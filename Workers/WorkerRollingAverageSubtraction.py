@@ -8,7 +8,7 @@ import zmq
 import sys
 import time
 
-from Core.Logger import log
+from Core.Logger import logger
 from Core import DatFile
 from Core import DatFileWriter
 
@@ -34,12 +34,12 @@ class WorkerRollingAverageSubtraction(Worker):
 
     def process(self, test):       
         if (str(test) == "test"):
-            log(self.name, "RECIEVED - 'test' message")
+            logger(self.name, "RECIEVED - 'test' message")
         
         
         if (str(test) == "static_image"):
             self.datFile = self.pull.recv_pyobj()
-            log(self.name, "Static Image Received")
+            logger(self.name, "Static Image Received")
             self.average()
             self.imageSubtraction()
 
@@ -55,7 +55,7 @@ class WorkerRollingAverageSubtraction(Worker):
         self.aveErrors = self.ave.average(self.allErrors)
         
 
-        log(self.name, "Averaging Completed")
+        logger(self.name, "Averaging Completed")
         
         fileName = "sample_"+self.datFile.getBaseFileName()
         
@@ -93,7 +93,7 @@ class WorkerRollingAverageSubtraction(Worker):
             self.newSample_sub = False
         
         self.datWriter.writeFile(self.absoluteLocation + "/sub/" , fileName , { 'q' : self.subtractedDatq, 'i' : self.subtractedDatIntensities, 'errors' : self.subtractedErrors})
-        log(self.name, "Static Image Written ->" + fileName)
+        logger(self.name, "Static Image Written ->" + fileName)
 
 
         

@@ -17,7 +17,7 @@ import sys
 import os
 from Core import DatFile
 from Core import LogLine
-from Core.Logger import log
+from Core.Logger import logger
 from Core import DirectoryCreator
 #import MySQLdb as mysql
 from Core.RootName import changeInRootName
@@ -46,7 +46,7 @@ class Engine():
         try:
             stream = file(configuration, 'r') 
         except IOError:
-            log(self.name, "Unable to find configuration file (config.yaml, in current directory), exiting.")
+            logger(self.name, "Unable to find configuration file (config.yaml, in current directory), exiting.")
             exit()
             
         self.config = yaml.load(stream)
@@ -59,8 +59,9 @@ class Engine():
         
 
         
-        
-        self.index = 0
+        self.lineIndex = 0        
+        self.log = ""
+
         self.latestLogLine = ""
         self.logLines = []
         self.lines = []
@@ -75,21 +76,11 @@ class Engine():
         self.datFileLocation = "" #Properly set in setUser
         
         
-        self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
-        self.datFileLocation = self.absoluteLocation + "/raw_dat/"
-        
-        
-        """
-        # /data/pilatus1M/data/Cycle_2012_2  -- correct location, with user on the end
-        """
-        
-        #self.logLocation = "/home/dwyerj/sim/data/livelogfile.log"
-        #self.datFileLocation = "/home/dwyerj/sim/data/"
         
         
 
         
-        log(self.name, "Engine Started")
+        logger(self.name, "Engine Started")
         
         #ZeroMQ setup stuff
         self.context = zmq.Context()
@@ -107,29 +98,29 @@ class Engine():
         #Connect Up all Workers, and have them ready
         self.bufferRequest = self.context.socket(zmq.REQ)
         self.bufferRequest.connect("tcp://127.0.0.1:5000")
-        log(self.name, "Connected -> BufferRequest")
+        logger(self.name, "Connected -> BufferRequest")
 
         self.bufferPush = self.context.socket(zmq.PUSH)
         self.bufferPush.bind("tcp://127.0.0.1:5001")
-        log(self.name, "Binded -> BufferPush")
+        logger(self.name, "Binded -> BufferPush")
 
         self.staticPush = self.context.socket(zmq.PUSH)
         self.staticPush.connect("tcp://127.0.0.1:5002")
-        log(self.name, "Binded -> StaticPush")
+        logger(self.name, "Binded -> StaticPush")
         
         
         self.dbPush = self.context.socket(zmq.PUSH)
         self.dbPush.connect("tcp://127.0.0.1:5003")
-        log(self.name, "Binded -> dbPush")
+        logger(self.name, "Binded -> dbPush")
      
 
         self.rollingPush = self.context.socket(zmq.PUSH)
         self.rollingPush.bind("tcp://127.0.0.1:5004")
-        log(self.name, "Binded -> RollingPush")
+        logger(self.name, "Binded -> RollingPush")
         
         self.EMBLmolSizePush = self.context.socket(zmq.PUSH)
         self.EMBLmolSizePush.connect("tcp://127.0.0.1:5005")
-        log(self.name, "Binded -> EMBL1Push")
+        logger(self.name, "Binded -> EMBL1Push")
 
         time.sleep(0.5)
         
@@ -173,11 +164,11 @@ class Engine():
         self.watchForUserChangeOver()
         self.watchForImage() 
         
- 	time.sleep(0.1) 
+        time.sleep(0.1) 
         self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
         self.datFileLocation = self.absoluteLocation + "/raw_dat/"
 
-	log(self.name, "All Workers ready")
+        logger(self.name, "All Workers ready")
         
         self.dbPush.send("test")
 
@@ -229,8 +220,58 @@ class Engine():
        
     def imageTaken(self, char_value, **kw):
         print "imageTaken()"
-        self.readLatestLogLine(char_value)
+        self.readLatestLogLine()
+    
+    
+    def readLatestLogLine(self):
+        if not (self.log):
+            start_time = time.time()
+            logger(self.name, "Opening Log File")
+            while not (self.log):
+                if ((time.time() - start_time) == 30.0):
+                    logger(self.name, "Error: can not open log file at location: " + self.logLocation)
+                    logger(self.name, "Shutting down")
+                else:
+                    time.sleep(0.1)
+                    self.log = open(self.logLocation, 'r')
+    
+        numLines = len(self.log.readlines())
+        while True:
+            if (self.lineIndex < numLines):
+                logger(self.name, "Behind current logFile/experiment -- TURBO MODE ENABLED")
+                
         
+        
+    def readLatestLogLine2(self, image_name):
+        start_time = time.time()
+    
+        if not (self.logLine):
+            logger(self.name, "Opening Log File")
+            while start_time < 30:
+                time.sleep(0.2)
+                self.logLine = open(self.logLocation, 'r')
+            logger(self.name, "ERROR: can not open log file at location: %s - Shutting down", self.logLocation)
+            sys.exit()
+            
+        while True:
+            if (self.index < len(self.log.readlines())):
+                logger(self.name, "Behind Current logFile - Need to catch up! Turbo mode enabled.")
+                for i in range(self.index - (len(self.log.readlines()))):
+                    print i
+        
+        
+        #Test if above the current engines index
+            if (self.index > len(self.log.readlines())):
+                logger(self.name, "Ahead of current log line, sleeping for 0.5seconds")
+                time.sleep(0.5)
+                continue
+        
+        print "Dropping out of readLastLogline_2"
+        print self.index
+        
+    
+    
+    
         
     def readLatestLogLine(self, image_name):
         print "read lastest log line"
@@ -243,8 +284,8 @@ class Engine():
                 time.sleep(0.5)
                 print "slept for 0.5 seconds"
                 if time.time()-start_time > 10.0: 
-                    log(self.name, "Timeout waiting for: LOG FILE")
-                    log(self.name, "Shutting down...")
+                    logger(self.name, "Timeout waiting for: LOG FILE")
+                    logger(self.name, "Shutting down...")
                     sys.exit()      
             	
                 self.latestLogLine = logFile.readlines()[-1]
@@ -254,16 +295,16 @@ class Engine():
                     continue
                 self.logLines.append(tempLogLine)
                 self.index = self.index + 1
-                log(self.name, "LogLine read : %s" % self.latestLogLine)
+                logger(self.name, "LogLine read : %s" % self.latestLogLine)
                 self.sendLogLine(LogLine.LogLine(self.latestLogLine))
                 
                 #Get image location
                 imageFileName = os.path.basename(self.logLines[-1].getValue("ImageLocation"))
-                log(self.name, "Image : %s" % imageFileName)
+                logger(self.name, "Image : %s" % imageFileName)
                 self.getImage(imageFileName)
                 return
             except KeyboardInterrupt:
-                log(self.name, "Error: Unable to read Log File")
+                logger(self.name, "Error: Unable to read Log File")
                 return False
                 
     
@@ -276,18 +317,18 @@ class Engine():
         imageName = imageName + ".dat"
         time.sleep(0.1) #Give it a little break to write out the dat file
         
-        log(self.name, "getImage called, with %s" % imageName) 
+        logger(self.name, "getImage called, with %s" % imageName) 
         
 
         
         while not os.path.isfile(self.datFileLocation + imageName):
-            log(self.name, "Waiting for: %s" % imageName)
+            logger(self.name, "Waiting for: %s" % imageName)
             time.sleep(0.5)
             if time.time()-start_time > 3.0: 
-                log(self.name, "Timeout waiting for: %s" % imageName)
+                logger(self.name, "Timeout waiting for: %s" % imageName)
                 return            
         
-        log(self.name, "Retrieved: %s" % imageName)
+        logger(self.name, "Retrieved: %s" % imageName)
         self.datFile = DatFile.DatFile(self.datFileLocation +  imageName)
         
         self.processDatFile(self.datFile, self.logLines[-1])
@@ -306,59 +347,59 @@ class Engine():
         try:
             if (changeInRootName(os.path.basename(self.logLines[-1].getValue("ImageLocation")), os.path.basename(self.logLines[-2].getValue("ImageLocation")))):
                 
-                log(self.name, "Change in root names")
+                logger(self.name, "Change in root names")
                 
                 if (logLine.getValue("SampleType") == "0"):
                     self.sendCommand("new_buffer")
                     self.needBuffer = True
-                    #log(self.name, "Buffer Received")
+                    #logger(self.name, "Buffer Received")
                     self.sendBuffer(datFile)
     
                 if (logLine.getValue("SampleType") == "1"):
                     
                     if (self.needBuffer):
-                        log(self.name, "Need A Buffer")
+                        logger(self.name, "Need A Buffer")
                         if (self.requestAverageBuffer()):
                             self.sendAverageBuffer(self.aveBuffer)
                             self.needBuffer = False
                             self.sendImage(datFile)
                         else:
-   			    log(self.name, "Request for averaged buffer failed, subtraction unable to occurr")
+   			    logger(self.name, "Request for averaged buffer failed, subtraction unable to occurr")
                     else:
                         self.sendImage(datFile)
-                        log(self.name, "Just Image Sent")
+                        logger(self.name, "Just Image Sent")
                         
     
                 
             else:
-                log(self.name, "NO CHANGE in root names")
+                logger(self.name, "NO CHANGE in root names")
     
                 if (logLine.getValue("SampleType") == "0"):
                     self.sendBuffer(datFile)
-                    log(self.name, "BUFFER SENT")
+                    logger(self.name, "BUFFER SENT")
     
                 if (logLine.getValue("SampleType") == "1"):
                     
                     if (self.needBuffer):
-                        log(self.name, "Need A Buffer")
+                        logger(self.name, "Need A Buffer")
 
                         if (self.requestAverageBuffer()):
                             self.sendAverageBuffer(self.aveBuffer)
                             self.needBuffer = False
                             self.sendImage(datFile)
 		        else:
-                            log(self.name, "Request for averaged buffer failed, can not subtract datfile")
+                            logger(self.name, "Request for averaged buffer failed, can not subtract datfile")
                         
                     else:
                         self.sendImage(datFile)
-                        log(self.name, "No buffer needed")
+                        logger(self.name, "No buffer needed")
 
                         #send just the image
                         
 
 
         except(IndexError):
-            log(self.name, "index error, must be first pass")
+            logger(self.name, "index error, must be first pass")
  
         
     def sentTest(self):
@@ -379,7 +420,7 @@ class Engine():
             char_value = raw_input("Enter User: ")
         
         self.user = self.getUser(char_value) #get new user
-        log(self.name, "User Changed -> " + str(self.user))
+        logger(self.name, "User Changed -> " + str(self.user))
         
         self.sendCommand("update_user")
         self.sendCommand(self.user)
@@ -390,7 +431,10 @@ class Engine():
         self.absoluteLocation = self.rootDirectory + self.user 
         self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
         self.datFileLocation = self.absoluteLocation + "/raw_dat/"
-        self.index = 0
+        
+        #Clear out some variables to be ready for the new user
+        self.lineIndex = 0
+        self.log = ""
     
         self.sendCommand("absolute_location")
         self.sendCommand(self.absoluteLocation)
@@ -412,7 +456,7 @@ class Engine():
 	    return True  	
 
     def returnUser(self):
-        log(self.name, "Current User : " + self.user)
+        logger(self.name, "Current User : " + self.user)
         self.sendCommand("getUser")
     
     
@@ -450,7 +494,7 @@ class Engine():
     def exitEngine(self):
         self.sendCommand("exit")
         time.sleep(0.2)
-        log(self.name, "Exiting")
+        logger(self.name, "Exiting")
         sys.exit()
 
         
@@ -490,7 +534,7 @@ class Engine():
     def generateDirectoryStructure(self):
         dirCreator = DirectoryCreator.DirectoryCreator(self.rootDirectory)
         dirCreator.createFolderStructure(self.user, "experiment1")
-        log(self.name, "Generated Directory Structure")
+        logger(self.name, "Generated Directory Structure")
                 
         
     #For Testing    
@@ -502,7 +546,7 @@ class Engine():
     def testRequest(self):
         self.bufferRequest.send("test")
         test = self.bufferRequest.recv_pyobj()
-        log(self.name, "RESPONSE RECIEVED -> " + test)
+        logger(self.name, "RESPONSE RECIEVED -> " + test)
         
     def epicSetUser(self):
         user = raw_input("Enter new user > ")

@@ -1,6 +1,6 @@
 import datetime
 
-def log(name, message):
+def logger(name, message):
     now = datetime.datetime.now()
     
     
@@ -15,10 +15,10 @@ def log(name, message):
     #f.write(formatting % (str(now), '-- ['+name+']','--', message+"\n"))#Needed for string formatting
 
 if __name__ == "__main__":
-    log("Jack", "UNIT TEST MESSAGE")
-    log("Engine", "Engine Started")
-    log("WorkerBufferAverage", "Generated")
-    log("WorkerStaticImage", "Generated")
-    log("WorkerRollingAverageSubtraction", "Generated")
-    log("Engine", "Connected -> BufferRequest")
+    logger("Jack", "UNIT TEST MESSAGE")
+    logger("Engine", "Engine Started")
+    logger("WorkerBufferAverage", "Generated")
+    logger("WorkerStaticImage", "Generated")
+    logger("WorkerRollingAverageSubtraction", "Generated")
+    logger("Engine", "Connected -> BufferRequest")
 

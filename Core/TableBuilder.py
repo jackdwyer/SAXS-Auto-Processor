@@ -12,8 +12,7 @@ class TableBuilder():
         self.tableName = tableName
         self.engine = create_engine("mysql+mysqldb://root:a@localhost/"+database)
         self.dictColumns = {}
-        self.attribList = attribList
-        self.columnBuilder()
+        self.attribList = self.columnBuilder(attribList)
         self.table = self.gen(self.tableName, self.dictColumns)
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
@@ -28,13 +27,17 @@ class TableBuilder():
         self.Base.metadata.create_all(self.engine)
         return logDataTableBuilder
 
-    def columnBuilder(self):
-        for attribute in self.attribList:
+    def columnBuilder(self, attribList):
+        for attribute in attribList:
             self.dictColumns[attribute] = Column(String(250))
                  
     def addData(self, data):
         newData = self.table(**data)
         self.session.add(newData)
         self.session.commit()
+        
+
+if __name__ == "__main__":
+    print "what"
         
     

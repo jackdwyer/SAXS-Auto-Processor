@@ -11,7 +11,7 @@ from threading import Thread
 sys.path.append("../")
 import zmq
 from Core import AverageList
-from Core.Logger import log
+from Core.Logger import logger
 from Core import DatFile
 
 from Worker import Worker
@@ -40,13 +40,13 @@ class WorkerBufferAverage(Worker):
     
     def process(self, test):       
         if (test == "test"):
-            log(self.name, "RECIEVED - 'test' message")
+            logger(self.name, "RECIEVED - 'test' message")
             
             
             
         if (test == "buffer"):
             buffer = self.pull.recv_pyobj()
-            log(self.name, "RECIEVED - Buffer")
+            logger(self.name, "RECIEVED - Buffer")
             self.average(buffer)
             
     def newBuffer(self):
@@ -89,7 +89,7 @@ class WorkerBufferAverage(Worker):
         
         self.datWriter.writeFile(self.absoluteLocation+"/avg/", fileName, { 'q': self.avQ, 'i' : self.avIntensities, 'errors':self.avErrors})
 
-        log(self.name, "Averaging Completed")
+        logger(self.name, "Averaging Completed")
 
 
             
@@ -101,15 +101,15 @@ class WorkerBufferAverage(Worker):
         
         if (dbPushPort):
             self.dbPush.connect("tcp://127.0.0.1:"+str(dbPushPort))
-            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort) + "-> replyPort: "+str(replyPort)+" -> dbPushPort: "+str(dbPushPort))
+            logger(self.name, "All Ports Connected -> pullPort: "+str(pullPort) + "-> replyPort: "+str(replyPort)+" -> dbPushPort: "+str(dbPushPort))
         
         else:
-            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort) + "-> replyPort: "+str(replyPort))
+            logger(self.name, "All Ports Connected -> pullPort: "+str(pullPort) + "-> replyPort: "+str(replyPort))
         
             
 
 
-        log(self.name, "All Ports Connected -> replyPort: "+str(replyPort))
+        logger(self.name, "All Ports Connected -> replyPort: "+str(replyPort))
         
         replyThread = Thread(target=self.sendData)
         replyThread.setDaemon(True)
@@ -129,7 +129,7 @@ class WorkerBufferAverage(Worker):
                 if (test == 'test'):
                     self.reply.send_pyobj("REQUESTED DATA")
                 if (test == "request_buffer"):
-                    log(self.name, "BufferRequested")
+                    logger(self.name, "BufferRequested")
                     v = self.getAverageBuffer()
 		    if (v['intensities']):
 			self.reply.send_pyobj(self.getAverageBuffer())
@@ -147,7 +147,7 @@ class WorkerBufferAverage(Worker):
         """Close all zmq sockets"""
         self.pull.close()
         self.reply.close()
-        log(self.name, "Sockets Closed")
+        logger(self.name, "Sockets Closed")
         sys.exit()
         
 

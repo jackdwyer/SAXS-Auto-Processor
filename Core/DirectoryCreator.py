@@ -8,7 +8,6 @@ it takes the absolute location and creates from there
 """
 
 import os
-import Logger
 
 class DirectoryCreator:
     def __init__(self, absolutePath):

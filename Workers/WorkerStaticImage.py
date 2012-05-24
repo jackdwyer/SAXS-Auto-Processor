@@ -14,7 +14,7 @@ sys.path.append("../")
 
 import time
 
-from Core.Logger import log
+from Core.Logger import logger
 from Core import DatFile
 from Core import DatFileWriter
 from Core import AverageList
@@ -40,14 +40,14 @@ class WorkerStaticImage(Worker):
         self.pull.bind("tcp://127.0.0.1:"+str(pullPort))
         if (EMBLmolSizePushPort):
             self.EMBLmolSizePush.connect("tcp://127.0.0.1:"+str(EMBLmolSizePushPort))
-            log(self.name, "EMBL mol Size push connected")
+            logger(self.name, "EMBL mol Size push connected")
         
         if (dbPushPort):
             self.dbPush.connect("tcp://127.0.0.1:"+str(dbPushPort))
-            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort) + " -> dbPushPort: "+str(dbPushPort))
+            logger(self.name, "All Ports Connected -> pullPort: "+str(pullPort) + " -> dbPushPort: "+str(dbPushPort))
         
         else:
-            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort))
+            logger(self.name, "All Ports Connected -> pullPort: "+str(pullPort))
         
             
 
@@ -55,11 +55,11 @@ class WorkerStaticImage(Worker):
 
     def process(self, test):       
         if (str(test) == "test"):
-            log(self.name, "RECIEVED - 'test' message")
+            logger(self.name, "RECIEVED - 'test' message")
         
         if (str(test) == "static_image"):
             self.datFile = self.pull.recv_pyobj()
-            log(self.name, "Static Image Received")
+            logger(self.name, "Static Image Received")
             self.imageSubtraction(self.datFile, self.aveBuffer)
 
 
@@ -89,7 +89,7 @@ class WorkerStaticImage(Worker):
         self.EMBLmolSizePush.send(fileName)
         
         self.datWriter.writeFile(self.absoluteLocation + "/sub/raw_sub/" , fileName , { 'q' : self.subtractedDatq, 'i' : self.subtractedDatIntensities, 'errors' : self.subtractedErrors})
-        log(self.name, "Static Image Written ->" + fileName)
+        logger(self.name, "Static Image Written ->" + fileName)
 
 
         

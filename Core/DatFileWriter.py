@@ -40,7 +40,7 @@ class DatFileWriter:
             formatting = '%'+str(8 + self.accuracy)+'.'+str(self.accuracy)+'f %'+str(6 + self.accuracy)+'.'+str(self.accuracy)+'f %'+str(6 + self.accuracy)+'.'+str(self.accuracy)+'f \n'
             f.write(formatting % (self.data['q'][i], self.data['i'][i], self.data['errors'][i]))        
         f.close()
-        Logger.log(self.datName, "DatFile Written")
+        Logger.logger(self.datName, "DatFile Written")
 
 
         

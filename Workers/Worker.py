@@ -15,7 +15,7 @@ import time
 from threading import Thread
 
 
-from Core.Logger import log
+from Core.Logger import logger
 from Core import DatFileWriter
 from Core import AverageList
 
@@ -56,7 +56,7 @@ class Worker():
 
 
         self.dataList = []     
-        log(self.name, "Generated")
+        logger(self.name, "Generated")
         
         
     def setName(self, name):
@@ -73,14 +73,14 @@ class Worker():
         self.pull.connect("tcp://127.0.0.1:"+str(pullPort))
         if (EMBLmolSizePushPort):
             self.EMBLmolSizePush.connect("tcp://127.0.0.1:"+str(pullPort))
-            log(self.name, "EMBL mol Size push connected")
+            logger(self.name, "EMBL mol Size push connected")
         
         if (dbPushPort):
             self.dbPush.connect("tcp://127.0.0.1:"+str(dbPushPort))
-            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort) + " -> dbPushPort: "+str(dbPushPort))
+            logger(self.name, "All Ports Connected -> pullPort: "+str(pullPort) + " -> dbPushPort: "+str(dbPushPort))
         
         else:
-            log(self.name, "All Ports Connected -> pullPort: "+str(pullPort))
+            logger(self.name, "All Ports Connected -> pullPort: "+str(pullPort))
         
             
 
@@ -102,7 +102,7 @@ class Worker():
         print self.dataList
         self.sampleIndex = 0
 
-        log(self.name, "Cleared")
+        logger(self.name, "Cleared")
        
        
         
@@ -121,7 +121,7 @@ class Worker():
 
     
     def test(self):
-        log(self.name, "Test Method preformed")     
+        logger(self.name, "Test Method preformed")     
 
     
     #Overridden in WorkerBufferAverage
@@ -135,24 +135,24 @@ class Worker():
                                 
                 #Generic Worker Control
                 if (str(test) == "update_user"):
-                    log(self.name, "Received Command - updateUser")
+                    logger(self.name, "Received Command - updateUser")
                     self.user = self.pull.recv()
-                    log(self.name, "New User -> " + self.user)
+                    logger(self.name, "New User -> " + self.user)
                
                 if (str(test) == "absolute_location"):
-                    log(self.name, "Received Command - absolute_location")
+                    logger(self.name, "Received Command - absolute_location")
                     self.absoluteLocation = self.pull.recv()
-       		    log(self.name, "Absolute Location: " + str(self.absoluteLocation))
+                    logger(self.name, "Absolute Location: " + str(self.absoluteLocation))
          
                 if (str(test) == "getUser"):
-                    log(self.name, "Current User : " + self.user)
+                    logger(self.name, "Current User : " + self.user)
                 
                 if (str(test) == "rootDirectory"):
                     self.rootDirectory = self.pull.recv()
-                    log(self.name, "Root Experiment Directory -> " + self.rootDirectory)
+                    logger(self.name, "Root Experiment Directory -> " + self.rootDirectory)
                 
                 if (str(test) == "returnDirectory"):
-                    log(self.name, "Current Root Directory : " + self.rootDirectory)
+                    logger(self.name, "Current Root Directory : " + self.rootDirectory)
                 
                 if (str(test) == "new_buffer"):
                     self.newBuffer()
@@ -160,7 +160,7 @@ class Worker():
                 if (str(test) == "average_buffer"):
                     self.aveBuffer = self.pull.recv_pyobj()
                     print self.aveBuffer
-                    log(self.name, "Received average buffer")
+                    logger(self.name, "Received average buffer")
                 
                 if (str(test) == 'clear'):
                     self.clear()
@@ -169,13 +169,13 @@ class Worker():
                     self.close()
                     
                 if (str(test) == "test"):
-                    log(self.name, "Received TEST")
+                    logger(self.name, "Received TEST")
                     
                     
                 #Test shit   
                 if (str(test) == "testPush"):
                     testString = self.pull.recv();
-                    log(self.name, "Test Pull/Push - Completed - String Received : " + testString)
+                    logger(self.name, "Test Pull/Push - Completed - String Received : " + testString)
                 
 
                 else:
@@ -190,7 +190,7 @@ class Worker():
         """Close all zmq sockets"""
         #time.sleep(0.1)
         self.pull.close()        
-        log(self.name, "Sockets Closed")
+        logger(self.name, "Sockets Closed")
         sys.exit()
                 
          
