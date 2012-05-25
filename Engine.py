@@ -19,6 +19,7 @@ from Core import DatFile
 from Core import LogLine
 from Core.Logger import logger
 from Core import DirectoryCreator
+from Core import LogLineReader
 #import MySQLdb as mysql
 from Core.RootName import changeInRootName
 
@@ -58,6 +59,8 @@ class Engine():
         self.experimentName = self.config['ExperimentName']
         
 
+        
+        self.logReader = LogLineReader()
         
         self.lineIndex = 0        
         self.log = ""
