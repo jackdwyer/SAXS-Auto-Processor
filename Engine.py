@@ -241,13 +241,15 @@ class Engine():
         lines = self.log.readlines()
         
         start_time = time.time()
-	while (len(lines) == 0):
+        while (len(lines) == 0):
             logger(self.name, "Waiting for a log line to appear, sleeping for 0.1 seconds")
             time.sleep(0.1)
             lines = self.log.readlines()
         
             if ((time.time() - start_time) > 5.0):
                 logger(self.name, "Error: SOMETHING BROKE let the next callback sort it out")
+                logger(self.name, "Image it was looking for: " + kw['char_value'])
+
                 return
         
         start_time = time.time()
