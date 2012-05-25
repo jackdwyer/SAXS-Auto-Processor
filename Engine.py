@@ -240,11 +240,15 @@ class Engine():
                     
         lines = self.log.readlines()
         
-        while (len(lines) == 0):
-            logger(self.name, "Waiting for a log line to appear, sleeping for 0.5 seconds")
-            time.sleep(0.5)
+        start_time = time.time()
+	while (len(lines) == 0):
+            logger(self.name, "Waiting for a log line to appear, sleeping for 0.1 seconds")
+            time.sleep(0.1)
             lines = self.log.readlines()
         
+            if ((time.time() - start_time) > 5.0):
+                logger(self.name, "Error: SOMETHING BROKE let the next callback sort it out")
+                return
         
         start_time = time.time()
         while True:
@@ -267,7 +271,7 @@ class Engine():
                 if (kw['char_value'] == latestLogLine.getValue):
                     break
                 else:
-                    time.sleep(0.2)
+                    time.sleep(0.1)
                     lines = self.log.readlines()
                     
             except KeyError:
