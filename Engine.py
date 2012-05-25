@@ -248,8 +248,6 @@ class Engine():
         
             if ((time.time() - start_time) > 5.0):
                 logger(self.name, "Error: SOMETHING BROKE let the next callback sort it out")
-                logger(self.name, "Image it was looking for: " + kw['char_value'])
-
                 return
         
         start_time = time.time()

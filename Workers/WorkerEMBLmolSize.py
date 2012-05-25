@@ -33,7 +33,7 @@ class WorkerEMBLmolSize(Worker):
 
 
     def processDatFile(self, datFile):
-        loc = self.rootDirectory +"/" + self.user + "sub/raw_sub/" + str(datFile)
+        loc = self.rootDirectory + self.user + "sub/raw_sub/" + str(datFile)
   
         process = subprocess.Popen(['autorg', '-f', 'ssv', str(loc)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output,errorOutput = process.communicate()
