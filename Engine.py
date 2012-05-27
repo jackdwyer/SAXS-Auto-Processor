@@ -60,7 +60,7 @@ class Engine():
         
 
         
-        self.logReader = LogLineReader()
+        self.logReader = ""
         
         self.lineIndex = 0        
         self.log = ""
@@ -209,10 +209,21 @@ class Engine():
     """
     def watchForUserChangeOver(self):
         epics.camonitor(self.userChangePV, callback=self.setUser)
-            
+        
+        
+    def watchForImage(self, logLocation):
+        self.logReader = LogReader()
+        self.setLocation("livelogfile.log")
+        self.setCallback(imageTaken())
+        
+    def killWatchImageThread(self):
+        self.logReader.kill()
+    """        
+    #Not being used
     def watchForImage(self):
         epics.camonitor(self.imageTakenPV, callback=self.imageTaken)
-         
+       
+    """     
     """
     Engine Functions
     - Reading log, creating log objects that can be passed around
@@ -394,6 +405,10 @@ class Engine():
 
     
     def setUser(self, char_value = False, **kw):
+        try:
+            self.killWatchImageThread()
+        except:
+            pass
         #TODO remove this, need another way to pass user directly
         if not (char_value): #needed for cli, though my kill engine, if user monitor doesnt return a valid value
             char_value = raw_input("Enter User: ")
@@ -410,6 +425,8 @@ class Engine():
         self.absoluteLocation = self.rootDirectory + self.user 
         self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
         self.datFileLocation = self.absoluteLocation + "/raw_dat/"
+        
+        self.watchForImage(self.logLocation)
         
         #Clear out some variables to be ready for the new user
         self.lineIndex = 0
