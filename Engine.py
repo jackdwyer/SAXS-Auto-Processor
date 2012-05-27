@@ -19,7 +19,7 @@ from Core import DatFile
 from Core import LogLine
 from Core.Logger import logger
 from Core import DirectoryCreator
-from Core import LogLineReader
+from Core import LogReader
 #import MySQLdb as mysql
 from Core.RootName import changeInRootName
 
