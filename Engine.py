@@ -232,7 +232,12 @@ class Engine():
     """    
        
     def imageTaken(self, line):
-        print line
+        latestLogLine = LogLine.LogLine(line)
+        self.logLines.append(latestLogLine)
+        imageFileName = os.path.basename(latestLogLine.getValue("ImageLocation"))
+        self.sendLogLine(latestLogLine)
+        self.getImage(imageFileName)
+        self.lineIndex = self.lineIndex + 1
     
     
     """
