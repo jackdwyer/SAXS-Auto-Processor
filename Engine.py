@@ -231,13 +231,13 @@ class Engine():
     - 
     """    
        
-    def imageTaken(self, **kw):
+    def imageTaken(self):
         print "imageTaken()"
-        self.readLatestLogLine(**kw)
+        self.readLatestLogLine()
     
     
     
-    def readLatestLogLine(self, **kw):
+    def readLatestLogLine(self):
         if not (self.log):
             start_time = time.time()
             logger(self.name, "Log File")
