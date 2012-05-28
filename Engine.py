@@ -240,62 +240,7 @@ class Engine():
         self.lineIndex = self.lineIndex + 1
     
     
-    """
-    def readLatestLogLine(self):
-        if not (self.log):
-            start_time = time.time()
-            logger(self.name, "Log File")
-            while not (self.log):
-                if ((time.time() - start_time) > 30.0):
-                    logger(self.name, "Error: can not open log file at location: " + self.logLocation)
-                    logger(self.name, "FATAL ERROR")
-                    logger(self.name, "Shutting down")
-                    sys.exit()
-                else:
-                    logger(self.name, "Opened Log File")
-                    time.sleep(0.1)
-                    self.log = open(self.logLocation, 'r')
-                    
-        lines = self.log.readlines()
-        
-        start_time = time.time()
-        while (len(lines) == 0):
-            logger(self.name, "Waiting for a log line to appear, sleeping for 0.1 seconds")
-            time.sleep(0.1)
-            lines = self.log.readlines()
-        
-            if ((time.time() - start_time) > 5.0):
-                logger(self.name, "Error: SOMETHING BROKE let the next callback sort it out")
-                return
-        
-        start_time = time.time()
-        while True:
-            for i in range(len(lines)):
-                logger(self.name, "1 or more lines avilable to be read - TURBO MODE")
-                latestLogLine = LogLine.LogLine(lines[i])
-                self.logLines.append(latestLogLine)
-                imageFileName = os.path.basename(latestLogLine.getValue("ImageLocation"))
-                self.sendLogLine(latestLogLine)
-                self.getImage(imageFileName)
-                self.lineIndex = self.lineIndex + 1
-
-                
-            #TODO if epics starts crashing have a timeout
-            if ((time.time() - start_time) > 5.0):
-                logger(self.name, "Error: Could not find image: " + kw['char_value'])
-                break
-            
-            try:
-                if (kw['char_value'] == latestLogLine.getValue):
-                    break
-                else:
-                    time.sleep(0.1)
-                    lines = self.log.readlines()
-                    
-            except KeyError:
-                break
-
-    """
+    
 
     def getImage(self, imageFileName):
         start_time = time.time() 
