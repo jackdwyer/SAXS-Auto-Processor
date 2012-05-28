@@ -214,6 +214,7 @@ class Engine():
         self.logReader = LogReader.LogReader()
         self.logReader.setLocation(logLocation)
         self.logReader.setCallback(self.imageTaken)
+        self.logReader.watch()
         
     def killWatchImageThread(self):
         self.logReader.kill()
