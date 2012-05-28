@@ -231,12 +231,11 @@ class Engine():
     - 
     """    
        
-    def imageTaken(self):
-        print "imageTaken()"
-        self.readLatestLogLine()
+    def imageTaken(self, line):
+        print line
     
     
-    
+    """
     def readLatestLogLine(self):
         if not (self.log):
             start_time = time.time()
@@ -291,6 +290,7 @@ class Engine():
             except KeyError:
                 break
 
+    """
 
     def getImage(self, imageFileName):
         start_time = time.time() 
