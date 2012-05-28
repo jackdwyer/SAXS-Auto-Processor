@@ -38,7 +38,9 @@ class LogReader():
     def fileWatch(self):
         #other shit here for if file dont exist
         fp = open(self.logLocation,'r')
-
+        
+        print "In FileWatch"
+        
         while self.alive:
             new = fp.readline()
             if new:
