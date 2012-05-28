@@ -212,9 +212,9 @@ class Engine():
         
     def watchForImage(self, logLocation):
         self.logReader = LogReader.LogReader()
-        self.setLocation("livelogfile.log")
+        self.logReader.setLocation(logLocation)
         
-        self.setCallback(imageTaken)
+        self.logReader.setCallback(imageTaken)
         
     def killWatchImageThread(self):
         self.logReader.kill()
