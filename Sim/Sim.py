@@ -20,7 +20,6 @@ from Core import LogLine
 
 
 class Sim:
-    
 
     def __init__(self, configFile):
         #TODO Get the RBV then set X to that, so that we dont get a miss image taken
@@ -40,7 +39,7 @@ class Sim:
         self.imageChangePV = self.config["imageChangePV"]
         self.userChangePV = self.config["userChangePV"]
         self.user = ""
-        self.relative = self.user + "/raw_dat/"
+        self.relative = self.user + "/images/"
         self.fullPath = ""
         self.liveLog = ""
         
@@ -74,16 +73,22 @@ class Sim:
             fileName = fileName[0] + ".dat"
             actualFileLoc = self.datFileLocation+fileName
 
-            location = self.RootDirectory + self.relative + fileName
-            shutil.copy(actualFileLoc, location)
-            logger(self.name, "Dat File, " + fileName + " Generated")
+            location = self.RootDirectory + self.relative + "/raw_dat/" + fileName
+            
+            try:
+                shutil.copy(actualFileLoc, location)
+                logger(self.name, "Dat File, " + fileName + " Generated")
+
+            except IOError:
+                logger(self.name, "Dat File, " + fileName + " NOT FOUND")
+                pass
 
 
         
             #write a line out to the 'live' log  
             time.sleep(0.2)
               
-            liveLog = open(self.RootDirectory + self.relative + "livelogfile.log", "a")
+            liveLog = open(self.RootDirectory + self.relative + "/images/livelogfile.log", "a")
             print self.RootDirectory + self.relative
             liveLog.write(line)
             liveLog.close()
@@ -97,10 +102,10 @@ class Sim:
             time.sleep(0.3)  
         
     def setRelative(self):
-        self.relative =  self.user  + "/raw_dat/"
+        self.relative =  self.user
     
     def setFullPath(self):
-        self.fullPath = self.RootDirectory + self.user
+        self.fullPath = self.RootDirectory + self.user + "/images/"
 
 
     def pause(self):
@@ -119,7 +124,7 @@ class Sim:
         epics.caput("13SIM1:TIFF1:FilePath", self.fullPath + bytearray("\0x00"*256))
 
     def generateLog(self):
-        self.liveLog = open(self.RootDirectory + self.relative + "livelogfile.log", "w")
+        self.liveLog = open(self.RootDirectory + self.relative + "/images/livelogfile.log", "w")
         self.liveLog.close()
         
     

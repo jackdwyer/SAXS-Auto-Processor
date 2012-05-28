@@ -7,8 +7,6 @@ Engine v0.3
 
 """
 
-
-
 import yaml
 import epics
 import time
@@ -173,6 +171,7 @@ class Engine():
         
         self.dbPush.send("test")
 
+        #Force setUser()
 
         #TODO: REMOVE this, shouldnt really be set here
         self.absoluteLocation = self.rootDirectory + self.user 
@@ -235,7 +234,7 @@ class Engine():
         latestLogLine = LogLine.LogLine(line)
         self.logLines.append(latestLogLine)
         imageFileName = os.path.basename(latestLogLine.getValue("ImageLocation"))
-        self.sendLogLine(latestLogLine)
+        self.sendLogLine(self.logLines[-1])
         self.getImage(imageFileName)
         self.lineIndex = self.lineIndex + 1
     
@@ -276,7 +275,7 @@ class Engine():
         0 - Buffer
         1 - Static Sample
         """
-        print logLine.getValue('SampleType')
+        logger(self.name, "SampleType - " + str(logLine.getValue('SampleType')))
         
         try:
             if (changeInRootName(os.path.basename(self.logLines[-1].getValue("ImageLocation")), os.path.basename(self.logLines[-2].getValue("ImageLocation")))):

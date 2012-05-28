@@ -36,8 +36,16 @@ class LogReader():
 
 
     def fileWatch(self):
-        #other shit here for if file dont exist
-        fp = open(self.logLocation,'r')
+
+        while True:
+            try:
+                fp = open(self.logLocation,'r')
+                break
+            except IOError:
+                print "Waiting for logFile"
+                time.sleep(0.5);
+            
+            #other shit here for if file dont exist
         
         print "In FileWatch"
         

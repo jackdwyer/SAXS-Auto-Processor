@@ -3,11 +3,11 @@ database :
     user : "root"
     password : "a"
 
-
-RootDirectory : "/data/pilatus1M/data/Cycle_2012_2/"
+RootDirectory : "/home/dwyerj/beamlinetesting/"
+#RootDirectory : "/data/pilatus1M/data/Cycle_2012_2/"
 RelativeLogFileLocation : "/images/livelogfile.log"
 ExperimentName : "experiment1"
 
-UserChangePV : "13PIL1:cam1:FilePath_RBV"
+UserChangePV : "13SIM1:TIFF1:FilePath_RBV"
 ImageTakenPV : "13PIL1:cam1:FullFileName_RBV"
 
