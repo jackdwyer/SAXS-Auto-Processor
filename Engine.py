@@ -164,7 +164,6 @@ class Engine():
         
         self.setRootDirectory()
         self.watchForUserChangeOver()
-        self.watchForImage() 
         
         time.sleep(0.1) 
         self.logLocation = self.absoluteLocation + self.relativeLogFileLocation
