@@ -77,8 +77,8 @@ class WorkerBufferAverage(Worker):
 
         #averaging out
         self.avIntensities = self.ave.average(self.allIntensities)
-        self.avErrors = self.ave.average(self.allErrors)
-        self.avQ = self.ave.average(self.allQ)
+        self.avErrors = self.ave.average(datBuffer.errors)
+        self.avQ = self.ave.average(datBuffer.q)
         
         fileName = "buffer" + str(self.index) + "_avg_" + str(datBuffer.getBaseFileName())
 
