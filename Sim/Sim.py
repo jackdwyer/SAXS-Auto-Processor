@@ -86,7 +86,7 @@ class Sim:
 
         
             #write a line out to the 'live' log  
-            time.sleep(0.2)
+            time.sleep(0.1)
               
             liveLog = open(self.RootDirectory + self.relative + "/images/livelogfile.log", "a")
             print self.RootDirectory + self.relative
@@ -99,7 +99,7 @@ class Sim:
             #throw some data out to epics to let the actual python script know that there has been some images/shit happened
             line = self.logFile.readline()
             x = x + 1
-            time.sleep(0.3)  
+            time.sleep(0.1)  
         
     def setRelative(self):
         self.relative =  self.user

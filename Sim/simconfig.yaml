@@ -1,4 +1,4 @@
-RootDirectory : "/home/dwyerj/beamlinetesting/"
+RootDirectory : "/tmp/"
 Experiment : "experiment1"
 
 #Relative location of datfiles, should be data/dat/

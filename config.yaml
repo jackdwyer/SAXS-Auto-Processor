@@ -3,7 +3,7 @@ database :
     user : "root"
     password : "a"
 
-RootDirectory : "/home/dwyerj/beamlinetesting/"
+RootDirectory : "/tmp/"
 #RootDirectory : "/data/pilatus1M/data/Cycle_2012_2/"
 RelativeLogFileLocation : "/images/livelogfile.log"
 ExperimentName : "experiment1"

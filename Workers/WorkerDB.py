@@ -48,7 +48,11 @@ class WorkerDB(Worker):
 
 
                 if (str(test) == "log_line"):
-                    logLine = self.pull.recv_pyobj()
+                    logger(self.name, "GOT CALLED LOG LINE")
+                    try:
+                        logLine = self.pull.recv_pyobj()
+                    except:
+                        logger(self.name, "UNPICKLING ERROR - LINE MISSED TO DB")
                     self.writeLogToDB(logLine)
                     
                 if (str(test) == "sub_static_image"):

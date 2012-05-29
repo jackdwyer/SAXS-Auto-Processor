@@ -51,8 +51,8 @@ class WorkerRollingAverageSubtraction(Worker):
 
         #averaging out
         self.aveIntensities = self.ave.average(self.allIntensities)
-        self.aveQ = self.ave.average(self.allQ)
-        self.aveErrors = self.ave.average(self.allErrors)
+        self.aveQ = self.datFile.q
+        self.aveErrors = self.datFile.errors
         
 
         logger(self.name, "Averaging Completed")
