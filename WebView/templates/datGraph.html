@@ -1,0 +1,208 @@
+ <html>                                                                  
+ <head>      
+ <script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script> 
+ <script type="text/javascript" src="js/jquery.flot.js"></script>                                                           
+ 
+ <script type="text/javascript">
+ 
+
+
+ </script>                                                               
+ 
+ </head>                                                                 
+ <body>     
+<div id="hide" style="float:left; z-index: 100;"> LOADING </div>      
+<div id="paused" style="float:left"> PAUSED </div>      
+<br>
+<p>
+</p>
+
+     <input type="submit" id="button1" value="FORCE LOAD">  
+
+        <div id="quote">TEST</div>    
+        
+             <input type="submit" id="button2" value="PAUSE">  
+             <input type="submit" id="button3" value="RESTART">  
+             
+
+    <div id="placeholder" style="width:600px;height:300px"></div>
+
+              
+        
+                                                       
+ </body>
+ 
+ <script>
+
+
+var b = false;
+var i = 0;
+var dataPoints = [];
+var started = true;
+
+
+function scientificTick(val,axis){
+
+    switch(val)
+    {
+    case 0.0001:
+      return '0.0001';
+      break;    
+    case 0.001:
+      return '0.001';
+      break;
+    case 0.01:
+      return '0.01';
+      break;
+        case 0.1:
+      return '.1';
+      break;
+        case 1:
+      return '1';
+      break;
+    default:
+      return '';
+    }
+    }
+
+var plot = $.plot($("#placeholder"), [
+    {
+        lines: { show: true, fill: true },
+    }], 
+    {
+        colors : ["#288aff"],
+            xaxis: {
+                min: 0.0001,
+                max: 1,
+                tickFormatter: scientificTick,
+                ticks: [0.001,0.002,0.003,0.004,0.005,0.01,0.02,0.03,0.04,0.05,0.1,0.2,0.3,0.4,0.5,0.6,0.7],
+                transform: function (v) { return Math.log(v); },
+                inverseTransform: function (v) { return Math.exp(v); }
+                },
+            yaxis: {
+                min : 0.0001,
+                max : 1.2,
+                tickFormatter: scientificTick,
+                ticks: [0.0001,0.0002,0.0003,0.0004,0.0005,0.001,0.002,0.003,0.004,0.005,0.01,0.02,0.03,0.04,0.05,0.1,0.2,0.3,0.4,0.5,1],
+                transform: function (v) { return Math.log(v); },
+                inverseTransform: function (v) { return Math.exp(v); }
+               }
+    }
+);
+
+function update() {
+    t(dataPoints);
+    t("added data points");
+    plot.setData([dataPoints]);
+    t("drawing");
+    plot.draw();
+    t("tried to draw");
+};
+
+
+function writeD() {
+    for (var j=0; j<dataPoints.length; j++) {
+        document.write("<p>"+dataPoints[j]+"</p>"); 
+    };
+};
+
+ $(document).ready(function() {
+    $('#hide').hide();
+    $('#paused').hide();
+
+
+    t("in ready");
+    $("#button1").click(function() {
+        t("BUTTON PRESSED");
+        ajaxCaller();
+    });
+
+    t("added the click hander to button1");
+    
+    $('#button2').click(function() {
+        pause();
+    });
+    
+    $('#button3').click(function() {
+        start();
+    });
+    
+    start();
+    
+ });
+
+function ajaxCaller() {
+        $('#hide').show('fast');
+        t(b);
+        
+        $.ajax({
+             url: "/dat",
+             method: 'GET',
+             statusCode: {
+                 404: function() {
+                     t("404 error on ajax request");
+                 }
+             },
+            error: function() {
+                t("error for ajax!");
+            },
+            success: function(data) {
+                t(data);
+                var jsonObject = $.parseJSON(data);
+                t(jsonObject);
+                t(jsonObject[1]);
+                generateDataPoints(jsonObject[0], jsonObject[1]);
+            },
+            complete: function() {
+                t("ajax complete");
+                $('#hide').hide('fast');
+                i = i + 1;
+                update();
+
+            },
+         })
+};
+    
+    
+    
+ function start() {
+     if (!started) {
+         $('#paused').hide('fast');
+        started = true;
+        ajaxInterval = setInterval(function() {
+            t("AT SET TIMEOUT");
+            ajaxCaller();
+            t("FINSHED SET TIMEOUT");
+            }, 1000); 
+    }
+ }
+ 
+ function pause() {
+     t("tyring to pause ajax");
+     clearInterval(ajaxInterval);
+     t("pause worked?");
+     $('#paused').show('slow');
+     started = false;
+
+     
+ }
+ 
+ function t(data) {
+     console.log(data);
+ }
+
+function generateDataPoints(i, q) {
+    t("in generate");
+    for (var j = 0; j < i.length; j++) 
+        {
+            var gh = [i[j], q[j]];
+            dataPoints.push(gh);
+        }
+};
+
+
+ 
+ 
+ </script>
+                                                                  
+ </html>
