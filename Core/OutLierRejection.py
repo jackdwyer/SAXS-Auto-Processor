@@ -7,6 +7,7 @@ Will need to pass a dictionary of all dat files to be checked against
 """
 
 import DatFile
+import glob
 
 class OutLierRejection():
     def __init__(self):
@@ -14,41 +15,78 @@ class OutLierRejection():
 
     def process(self, datFiles):
         #If length is 1, can not check
-        if (len(datFiles) == 1):
+        if (len(datFiles) == 1 or len(datFiles) == 0):
             return False
         else:
             ILQ = []
             IHQ = []
             for dat in datFiles:
-                ILQ.append(dat.findILQ())
-                IHQ.append(dat.findIHQ())
-            iqlThreshold = (1.1 * min(ILQ))
+                ILQ.append(dat.getILQ())
+                IHQ.append(dat.getIHQ())
+                
             ihqThreshold = (0.95 * max(IHQ))
+            ilqThreshold = (1.05 * min(ILQ))
             
-            print "IQL Threshold: %s", str(iqlThreshold)
-            print "IHQ Threshold: %s", str(ihqThreshold)
+            print "IQL Threshold: ", str(ilqThreshold)
+            print "IHQ Threshold: ", str(ihqThreshold)
+            
+            for dat in datFiles:
+                if ((dat.getIHQ() < ihqThreshold) or (dat.getILQ() > ilqThreshold)):
+                    print dat.getFileName()
+                    print "FAILED"
+                else:
+                    print "valid"
+                    #print dat.getIHQ()
+                    #print dat.getILQ()
+                    dat.setValid(True)
 
 
 
 if __name__ == '__main__':
+    outerlierTest = OutLierRejection()
     print "Running - Outlier Rejection"
-    dat1 = DatFile.DatFile("testData/empty_cap2a_chk_0001.dat")
-    dat2 = DatFile.DatFile("testData/empty_cap2a_chk_0002.dat")
-    dat3 = DatFile.DatFile("testData/empty_cap2a_chk_0003.dat")
-    dat4 = DatFile.DatFile("testData/empty_cap2a_chk_0004.dat")
-    dat5 = DatFile.DatFile("testData/P1B7_HCL_PH3_100_NACL_0585.dat")    
-    dat6 = DatFile.DatFile("testData/P1B7_HCL_PH3_100_NACL_0586.dat")
-    dat7 = DatFile.DatFile("testData/P1B7_HCL_PH3_100_NACL_0587.dat")
-    dat8 = DatFile.DatFile("testData/P1B7_HCL_PH3_100_NACL_0588.dat")
+    
+    
+    datA = glob.glob('testData/35C_naPhos_nacl_ph7a*')
+    datB = glob.glob('testData/35C_naPhos_nacl_ph7b*')
+    datC = glob.glob('testData/35C_naPhos_nacl_ph7c*')
+    datD = glob.glob('testData/35C_naPhos_nacl_ph7d*')
+    datE = glob.glob('testData/35C_naPhos_nacl_ph7e*')
+    datF = glob.glob('testData/35C_naPhos_nacl_ph7f*')
+    datG = glob.glob('testData/35C_naPhos_nacl_ph7g*')
 
+    dA = []
+    dB = []
+    dC = []
+    dD = []
+    dE = []
+    dF = []
+    dG = []
+    """
+    for files in datA:
+        dA.append(DatFile.DatFile(files))
+    for files in datB:
+        dB.append(DatFile.DatFile(files))
+    """
+    for files in datC:
+        dC.append(DatFile.DatFile(files))
+    outerlierTest.process(dC)
+    """
+    for files in datD:
+        dD.append(DatFile.DatFile(files))
+    for files in datE:
+        dE.append(DatFile.DatFile(files))
+    for files in datF:
+        dF.append(DatFile.DatFile(files))
+    for files in datG:
+        dG.append(DatFile.DatFile(files))
     
-    o = OutLierRejection()
-    o.process([dat1, dat2, dat3, dat4, dat5, dat6, dat7, dat8])
-    
-    print dat1.findILQ()
-    print dat2.findILQ()
-    print dat3.findILQ()
-    print dat4.findILQ()
-    print "#########"
-    print dat6.findILQ()
-    print dat6.findIHQ()
+    datLists = [dA, dB,dC, dD, dE, dF, dG]
+    for list in datLists:
+        print "DAT LIST 1"
+        outerlierTest.process(list)
+        print "#####"
+
+"""
+
+
