@@ -24,8 +24,9 @@ class DatFile:
         self.IHQ = 0.0
         self.valid = False
         self.nonAir = False
-
         self.processDatFile()
+        self.processHighLowQ()
+
 
     def openDatFile(self):
         f = open(self.datFilePath, "r")
@@ -54,6 +55,10 @@ class DatFile:
 
     def getDatFilePath(self):
         return self.datFilePath
+    
+    def isValid(self):
+        return self.valid
+        
 
     def getq(self):
         return self.q
@@ -82,16 +87,16 @@ class DatFile:
     def setValid(self, valid = False):
         self.valid = valid
         
+    def processHighLowQ(self):
+        self.findILQ()
+        self.findIHQ()
+        
     def findILQ(self, start = 3 , end = 20):
-        self.ILQ = self.intensities[start:end]
         self.ILQ  = sum(self.intensities[start:end])
         #self.ILQ = float(sum(self.ILQ)) / len(self.ILQ)
-        return self.ILQ
     
     def findIHQ(self, start = -20, end = -1): 
-        self.IHQ = self.intensities[start:end]
-        self.IHQ = sum(self.IHQ)
-        return self.IHQ
+        self.IHQ = sum(self.intensities[start:end])
         
         
     def processDatFile(self):
@@ -121,9 +126,18 @@ class DatFile:
         self.closeDatFile(f)
         self.setNumLines(numLines)
         
+    def getValues(self):
+        return { 'q' : self.q, 'intensities' : self.intensities, 'errros' : self.errors }
+        
     def reprocessDatFile(self):
         self.processDatFile()
         
+    def getIHQ(self):
+        return self.IHQ 
+    
+    def getILQ(self):
+        return self.ILQ
+    
 
 if __name__ == "__main__":
     b = DatFile("../data/dat/air_1_0001.dat")
