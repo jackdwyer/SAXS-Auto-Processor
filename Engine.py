@@ -3,7 +3,7 @@ Jack Dwyer
 26/04/2012
 
 Engine v0.3
-- Loads all default workes
+- Loads all default workers
 
 """
 

@@ -99,7 +99,7 @@ class Sim:
             #throw some data out to epics to let the actual python script know that there has been some images/shit happened
             line = self.logFile.readline()
             x = x + 1
-            time.sleep(0.1)  
+            time.sleep(1)  
         
     def setRelative(self):
         self.relative =  self.user
