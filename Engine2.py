@@ -30,8 +30,6 @@ class Engine2():
         #Read all configuration settings
         self.setConfiguration(configuration)
 
-        fp, pathname, description = imp.find_module("Workers/Worker")
-        print fp, pathname, description
 
         #ZMQ Class Variables
         self.zmqContext = zmq.Context()
@@ -60,10 +58,12 @@ class Engine2():
         """Loads up each worker into their own thread
         sets them to be daemons and starts the thread"""
         for worker in workers:
-            mod = __import__("Workers." + worker, level=1)
-            v = getattr(mod, worker)
+            im = __import__('Workers_new.'+worker, globals(), locals(), [worker])
+            v = getattr(im, worker)
             x = v()
             instanceDict[worker] = x
+            
+        print instanceDict
     
         
 
