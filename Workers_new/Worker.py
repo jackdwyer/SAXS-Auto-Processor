@@ -18,7 +18,12 @@ from threading import Thread
 
 
 class Worker():
-    def __init__(self):
+    def __init__(self, name = "Default Worker"):
+        #General Variables
+        self.name = name
+
+        
+        
         #ZMQ stuff
         self.context = zmq.Context()
         self.pull = self.context.socket(zmq.PULL)
@@ -29,13 +34,7 @@ class Worker():
         self.pullPort = None
         #User Specific Variables (eg, user, their location relative to engine)
         
-        self.name = "Default Worker"
         self.setLoggingDetails()
-        
-        
-        
-        self.logger.critical("SHOULD NOT BE INSTANTIATED DIRECTLY")
-        #raise RuntimeError("This class should not be instantiated directly")
 
         
     def connect(self, pullPort):
