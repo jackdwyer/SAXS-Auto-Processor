@@ -26,12 +26,10 @@ You can extend the dictionary with what ever data you want your worker to use.  
 
 ###Default/Generic Commands
 { 'command' : 'clear'} 
-Worker will clear itself
+*Worker will clear itself*
 
 { 'command' : 'shut_down'}
-Worker will shutdown/close all ports 
-
-{ 'command' : 'update_user', 'user' : new_user }
+*Worker will shutdown/close all ports*
 
 { 'command' : 'update_user', 'user' : new_user }
 
