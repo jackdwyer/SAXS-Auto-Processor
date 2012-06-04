@@ -1,13 +1,13 @@
 # SAX-Auto-Processor
 
 ##Required Third party Libraries
-* Mysqldb
-* yaml (maybe)
-* epics
-* zmq
-* msgpack (maybe)
+- Mysqldb
+- yaml (maybe)
+- epics
+- zmq
+- msgpack (maybe)
 
-**Check internal wiki under SAXS-WAXS to get latest install details, when finalised (soon) will place here **
+**Check internal wiki under SAXS-WAXS to get latest install details, when finalised (soon) will place here**
 
 
 *Live Experiment Usage*
