@@ -16,7 +16,7 @@ class DirectoryCreator:
         self.experiment = ""
         self.fullPath = ""
         
-    def createFolderStructure(self, user, experiment):
+    def createFolderStructure(self, rootDirectory, user):
         self.user = user
         self.fullPath = self.absolutePath + str(user) + "/"
         
@@ -105,5 +105,5 @@ class DirectoryCreator:
 
 if __name__ == "__main__":
     folderBuilder = DirectoryCreator()
-    folderBuilder.createFolderStructure("jack1", "experiment")
+    folderBuilder.createFolderStructure("jack1")
         

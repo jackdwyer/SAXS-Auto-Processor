@@ -10,9 +10,12 @@ class TableBuilder():
     def __init__(self, database, tableName, attribList):
         self.Base = declarative_base()
         self.tableName = tableName
-        self.engine = create_engine("mysql+mysqldb://root:a@localhost/"+database)
-        self.dictColumns = {}
-        self.attribList = self.columnBuilder(attribList)
+        self.engine = create_engine('sqlite:///tutorial.db')
+
+        
+        #self.engine = create_engine("mysql+mysqldb://root:a@localhost/"+database)
+        #self.dictColumns = {}
+        #self.attribList = self.columnBuilder(attribList)
         self.table = self.gen(self.tableName, self.dictColumns)
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
@@ -38,6 +41,9 @@ class TableBuilder():
         
 
 if __name__ == "__main__":
-    print "what"
-        
+    collumAttributes = ['WashType', 'SampleOmega', 'FilePluginDestination', 'Temperature2', 'Temperature1', 'WellNumber', 'SamplePhi', 'NumericTimeStamp', 'I0', 'SampleY', 'SampleX', 'SampleChi', 'TimeStamp', 'SampleType', 'ImageCounter', 'Ibs', 'exptime', 'FilePluginFileName', 'Energy', 'It', 'SampleTableX', 'SampleTableY', 'NORD', 'ImageLocation']
+    t = TableBuilder("JAck", "images", collumAttributes)
+
+    
+     
     

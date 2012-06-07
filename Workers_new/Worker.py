@@ -82,11 +82,14 @@ class Worker():
                 #Default Commands            
                 if (command == "update_user"):
                     self.clear()
-                    self.setUser(recievedObject['user'])
+                    try:
+                        self.setUser(recievedObject['user'])
+                    except KeyError:
+                        self.logger.error("Malformed command dictionary")
                     continue
                     
                 if (command == "absolute_directory"):
-                    self.setDirectory(receievedObject['absolute_directory'])
+                    self.setDirectory(recievedObject['absolute_directory'])
                     continue
                 
                 if (command == "clear"):
@@ -98,13 +101,18 @@ class Worker():
                
                 #Test commands
                 if (command == "test"):
-                     print "test command received"
+                     self.logger.info("test command received")
                      continue
                  
                 if (command == "test_receive"):
                     print recievedObject['test_receive']
                     continue
-               
+                
+                if (command == "get_variables"):
+                    print self.user
+                    print self.absoluteLocation
+                    print self.getName()
+                    
                 else:
                    self.processRequest(command, recievedObject)      
                    continue
@@ -113,6 +121,7 @@ class Worker():
         except KeyboardInterrupt:
                 pass
         
+        self.logger.info("Shutting Down")
         self.close()
     
     
@@ -123,13 +132,16 @@ class Worker():
     
  
          
-    #Generic Methods shared by all workers
+    #Generic Methods shared by all workers - WorkerDB over rides some stuff
     def setUser(self, user):
         self.user = str(user)
         self.logger.info("User set to %(user)s" % {'user':self.user})
                 
     def setDirectory(self, directory):
         self.absoluteLocation = directory
+     
+    def getName(self):
+        return self.name
         
     #This should be called from super class    
     def clear(self):

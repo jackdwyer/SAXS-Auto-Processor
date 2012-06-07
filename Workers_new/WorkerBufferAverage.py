@@ -9,7 +9,7 @@ from Worker import Worker
 
 class WorkerBufferAverage(Worker):    
     def __init__(self):
-        Worker.__init__(self, "Worker Static Image")
+        Worker.__init__(self, "Worker Buffer Average")
         
         #Specific Class Variables
         self.averagedBuffer = None
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     context = zmq.Context()
     port = 1200
     
-    worker = WorkerStaticImage()
+    worker = WorkerBufferAverage()
 
     t = Thread(target=worker.connect, args=(port,))
     t.start()
