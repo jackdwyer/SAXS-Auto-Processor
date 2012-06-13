@@ -18,6 +18,7 @@ from threading import Thread
 from Core.EngineFunctions import getUser as getUser
 from Core.EngineFunctions import testUserChange as testUserChange
 from Core.EngineFunctions import createFolderStructure as createFolderStructure
+from Core import LogWatcher
 
 
 #from Workers import Worker
@@ -33,6 +34,10 @@ class Engine2():
         
         #Instantiate class variables
         self.rootDirectory = None
+        
+        # Object that will be watching the LiveLogFile
+        self.logWatcher = LogWatcher.LogWatcher()
+
         
         #SET Correctly in newUser
         self.liveLog = None
@@ -51,8 +56,7 @@ class Engine2():
         #Instantiate all workers, get them all ready to push out into their own thread and connected up
         self.instanceWorkerList = self.instantiateWorkers(self.workers)
         #Connect up workers
-        self.connectWorkers(self.instanceWorkerList)
-    
+        self.connectWorkers(self.instanceWorkerList)    
     
     def setConfiguration(self, configuration):
         """ Default configuration is settings.conf """
@@ -114,13 +118,25 @@ class Engine2():
         for worker in self.connectedWorkers:
             self.connectedWorkers[worker].connect("tcp://127.0.0.1:"+str(workerPortLocation[worker]))
 
-        
         self.logger.info("All Workers connected and ready")
 
 
-
+    # Event Watching
     def setUserWatcher(self):
         epics.camonitor(self.userChangePV, callback=self.setUser)
+        
+    def watchForLogLines(self, logLocation):
+        self.logWatcher.setLocation(logLocation)
+        self.logWatcher.setCallback(self.imageTaken)
+        self.logWatcher.watch()
+        
+    def killLogWatcher(self):
+        self.logWatcher.kill()
+
+
+    def imageTaken(self, line, **kw):
+        print "IMAGE TAKEN"
+
         
     def setUser(self, char_value, **kw):
         self.logger.info("User Change Event")
@@ -135,6 +151,7 @@ class Engine2():
     def newUser(self, user):
         self.logger.info("New User Requested")
 
+
         self.user = user
         self.liveLog = self.rootDirectory + "/" + self.user + "/images/livelogfile.log"
         self.datFileLocation = self.rootDirectory + "/raw_dat/"
@@ -146,10 +163,15 @@ class Engine2():
         #Update all workers
         self.sendCommand({"command":"update_user", "user":self.user})
         self.sendCommand({"command":"absolute_directory","absolute_directory":self.rootDirectory + "/" + self.user})
+        
+        self.watchForLogLines(self.liveLog)
 
 
     def run(self):
         self.setUserWatcher() #Start epics call back
+        
+        
+   
         try:
             while True:
                 print "exit - to exit"
