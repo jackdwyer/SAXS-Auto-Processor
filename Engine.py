@@ -18,7 +18,6 @@ from Core import LogLine
 from Core.Logger import logger
 from Core import DirectoryCreator
 from Core import LogReader
-#import MySQLdb as mysql
 from Core.RootName import changeInRootName
 
 from threading import Thread

@@ -4,11 +4,18 @@ Engine using standard configparse over pyYaml
 Jack Dwyer
 
 TODO import logging and use that across all workers/core/engine etc
+
+BASH start stop
+screen -dmS "engine" "./engine.py"
+
+
+
 """
 import logging
 import sys
 import time
 import epics
+import os
 
 import zmq
 import yaml
@@ -18,7 +25,11 @@ from threading import Thread
 from Core.EngineFunctions import getUser as getUser
 from Core.EngineFunctions import testUserChange as testUserChange
 from Core.EngineFunctions import createFolderStructure as createFolderStructure
+from Core.RootName import changeInRootName
+
 from Core import LogWatcher
+from Core import LogLine
+from Core import DatFile
 
 
 #from Workers import Worker
@@ -33,7 +44,11 @@ class Engine2():
         self.setLoggingDetails()
         
         #Instantiate class variables
+        self.first = True #For catching index error
         self.rootDirectory = None
+        self.user = None
+        self.logLines = []
+        self.needBuffer = True
         
         # Object that will be watching the LiveLogFile
         self.logWatcher = LogWatcher.LogWatcher()
@@ -127,20 +142,17 @@ class Engine2():
         
     def watchForLogLines(self, logLocation):
         self.logWatcher.setLocation(logLocation)
-        self.logWatcher.setCallback(self.imageTaken)
+        self.logWatcher.setCallback(self.lineCreated)
         self.logWatcher.watch()
         
     def killLogWatcher(self):
         self.logWatcher.kill()
 
 
-    def imageTaken(self, line, **kw):
-        print "IMAGE TAKEN"
 
         
     def setUser(self, char_value, **kw):
         self.logger.info("User Change Event")
-
         user = getUser(char_value)
         if (testUserChange(user, self.previousUser)):
             self.previousUser = user
@@ -150,11 +162,16 @@ class Engine2():
         
     def newUser(self, user):
         self.logger.info("New User Requested")
-
-
+        #Reset class variables for controlling logic and data
+        self.first = True
+        self.logLines = []
+        self.needBuffer = True
+        
         self.user = user
         self.liveLog = self.rootDirectory + "/" + self.user + "/images/livelogfile.log"
-        self.datFileLocation = self.rootDirectory + "/raw_dat/"
+        self.datFileLocation = self.rootDirectory + "/" + self.user + "/raw_dat/"
+        print "DAT FILE LOCATIONLLLLL"
+        print self.datFileLocation
         
         #Generate Directory Structure
         createFolderStructure(self.rootDirectory, self.user)
@@ -164,14 +181,117 @@ class Engine2():
         self.sendCommand({"command":"update_user", "user":self.user})
         self.sendCommand({"command":"absolute_directory","absolute_directory":self.rootDirectory + "/" + self.user})
         
-        self.watchForLogLines(self.liveLog)
+        
+        #Start waiting for log to appear
+        self.watchForLogLines(self.liveLog) # Start waiting for the Log
 
 
-    def run(self):
+    def run(self): 
+        ## Get the user from epics if it needs to auto start       
+        """
+        if (self.user == None):
+            print self.user
+        """
+        
         self.setUserWatcher() #Start epics call back
+
         
         
+        
+        while True:
+            #Keep the script running
+            time.sleep(0.1)
+        
+ 
+ 
+ 
+ 
+    def lineCreated(self, line, **kw):
+        """
+        Here we will decide how to process the file
+        Sample Types:
+        6 - Water
+        0 - Buffer
+        1 - Static Sample
+        """
+        
+        latestLine = LogLine.LogLine(line)
+        self.logLines.append(latestLine)
+        
+        #Send off line to be written to db
+        self.sendLogLine(latestLine)
+        
+        if (latestLine.getValue("SampleType") == "0" or latestLine.getValue("SampleType") == "1"):
+            datFile = self.getDatFile(latestLine.getValue("ImageLocation"))
+            if (datFile):
+                self.processDat(latestLine, datFile)
+        else:
+            self.logger.info("Hey, it's a sample type I just don't care for!")
    
+   
+    def getDatFile(self, fullPath):
+        imageName = os.path.basename(fullPath)
+        imageName = os.path.splitext(imageName)[0]
+        datFileName = imageName + ".dat"
+
+        
+        time.sleep(0.1) #have a little snooze to make sure the image has been written
+        self.logger.info("Looking for DatFile %s" % datFileName)
+   
+        startTime = time.time()
+        while not os.path.isfile(self.datFileLocation + datFileName):
+            self.logger.info("Waiting for the %s" % datFileName)
+            time.sleep(0.5)
+            if (time.time() - startTime > 3.0):
+                self.logger.critical("DatFile: %s - could not be found - SKIPPING" % datFileName)
+                return False
+        
+        datFile = DatFile.DatFile(self.datFileLocation +  datFileName)
+        self.logger.info("DatFile: %s - has been found" % datFileName)
+        return datFile
+   
+   
+    def processDat(self, logLine, datFile):
+        try:
+            if (changeInRootName(os.path.basename(self.logLines[-1].getValue("ImageLocation")), os.path.basename(self.logLines[-2].getValue("ImageLocation")))):
+                self.logger.info("There has been a change in the root name")
+                
+                self.sendCommand({"command":"root_name_change"})
+                
+                if (logLine.getValue("SampleType") == "0"):
+                    self.logger.info("New Buffer!")
+                    self.needBuffer = True
+                    self.sendCommand({"command":"new_buffer"})
+                    self.sendCommand({"command":"buffer", "buffer":datFile})
+                
+                
+                if (logLine.getValue("SampleType") == "1"):
+                    if (self.needBuffer):
+                        self.logger.info("Hey i need a new buffer fool, so fucking request it")
+                        self.needBuffer = False
+                    else:
+                        self.logger.info("nope dont need a buffer")
+                
+            else:
+                self.logger.info("No change in root name fellas")
+                
+                if (logLine.getValue("SampleType") == "0"):
+                    self.sendCommand({"command":"buffer", "buffer":datFile})
+
+                if (logLine.getValue("SampleType") == "1"):            
+                    self.logger.info("no cange in root and its a sample")
+       
+        except IndexError:
+            if (self.first):
+                self.first = False
+            else:
+                self.logger.info("INDEX ERROR - Should only occur on first pass!")
+                   
+
+
+
+    
+    def cli(self):
         try:
             while True:
                 print "exit - to exit"
@@ -190,12 +310,16 @@ class Engine2():
         except KeyboardInterrupt:
             pass
 
-
     #Generic Methods
     def sendCommand(self, command):
-        for worker in self.connectedWorkers:
-            self.connectedWorkers[worker].send_pyobj(command)
+        if (type(command) is dict):
+            for worker in self.connectedWorkers:
+                self.connectedWorkers[worker].send_pyobj(command)
+        else:
+            self.logger.critical("Incorrect Command datatype, must send a dictionary")
 
+    def sendLogLine(self, line):
+        self.connectedWorkers['WorkerDB'].send_pyobj({"command":"log_line", "line":line})
 
     def test(self):
         self.sendCommand({'command':"test"})

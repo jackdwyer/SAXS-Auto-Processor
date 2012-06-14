@@ -10,6 +10,7 @@ import epics
 import sys
 import glob
 import shutil
+import os
 
 
 sys.path.append("../")
@@ -45,6 +46,7 @@ class Sim3():
                 print "2: Send Repeat Request of same User"
                 print "3: Send Repeat Request of different User"
                 print "4: Start a Full Experiment"
+                print "5: Send a buffer set"
 
     
                 option = raw_input("Enter Option: ")
@@ -80,29 +82,53 @@ class Sim3():
                         
                 if (option == "4"):
                     user = raw_input("Enter User: ")
-                    self.runExperiment(user)
+                    timeout = raw_input("Timeout: ")
+                    print timeout
+                    if (len(timeout) == 0):
+                        timeout = 0.1
+                    self.runExperiment(user, "livelogfile.log", float(timeout))
+                
+                if (option == "5"):
+                    self.clearUsers()
+                    user = "Jack"
+                    timeout = 1.0
+                    self.runExperiment(user, "bufferSet.log", float(timeout))
                     
                     
         except KeyboardInterrupt:
             pass
     
+    def clearUsers(self):
+        folders = glob.glob(self.rootDirectory+"/*")
+        for folder in folders:
+            shutil.rmtree(folder)
+
     def sendUser(self, user):
         epics.caput(self.userChangePV, "/location/to/something/"+str(user)+"/images" + bytearray("\0x00"*256))
 
     def createLog(self, user):
-        self.liveLog = open(self.rootDirectory + "/" + user + "/images/livelogfile.log", "w")
+        self.livelog = self.rootDirectory + "/" + user + "/images/livelogfile.log"
+        log = open(self.livelog, "w")
+        log.close()
+    
+    def writeLine(self, line):
+        log = open(self.livelog, "a")
+        log.write(line)
+        log.close()
         
+        
+                
     def setLocation(self, user):
         self.location = self.rootDirectory + "/" + user + "/"
         
         
-    def runExperiment(self, user):
+    def runExperiment(self, user, logFile, timeout = 0.1):
         self.sendUser(user)
         self.setLocation(user)
         time.sleep(0.1) #Give some time for the engine to check directories, and create if needed
         self.createLog(user)
         
-        self.logFile = open("../data/livelogfile.log")
+        self.logFile = open("../data/"+logFile)
         line = self.logFile.readline()
         datFiles = glob.glob("../data/data/")
         while True:
@@ -123,13 +149,13 @@ class Sim3():
                 print e
                 pass
             
-            time.sleep(0.1)
             print "Ran"
-            self.liveLog.write(line)
+            self.writeLine(line)
             
             line = self.logFile.readline()
-        
-        
+            time.sleep(timeout)
+
+
 
 
 if __name__ == "__main__":

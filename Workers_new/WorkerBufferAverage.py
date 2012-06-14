@@ -4,6 +4,9 @@ import zmq
 import time
 from threading import Thread
 from Worker import Worker
+from Core import AverageList
+from Core import DatFile
+from Core import DatFileWriter
 
 
 
@@ -13,21 +16,44 @@ class WorkerBufferAverage(Worker):
         
         #Specific Class Variables
         self.averagedBuffer = None
+        self.bufferIndex = 1
+        self.buffers = []
+        
         
         
     def processRequest(self, command, obj):                
         self.logger.info("Processing Received object")
         command = str(obj['command'])
         
-        if (command == "static_image"):
-            self.logger.info("Received a static image")
-        
-        if (command == "averaged_buffer"):
-            self.logger.info("Received an averaged buffer")
+        if (command == "buffer"):
+            buffer = obj['buffer']
+            self.logger.info("Buffer Sample")
+            self.averageBuffer(buffer)
             
+    def averageBuffer(self, buffer):
+        self.buffers.append(buffer)
+        intensities = []
+        for buffer in self.buffers:
+            intensities.append(buffer.intensities)
+            
+        datName = "avg_buffer_" + str(self.bufferIndex) + "_" +buffer.getBaseFileName()
+        averageIntensities = self.averageList.average(intensities)
+        self.datWriter.writeFile(self.absoluteLocation + "/avg/", datName, { 'q' : self.buffers[-1].getq(), "i" : averageIntensities, 'errors':self.buffers[-1].getErrors()})
 
+        
 
+    def rootNameChange(self):
+        self.logger.info("Root Name Change Called - No Action Required")
+
+    def newBuffer(self):
+        self.averagedBuffer = None
+        self.bufferIndex = self.bufferIndex + 1
     
+    def clear(self):
+        Worker.clear(self)
+        self.averagedBuffer = None
+        self.bufferIndex = 1
+        self.buffers = []
 
         
 

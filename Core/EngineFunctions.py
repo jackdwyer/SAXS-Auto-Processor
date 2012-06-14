@@ -19,7 +19,7 @@ def getUser(path):
     ###########################################################################################################
     
 
-def testUserChange(user, perviousUser):
+def testUserChange(user, perviousUser = None):
     if not (perviousUser):
         return True
     else:

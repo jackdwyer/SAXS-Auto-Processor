@@ -16,6 +16,9 @@ import logging
 
 import time
 from threading import Thread
+from Core import AverageList
+from Core import DatFile
+from Core import DatFileWriter
 
 
 class Worker():
@@ -23,15 +26,15 @@ class Worker():
         #General Variables
         self.name = name
         
-
-
-        
         
         #ZMQ stuff
         self.context = zmq.Context()
         self.pull = self.context.socket(zmq.PULL)
         self.pub = self.context.socket(zmq.PUB)
         
+        #Class objects
+        self.datWriter = DatFileWriter.DatFileWriter()
+        self.averageList = AverageList.AverageList()
         
         #Class Variables
         self.logger = None
@@ -92,6 +95,14 @@ class Worker():
                     self.setDirectory(recievedObject['absolute_directory'])
                     continue
                 
+                if (command == "root_name_change"):
+                    self.rootNameChange()
+                    continue
+                
+                if (command == "new_buffer"):
+                    self.newBuffer()
+                    continue
+                
                 if (command == "clear"):
                     self.clear()
                     continue
@@ -130,6 +141,13 @@ class Worker():
     def processRequest(self, command, obj):
         raise Exception("Must override this method")
     
+    def rootNameChange(self):
+        raise Exception("Must override this method")
+
+    def newBuffer(self):
+        raise Exception("Must override this method")
+
+
  
          
     #Generic Methods shared by all workers - WorkerDB over rides some stuff

@@ -43,6 +43,7 @@ class LogWatcher():
                 break
             except IOError:
                 print "Waiting for logFile"
+                print self.logLocation
                 time.sleep(0.5);
             
             #other shit here for if file dont exist
@@ -58,6 +59,7 @@ class LogWatcher():
 
     def watchThread(self):
         for line in self.fileWatch():
+            print line
             self.callback(line)
 
 

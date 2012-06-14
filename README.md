@@ -38,5 +38,12 @@ You can extend the dictionary with what ever data you want your worker to use.  
 { 'command' : 'absolute_directory', 'absolute_directory' : new_directory }
 
 
+###Specific Commands relating to DatFiles
+{"command":"root_name_change"}
+d{"command":"new_buffer"}
+
+
+
+
 
 

@@ -23,7 +23,9 @@ class WorkerDB(Worker):
     def processRequest(self, command, obj):                
         self.logger.info("Processing Received object")
         command = str(obj['command'])
-        self.logger.info("Unknown Command - Did not process")
+        if (command == "log_line"):
+            print obj['line'].data["SampleType"]
+        
    
     def connect(self, pullPort = False, subPort = False):
         try:
@@ -124,6 +126,14 @@ class WorkerDB(Worker):
         finally:
             sys.exit()
             
+    
+
+    
+    def rootNameChange(self):
+        pass
+    
+    def newBuffer(self):
+        pass
             
 if __name__ == "__main__":
     #Test Cases

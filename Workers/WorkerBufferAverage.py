@@ -13,6 +13,7 @@ import zmq
 from Core import AverageList
 from Core.Logger import logger
 from Core import DatFile
+from Core import AverageList
 
 from Worker import Worker
 
