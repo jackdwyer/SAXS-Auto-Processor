@@ -67,6 +67,7 @@ class Engine2():
 
         #ZMQ Class Variables
         self.zmqContext = zmq.Context()
+        self.requestBuffer = None
 
         #Instantiate all workers, get them all ready to push out into their own thread and connected up
         self.instanceWorkerList = self.instantiateWorkers(self.workers)
@@ -101,7 +102,8 @@ class Engine2():
 
     def connectWorkers(self, instanceList):
         pushPort = 2000
-        pubPort = 1999
+        pubPort = 1998
+        bufferRequestPort = 1999
         
         #Actual Worker Threads
         workerThreads = {}
@@ -111,9 +113,16 @@ class Engine2():
 
         #Start up a dictionary of threads, so we know where all the workers are        
         for worker in instanceList:
-            workerThreads[worker] = Thread(target=instanceList[worker].connect, args=(pushPort, pubPort,))                            
-            workerPortLocation[worker] = pushPort #So we know where to send commands
-            pushPort = pushPort + 1
+            if (worker == "WorkerBufferAverage"):
+                workerThreads[worker] = Thread(target=instanceList[worker].connect, args=(pushPort, pubPort, bufferRequestPort))
+                workerPortLocation[worker] = pushPort
+                self.requestBuffer = self.zmqContext.socket(zmq.REQ)
+                self.requestBuffer.connect("tcp://127.0.0.1:"+str(bufferRequestPort))
+                pushPort = pushPort + 1
+            else:
+                workerThreads[worker] = Thread(target=instanceList[worker].connect, args=(pushPort, pubPort,))                            
+                workerPortLocation[worker] = pushPort #So we know where to send commands
+                pushPort = pushPort + 1
             
         #Set all workers as Daemon threads (so they all die when we close the application)
         for workerThread in workerThreads:
@@ -258,6 +267,7 @@ class Engine2():
                 
                 self.sendCommand({"command":"root_name_change"})
                 
+                
                 if (logLine.getValue("SampleType") == "0"):
                     self.logger.info("New Buffer!")
                     self.needBuffer = True
@@ -267,10 +277,18 @@ class Engine2():
                 
                 if (logLine.getValue("SampleType") == "1"):
                     if (self.needBuffer):
-                        self.logger.info("Hey i need a new buffer fool, so fucking request it")
-                        self.needBuffer = False
+                        averagedBuffer = self.requestAveragedBuffer()
+                        print averagedBuffer
+                        if (averagedBuffer):
+                            self.sendCommand({"command":"averaged_buffer", "averaged_buffer":averagedBuffer})
+                            self.needBuffer = False
+                            self.sendCommand({"command":"static_image", "static_image":datFile})
+                            
+                        else:
+                            self.sendCommand({"command":"static_image", "static_image":datFile})
+
                     else:
-                        self.logger.info("nope dont need a buffer")
+                        self.logger.info("So lets average with current buffer!")
                 
             else:
                 self.logger.info("No change in root name fellas")
@@ -278,8 +296,22 @@ class Engine2():
                 if (logLine.getValue("SampleType") == "0"):
                     self.sendCommand({"command":"buffer", "buffer":datFile})
 
-                if (logLine.getValue("SampleType") == "1"):            
-                    self.logger.info("no cange in root and its a sample")
+                if (logLine.getValue("SampleType") == "1"):
+                    if (self.needBuffer):
+                        averagedBuffer = self.requestAveragedBuffer()
+                        print averagedBuffer
+                        if (averagedBuffer):
+                            self.sendCommand({"command":"averaged_buffer", "averaged_buffer":averagedBuffer})
+                            self.needBuffer = False
+                            self.sendCommand({"command":"static_image", "static_image":datFile})
+
+                        else:
+                            self.logger.critical("No averaged Buffer returned unable to perform subtraction")
+                    else:
+                        self.sendCommand({"command":"static_image", "static_image":datFile})
+                    
+
+
        
         except IndexError:
             if (self.first):
@@ -320,7 +352,13 @@ class Engine2():
 
     def sendLogLine(self, line):
         self.connectedWorkers['WorkerDB'].send_pyobj({"command":"log_line", "line":line})
-
+        
+    def requestAveragedBuffer(self):
+        self.requestBuffer.send("request_buffer")
+        buffer = self.requestBuffer.recv_pyobj()
+        return buffer
+    
+    
     def test(self):
         self.sendCommand({'command':"test"})
         time.sleep(0.1)

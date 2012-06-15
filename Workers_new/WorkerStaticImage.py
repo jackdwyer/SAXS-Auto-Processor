@@ -19,32 +19,56 @@ class WorkerStaticImage(Worker):
         
         
     def processRequest(self, command, obj):                
-        self.logger.info("Processing Received object")
         command = str(obj['command'])
         
         if (command == "static_image"):
             self.logger.info("Received a static image")
+            self.subtractBuffer(obj["static_image"], self.averagedBuffer)
         
         if (command == "averaged_buffer"):
             self.logger.info("Received an averaged buffer")
             try:
                 self.setBuffer(obj['averaged_buffer'])
             except KeyError:
-                self.logger.critical("Key Error at averaged_buffer")
-            
-            
-        else:
-            self.logger.info("Unknown Command - Did not process")
+                self.logger.critical("Key Error at averaged_buffer")           
+
             
     
     def setBuffer(self, buffer):
         self.averagedBuffer = buffer
         self.logger.info("Set Averaged Buffer")
+        print "DA BUFFER"
+        print self.averagedBuffer
         
-    def subtractBuffer(self):
+    def subtractBuffer(self, datFile, buffer):
         """Method for subtracting buffer from static sample """
-        self.logger.info("Subtracting Buffer")
-        pass
+        if (buffer):
+            newIntensities = []
+            print datFile.getIntensities()
+            for i in len(datFile.getIntensities()):
+                newIntensities.append(datFile.getIntensities()[i] - buffer[i])
+
+            self.logger.info("Subtracting Buffer")
+            print datFile
+            print buffer
+            print "######"
+            print newIntensities
+            
+            datName = "sub_"+datFile.getBaseFileName()
+            self.datWriter.writeFile(self.absoluteLocation + "/sub/", datName, { 'q' : datFile.getq(), "i" : newIntensities, 'errors':datFile.getErrors()})
+            
+            
+            
+            
+            
+        else:
+            self.logger.critical("Error with Averaged Buffer, unable to perform subtraction")    
+    
+    def rootNameChange(self):
+        self.logger.info("Root Name Change Called - No Action Required")
+        
+    def newBuffer(self):
+        self.averagedBuffer = None
     
     
     def clear(self):

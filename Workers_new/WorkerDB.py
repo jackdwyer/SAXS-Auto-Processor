@@ -36,6 +36,10 @@ class WorkerDB(Worker):
                 self.sub.bind("tcp://127.0.0.1:"+str(subPort))
                 self.sub.setsockopt(zmq.SUBSCRIBE, "")
                 
+                subThread = Thread(target=self.subscribe)
+                subThread.setDaemon(True)
+                subThread.start()
+                
             self.logger.info("Connected Pull Port at: %(pullPort)s - Subscribed Port at: %(pubPort)s" % {'pullPort' : pullPort, 'pubPort' : subPort})
         
         except:  
@@ -57,17 +61,7 @@ class WorkerDB(Worker):
 
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    def sub(self):
+    def subscribe(self):
         try:
             while True:
                 
@@ -127,13 +121,12 @@ class WorkerDB(Worker):
             sys.exit()
             
     
-
-    
     def rootNameChange(self):
         pass
     
     def newBuffer(self):
         pass
+            
             
 if __name__ == "__main__":
     #Test Cases

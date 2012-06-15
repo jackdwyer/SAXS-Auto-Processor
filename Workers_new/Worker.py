@@ -73,7 +73,6 @@ class Worker():
     def run(self):
         try:
             while True:
-                
                 recievedObject = self.pull.recv_pyobj()
                 self.logger.info("Received Object")
                 try:

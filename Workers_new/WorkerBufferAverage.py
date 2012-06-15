@@ -18,8 +18,38 @@ class WorkerBufferAverage(Worker):
         self.averagedBuffer = None
         self.bufferIndex = 1
         self.buffers = []
+        self.averageIntensities = None
         
+        #specific ZMQ 
+        self.context = zmq.Context()
+        self.reply = self.context.socket(zmq.REP)
+
+    
+    def connect(self, pullPort = False, pubPort = False, replyPort = False):
+        try:
+            if (pullPort):
+                self.pull.bind("tcp://127.0.0.1:"+str(pullPort))
+
+            if (pubPort):
+                self.pub.connect("tcp://127.0.0.1:"+str(pubPort))
+            
+            if (replyPort):
+                self.reply.bind("tcp://127.0.0.1:"+str(replyPort))
+                
+                replyThread = Thread(target=self.requestBufferThread)
+                replyThread.setDaemon(True)
+                replyThread.start()
+                
+                
+            self.logger.info("Connected Pull Port at: %(pullPort)s - Publish Port at: %(pubPort)s - Reply Port at: %(replyPort)s" % {'pullPort' : pullPort, 'pubPort' : pubPort, 'replyPort':replyPort})
         
+        except:  
+            self.logger.critical("ZMQ Error - Unable to connect")
+            raise Exception("ZMQ Error - Unable to connect")
+        
+        self.run()
+
+    
         
     def processRequest(self, command, obj):                
         self.logger.info("Processing Received object")
@@ -30,6 +60,8 @@ class WorkerBufferAverage(Worker):
             self.logger.info("Buffer Sample")
             self.averageBuffer(buffer)
             
+            
+            
     def averageBuffer(self, buffer):
         self.buffers.append(buffer)
         intensities = []
@@ -37,10 +69,28 @@ class WorkerBufferAverage(Worker):
             intensities.append(buffer.intensities)
             
         datName = "avg_buffer_" + str(self.bufferIndex) + "_" +buffer.getBaseFileName()
-        averageIntensities = self.averageList.average(intensities)
-        self.datWriter.writeFile(self.absoluteLocation + "/avg/", datName, { 'q' : self.buffers[-1].getq(), "i" : averageIntensities, 'errors':self.buffers[-1].getErrors()})
+        self.averagedIntensities = self.averageList.average(intensities)
+        self.datWriter.writeFile(self.absoluteLocation + "/avg/", datName, { 'q' : self.buffers[-1].getq(), "i" : self.averagedIntensities, 'errors':self.buffers[-1].getErrors()})
 
-        
+    
+    def requestBufferThread(self):
+        try:
+            while True:
+                test = self.reply.recv() #wait for request of buffer
+                if (test == 'test'):
+                    self.reply.send_pyobj("REQUESTED DATA")
+                if (test == "request_buffer"):
+                    print "self averaged intensities"
+                    print self.averagedIntensities
+                    if (self.averagedIntensities):
+                        self.reply.send_pyobj(self.averagedIntensities)      
+                    else:
+                        self.reply.send_pyobj(False)
+        except KeyboardInterrupt:
+            pass   
+
+
+
 
     def rootNameChange(self):
         self.logger.info("Root Name Change Called - No Action Required")
