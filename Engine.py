@@ -1,11 +1,7 @@
-"""
-Jack Dwyer
+###BASH start stop
+#screen -dmS "engine" "./engine.py"
 
 
-BASH start stop
-screen -dmS "engine" "./engine.py"
-
-"""
 import logging
 import sys
 import time
@@ -28,6 +24,10 @@ from Core import DatFile
 
 
 class Engine():
+    """
+    Engine does some things
+    
+    """
     def __init__(self, configuration):
         #Set up the Logger
         self.name = "Engine"
@@ -40,6 +40,7 @@ class Engine():
         self.user = None
         self.logLines = []
         self.needBuffer = True
+        """Attribute self.needBuffer"""
         
         # Object that will be watching the LiveLogFile
         self.logWatcher = LogWatcher.LogWatcher()
@@ -66,7 +67,27 @@ class Engine():
         self.connectWorkers(self.instanceWorkerList)    
     
     def setConfiguration(self, configuration):
-        """ Default configuration is settings.conf """
+        """Reads the default configuration file that is passed at object creation 
+        """
+        #The configuration stores the Workers that need to be loaded, whether an Experiment name is being used
+        #The Absolute location of the datFiles.
+        #Any PV's that need to be watched
+        
+        # Args:
+        #     configuration: A YAML config file
+          
+        #Returns:
+        #   Nothing
+        #   Sets class Variables:
+        #       self.rootDirectory = The absolute location of the experiments as mounted on the local machine
+        #       self.userChangePV = The FullPath PV from epics to watch for user/experiment change over
+        
+          #self.experimentFolderOn = Switch if they experiment folders are being used
+           #   self.workrs = List of all workers that need to be instantiated
+          
+        #Raises:
+        #   IOError: When it is unable to find the configuration
+            
         try:
             stream = file(configuration, 'r') 
         except IOError:
