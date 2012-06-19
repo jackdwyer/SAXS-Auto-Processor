@@ -96,3 +96,25 @@ class WorkerRollingAverageSubtraction(Worker):
         Worker.clear(self)
         self.averagedBuffer = None
         self.datIndex = 1
+        
+        
+        
+if __name__ == "__main__":
+    #Test Cases
+    context = zmq.Context()
+    port = 1200
+    
+    worker = WorkerRollingAverageSubtraction()
+
+    t = Thread(target=worker.connect, args=(port,))
+    t.start()
+    time.sleep(0.1)
+
+    
+    testPush = context.socket(zmq.PUSH)
+    testPush.connect("tcp://127.0.0.1:"+str(port))
+    testPush.send_pyobj({'command' : "averaged_buffer", "averaged_buffer":buffer})  #Buffer needs to be a datFile object
+    testPush.send_pyobj({'command' : "static_image", "static_image":datFile})  #datFile needs to be a datFile object
+    testPush.send_pyobj({'command' : "static_image", "static_image":datFile})  #datFile needs to be a datFile object
+    testPush.send_pyobj({'command' : "static_image", "static_image":datFile})  #datFile needs to be a datFile object
+
