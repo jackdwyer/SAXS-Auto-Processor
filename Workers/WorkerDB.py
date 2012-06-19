@@ -1,109 +1,145 @@
-#!/usr/bin/env python2.7
-"""
-Jack dywer
-20 march 2012
-"""
-#TODO: Fix up sample Typpe, eg write to another table of subtracted types.
-
-
+import logging
 import sys
+sys.path.append("../")
+
+import zmq
 import time
 from threading import Thread
-sys.path.append("../")
-import zmq
-from Core import AverageList
-from Core.Logger import logger
-from Core import DatFile
-
 from Worker import Worker
-
+from Core import DatFile
 from Core import TableBuilder
 import MySQLdb as mysql
 
 
 
-class WorkerDB(Worker):
-    
+from sqlalchemy import *
+
+
+class WorkerDB(Worker):    
     def __init__(self):
         Worker.__init__(self, "WorkerDB")
         
-    def connect(self, pullPort):
-        self.pull.bind("tcp://127.0.0.1:"+str(pullPort))
+        self.db = None
+        
+        #Specific ZMQ stuff for WorkerDB, it uses SUB/PUB
+        self.sub = self.context.socket(zmq.SUB)
+
+        
+    def processRequest(self, command, obj):                
+        self.logger.info("Processing Received object")
+        command = str(obj['command'])
+        if (command == "log_line"):
+            self.writeLogToDB(obj['line'])
+            print obj['line'].data["SampleType"]
+        
+        if (command == "createDB"):
+            self.createDB(self.user)
+        
+   
+    def connect(self, pullPort = False, subPort = False):
+        try:
+            if (pullPort):
+                self.pull.bind("tcp://127.0.0.1:"+str(pullPort))
+
+            if (subPort):
+                self.sub.bind("tcp://127.0.0.1:"+str(subPort))
+                self.sub.setsockopt(zmq.SUBSCRIBE, "")
+                
+                subThread = Thread(target=self.subscribe)
+                subThread.setDaemon(True)
+                subThread.start()
+                
+            self.logger.info("Connected Pull Port at: %(pullPort)s - Subscribed Port at: %(pubPort)s" % {'pullPort' : pullPort, 'pubPort' : subPort})
+        
+        except:  
+            self.logger.critical("ZMQ Error - Unable to connect")
+            raise Exception("ZMQ Error - Unable to connect")
+        
         self.run()
     
-    def run(self):
+    
+    def subscribe(self):
         try:
             while True:
-                test = self.pull.recv()
-                                
-                #Generic Worker Control
-                if (str(test) == "update_user"):
-                    logger(self.name, "Received Command - updateUser")
-                    self.user = self.pull.recv()
-                    self.forceDBCreation(self.user)
-                    self.buildTables()
                 
-                if (str(test) == "getUser"):
-                    logger(self.name, "Current User : " + self.user)
+                recievedObject = self.sub.recv_pyobj()
+                self.logger.info("Received Object")
+                try:
+                    command = str(recievedObject['command'])
+                except KeyError:
+                    self.logger.error("No command key sent with object, can not process request")
+                    continue
 
-
-                if (str(test) == "log_line"):
-                    logger(self.name, "GOT CALLED LOG LINE")
-                    try:
-                        logLine = self.pull.recv_pyobj()
-                    except:
-                        logger(self.name, "UNPICKLING ERROR - LINE MISSED TO DB")
-                    self.writeLogToDB(logLine)
-                    
-                if (str(test) == "sub_static_image"):
-                    loc = self.pull.recv()
-                    self.writeSubtractionLocation(loc)
-                    
-                if (str(test) == "buffer_file"):
-                    loc = self.pull.recv()
-                    self.writeBufferLocation(loc)
-                    
-                if (str(test) == "subtracted_average_image"):
-                    loc = self.pull.recv()
-                    self.writeAveragedSubtactedLocation(loc)
-                    
-                if (str(test) == "average_image"):
-                    loc = self.pull.recv()
-                    self.writeAveragedLocation(loc)
+                if (command == "averaged_buffer"):
+                    self.logger.info("Written location of averaged buffer")
+                    self.writeBufferLocation(recievedObject["location"])
+                    continue
+                
+                if (command == "averaged_subtracted_sample"):
+                    self.logger.info("Written location of averaged_subtracted_sample")
+                    self.writeAveragedSubtactedLocation(recievedObject["location"])
+                    continue
+                
+                if (command == "averaged_sample"):
+                    self.logger.info("Written location of averaged_sample")
+                    self.writeAveragedLocation(recievedObject["location"])
+                    continue
+                
+                if (command == "subtracted_sample"):
+                    self.logger.info("Written location of subtracted_sample")
+                    self.writeAveragedLocation(recievedObject["location"])
+                    continue
+                
+                if (command == "test"):
+                    self.logger.info("Gotten TEST COMMMAND")
+                    print recievedObject["value"]
+                    continue
                 
                 
-                if (str(test) == 'clear'):
-                    self.clear()
 
-                if (str(test) == "exit"):
-                    self.close()
-                    
-                if (str(test) == "test"):
-                    logger(self.name, "Received TEST")
-                    
-                                        
-                #Test shit   
-                if (str(test) == "testPush"):
-                    testString = self.pull.recv();
-                    logger(self.name, "Test Pull/Push - Completed - String Received : " + testString)
 
-                
+
+               
+               
         except KeyboardInterrupt:
-            pass
-
+                pass
+        
+        self.close()
+        
+    def close(self):
+        try:
+            time.sleep(0.1)
+            self.sub.close()
+            self.logger.info("Closed ports - shutting down")
+        except:
+            self.logger.critical("Failed to close ports")
+            raise Exception("Failed to close ports")
+        finally:
+            sys.exit()
+            
     
-    def forceDBCreation(self, user):
-        logger(self.name, "Forcing Database Creation")
+    def rootNameChange(self):
+        pass
+    
+    def newBuffer(self):
+        pass
+    
+    
+    def setUser(self, user):
+        self.user = str(user)
+        self.logger.info("User set to %(user)s" % {'user':self.user})
+
+    def createDB(self, user):
         try:
             db = mysql.connect(user="root", host="localhost", passwd="a")
             c = db.cursor()
             cmd = "CREATE DATABASE IF NOT EXISTS " + str(user) + ";"
             c.execute(cmd)      
-            logger(self.name, "Database Created for user: " + str(user))
         except Exception:
-            logger(self.name, "Database CREATION FAILED for user:" + str(user))
             raise
-    
+        
+        self.buildTables()
+        
     def buildTables(self):
         collumAttributes = ['WashType', 'SampleOmega', 'FilePluginDestination', 'Temperature2', 'Temperature1', 'WellNumber', 'SamplePhi', 'NumericTimeStamp', 'I0', 'SampleY', 'SampleX', 'SampleChi', 'TimeStamp', 'SampleType', 'ImageCounter', 'Ibs', 'exptime', 'FilePluginFileName', 'Energy', 'It', 'SampleTableX', 'SampleTableY', 'NORD', 'ImageLocation']
 
@@ -120,7 +156,7 @@ class WorkerDB(Worker):
         averagedRows = ['average_location']
         self.averagedTable = TableBuilder.TableBuilder(self.user, 'average_images', averagedRows)
         
-        averagedSubRows = ['subtracted_average_location']
+        averagedSubRows = ['subtracted_average_location', 'DAM_value']
         self.averagedSubTable = TableBuilder.TableBuilder(self.user, 'average_subtracted_images', averagedSubRows)
 
     
@@ -141,26 +177,23 @@ class WorkerDB(Worker):
         self.averagedSubTable.addData({ "subtracted_average_location" : image })
         
         
-if __name__ == "__main__":
-    pushPort = 4000
-    reqPort = 8000
-    context = zmq.Context()
-    replyPass = False
-
-    print "TEST 1 - ONLY PUSH/PULL"
-    #Test 1 - Only a pull socket
-    b = Worker("Worker db")
-    t = Thread(target=b.connect, args=(pushPort,))
-    t.start()
-
     
-    testPush = context.socket(zmq.PUSH)
-    testPush.bind("tcp://127.0.0.1:"+str(pushPort))
-    testPush.send("clear")
+            
+            
+if __name__ == "__main__":
+    #Test Cases
+    context = zmq.Context()
+    port = 1211
+    
+    worker = WorkerDB()
+    print worker.getName()
+
+    t = Thread(target=worker.connect, args=(port,))
+    t.start()
     time.sleep(0.1)
-    testPush.close()
-    b.close()
-        
-    sys.exit()
 
+    testPub = context.socket(zmq.PUB)
+    testPub.connect("tcp://127.0.0.1:"+str(port))
 
+    testPub.send_pyobj({'command' : "test"})
+    testPub.send_pyobj({'command' : "shut_down"})

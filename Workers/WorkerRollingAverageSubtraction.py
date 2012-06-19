@@ -1,143 +1,98 @@
 """
 Jack Dwyer
-
 """
 
-from threading import Thread
-import zmq
+import logging
 import sys
+import zmq
 import time
-
-from Core.Logger import logger
+from threading import Thread
+from Worker import Worker
+from Core import AverageList
 from Core import DatFile
 from Core import DatFileWriter
 
-from Worker import Worker
 
-class WorkerRollingAverageSubtraction(Worker):
+
+class WorkerRollingAverageSubtraction(Worker):    
     def __init__(self):
-        Worker.__init__(self, "WorkerRollingAverageSubtraction")
+        Worker.__init__(self, "Worker Rolling Average Subtraction")
         
-        self.subtractedDatIntensities = []
-        self.subtractedDatq = []
-        self.subtractedErrors = []
+        #Class specific variables
+        self.averagedBuffer = None
+        self.datFiles = []
+        self.datIndex = 1
         
-        self.allIntensities = []
-        self.allQ = []
-        self.allErrors = []
+    def processRequest(self, command, obj):
+        command = str(obj['command'])
         
+        if (command == "static_image"):
+            self.logger.info("Received a static image")
+            self.subAvIntensities(obj['static_image'])
+            #Then Subtract
         
-        #For adding to be cleared when new user/sample
-        self.addToClearList(self.subtractedDatIntensities)
-        self.addToClearList(self.subtractedDatq)
-        self.addToClearList(self.subtractedErrors)
-
-    def process(self, test):       
-        if (str(test) == "test"):
-            logger(self.name, "RECIEVED - 'test' message")
-        
-        
-        if (str(test) == "static_image"):
-            self.datFile = self.pull.recv_pyobj()
-            logger(self.name, "Static Image Received")
-            self.average()
-            self.imageSubtraction()
-
+        if (command == "averaged_buffer"):
+            self.logger.info("Received an averaged buffer")
+            try:
+                self.setBuffer(obj['averaged_buffer'])
+            except KeyError:
+                self.logger.critical("Key Error at averaged_buffer")
                 
-    def average(self):
-        self.allIntensities.append(self.datFile.intensities)
-        self.allQ.append(self.datFile.q)
-        self.allErrors.append(self.datFile.errors)
-
-        #averaging out
-        self.aveIntensities = self.ave.average(self.allIntensities)
-        self.aveQ = self.datFile.q
-        self.aveErrors = self.datFile.errors
-        
-
-        logger(self.name, "Averaging Completed")
-        
-        fileName = "sample_"+self.datFile.getBaseFileName()
-        
-        if (self.newSample):      
-            self.dbPush.send("average_image")
-            self.dbPush.send(fileName)
-            self.newSample = False
-        
-        
-        self.datWriter.writeFile(self.absoluteLocation+"/avg/", fileName, { 'q': self.aveQ, 'i' : self.aveIntensities, 'errors':self.aveErrors})
-        
-        
-    def imageSubtraction(self):
-        subtractedDatIntensities = []
-        subtractedDatq = []
-        subtractedErrors = []
-        for i in range(len(self.datFile.intensities)):
-            #Intensities
-            value = self.datFile.intensities[i] - self.aveBuffer["intensities"][i]
-            subtractedDatIntensities.insert(i, value)
-            #Q Values
-            subtractedDatq.insert(i, self.datFile.q[i])
-            subtractedErrors.insert(i, self.datFile.errors[i])
-        
-        
-        self.subtractedDatIntensities = subtractedDatIntensities
-        self.subtractedDatq = subtractedDatq
-        self.subtractedErrors = subtractedErrors
-
-        fileName = "average_"+self.datFile.getBaseFileName()
-        
-        if (self.newSample_sub):
-            self.dbPush.send("subtracted_average_image")
-            self.dbPush.send(fileName)
-            self.newSample_sub = False
-        
-        self.datWriter.writeFile(self.absoluteLocation + "/sub/" , fileName , { 'q' : self.subtractedDatq, 'i' : self.subtractedDatIntensities, 'errors' : self.subtractedErrors})
-        logger(self.name, "Static Image Written ->" + fileName)
-
-
-        
-
-
-
-
-if __name__ == "__main__":
-    pushPort = 4000
-    reqPort = 8000
-    context = zmq.Context()
-    replyPass = False
-
-    print "TEST 1 - ONLY PUSH/PULL"
-    #Test 1 - Only a pull socket
-    b = WorkerRollingAverageSubtraction()
-    t = Thread(target=b.connect, args=(pushPort, False))
-    t.start()
-
     
-    testPush = context.socket(zmq.PUSH)
-    testPush.bind("tcp://127.0.0.1:"+str(pushPort))
-    testPush.send("clear")
-    time.sleep(0.1)
-    testPush.close()
+    
+    
+    def subAvIntensities(self, datFile):
+        self.datFiles.append(datFile)
+        intensities = []
+        for datFile in self.datFiles:
+            intensities.append(datFile.getIntensities())
+        
+        averagedIntensities = self.averageList.average(intensities)
 
 
-    #Test 2
-    print "TEST 2 - ONLY REQ/RECV"
-    b = WorkerRollingAverageSubtraction()
-    t = Thread(target=b.connect, args=(pushPort, reqPort))
-    t.start()
-    
-    testReq = context.socket(zmq.REQ)
-    testReq.connect("tcp://127.0.0.1:"+str(reqPort))
-    testReq.send("testReply")
-    testReply = testReq.recv_pyobj()
-    
-    if (testReply == "testReply"):
-        replyPass = True
 
-    testReq.close()
+        datName = "avg_sample_" + str(self.datIndex) + "_" +datFile.getBaseFileName()
+        if (averagedIntensities):
+            self.datWriter.writeFile(self.absoluteLocation + "/avg/", datName, { 'q' : datFile.getq(), "i" : averagedIntensities, 'errors':datFile.getErrors()})
+            self.pub.send_pyobj({"command":"averaged_sample", "location":datName})
+
+
+        
+        datName = "avg_sub_sample_" + str(self.datIndex) + "_" +datFile.getBaseFileName()
+        
+        subtractedIntensities = self.subtractBuffer(averagedIntensities, self.averagedBuffer)
+        
+        if (subtractedIntensities):
+            self.datWriter.writeFile(self.absoluteLocation + "/sub/", datName, { 'q' : datFile.getq(), "i" : subtractedIntensities, 'errors':datFile.getErrors()})
+            self.pub.send_pyobj({"command":"averaged_subtracted_sample", "location":datName})
+
+
+        
+
+    def subtractBuffer(self, intensities, buffer):
+        if (buffer):
+            newIntensities = []
+            for i in range(0, len(intensities)):
+                newIntensities.append(intensities[i] - buffer[i])
+            return newIntensities
+        else:
+            self.logger.critical("Error with Averaged Buffer, unable to perform subtraction")    
     
-    if (replyPass):
-        print "TEST OVER - Succeeded"
-    else:
-        print "TEST OVER - Failed with reply"
+    
+    
+    def setBuffer(self, buffer):
+        self.averagedBuffer = buffer
+        self.logger.info("Set Averaged Buffer")
+        
+    def rootNameChange(self):
+        self.datFiles = []
+        self.datIndex = self.datIndex + 1
+    
+    def newBuffer(self):
+        self.datFiles = []
+        self.averagedBuffer = None
+        
+    def clear(self):
+        Worker.clear(self)
+        self.averagedBuffer = None
+        self.datIndex = 1

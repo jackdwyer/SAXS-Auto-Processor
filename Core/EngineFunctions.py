@@ -8,14 +8,14 @@ Collection of Functions used by the Engine
 import os
 
 
-def getUser(path):
+def getUser(path, index):
     """Splits file path, and returns only user"""
     user = path.split("/")
     user = filter(None, user) #needed to remove the none characters from the array
     
     ###########################################################################################################
     #set to -2
-    return user[-2] #
+    return user[index] #
     ###########################################################################################################
     
 

@@ -1,185 +1,148 @@
 """
 Jack Dwyer
-24 April 2012
-refactored WorkerBufferAverage
 """
 
+import logging
 import sys
-import time 
-from threading import Thread
-
-sys.path.append("../")
 import zmq
-from Core import AverageList
-from Core.Logger import logger
-from Core import DatFile
-from Core import AverageList
-
+import time
+from threading import Thread
 from Worker import Worker
+from Core import AverageList
+from Core import DatFile
+from Core import DatFileWriter
 
 
-class WorkerBufferAverage(Worker):
+
+class WorkerBufferAverage(Worker):    
     def __init__(self):
-        Worker.__init__(self, "WorkerBufferAverage")
-        self.allIntensities = []
-        self.allErrors = []
-        self.allQ = []
+        Worker.__init__(self, "Worker Buffer Average")
         
-        self.avIntensities = []
-        self.avErrors = []
-        self.avQ = []
+        #Specific Class Variables
+        self.averagedBuffer = None
+        self.bufferIndex = 1
+        self.buffers = []
+        self.averagedIntensities = None
         
-        #self.addToClearList(self.allIntensities, self.allErrors, self.allQ)
+        self.previousName = None
+        
+        
+        #specific ZMQ 
+        self.context = zmq.Context()
         self.reply = self.context.socket(zmq.REP)
 
-        #self.sendDataThread = Thread(target=self.sendData())
-        
-        self.index = 0
-        
-        self.changeInBuffer = True
-
     
-    def process(self, test):       
-        if (test == "test"):
-            logger(self.name, "RECIEVED - 'test' message")
+    def connect(self, pullPort = False, pubPort = False, replyPort = False):
+        try:
+            if (pullPort):
+                self.pull.bind("tcp://127.0.0.1:"+str(pullPort))
+
+            if (pubPort):
+                self.pub.connect("tcp://127.0.0.1:"+str(pubPort))
             
-            
-            
-        if (test == "buffer"):
-            buffer = self.pull.recv_pyobj()
-            logger(self.name, "RECIEVED - Buffer")
-            self.average(buffer)
-            
-    def newBuffer(self):
-        self.changeInBuffer = True
-        self.index = self.index + 1
-        self.allIntensities = []
-        self.allErrors = []
-        self.allQ = []
-        self.avIntensities = []
-        self.avErrors = []
-        self.avQ = []
+            if (replyPort):
+                self.reply.bind("tcp://127.0.0.1:"+str(replyPort))
+                
+                replyThread = Thread(target=self.requestBufferThread)
+                replyThread.setDaemon(True)
+                replyThread.start()
+                
+                
+            self.logger.info("Connected Pull Port at: %(pullPort)s - Publish Port at: %(pubPort)s - Reply Port at: %(replyPort)s" % {'pullPort' : pullPort, 'pubPort' : pubPort, 'replyPort':replyPort})
         
-    def clear(self):
-        self.index = 0
-        self.allIntensities = []
-        self.allErrors = []
-        self.allQ = []
-        self.avIntensities = []
-        self.avErrors = []
-        self.avQ = []
-            
-    
-    def average(self, datBuffer):
-        self.allIntensities.append(datBuffer.intensities)
-        self.allErrors.append(datBuffer.errors)
-        self.allQ.append(datBuffer.q)
-
-
-        #averaging out
-        self.avIntensities = self.ave.average(self.allIntensities)
-        self.avErrors = datBuffer.errors
-        self.avQ = datBuffer.q
-    
-        fileName = "buffer" + str(self.index) + "_avg_" + str(datBuffer.getBaseFileName())
-
-        if (self.changeInBuffer):
-            self.dbPush.send("buffer_file")
-            self.dbPush.send(fileName)
-            self.changeInBuffer = False
+        except:  
+            self.logger.critical("ZMQ Error - Unable to connect")
+            raise Exception("ZMQ Error - Unable to connect")
         
-        self.datWriter.writeFile(self.absoluteLocation+"/avg/", fileName, { 'q': self.avQ, 'i' : self.avIntensities, 'errors':self.avErrors})
-
-        logger(self.name, "Averaging Completed")
-
-
-            
-    def connect(self, pullPort, dbPushPort, replyPort):
-        
-        self.pull.connect("tcp://127.0.0.1:"+str(pullPort));
-        self.reply.bind("tcp://127.0.0.1:"+str(replyPort))
-
-        
-        if (dbPushPort):
-            self.dbPush.connect("tcp://127.0.0.1:"+str(dbPushPort))
-            logger(self.name, "All Ports Connected -> pullPort: "+str(pullPort) + "-> replyPort: "+str(replyPort)+" -> dbPushPort: "+str(dbPushPort))
-        
-        else:
-            logger(self.name, "All Ports Connected -> pullPort: "+str(pullPort) + "-> replyPort: "+str(replyPort))
-        
-            
-
-
-        logger(self.name, "All Ports Connected -> replyPort: "+str(replyPort))
-        
-        replyThread = Thread(target=self.sendData)
-        replyThread.setDaemon(True)
-        replyThread.start()
-
         self.run()
 
+    
+        
+    def processRequest(self, command, obj):                
+        self.logger.info("Processing Received object")
+        command = str(obj['command'])
+        
+        if (command == "buffer"):
+            buffer = obj['buffer']
+            self.logger.info("Buffer Sample")
+            self.averageBuffer(buffer)
+            
+            
+            
+    def averageBuffer(self, buffer):
+        self.buffers.append(buffer)
+        intensities = []
+        for buffer in self.buffers:
+            intensities.append(buffer.getIntensities())
+            
+        datName = "avg_buffer_" + str(self.bufferIndex) + "_" +buffer.getBaseFileName()
+        self.averagedIntensities = self.averageList.average(intensities)
+        
+        self.datWriter.writeFile(self.absoluteLocation + "/avg/", datName, { 'q' : self.buffers[-1].getq(), "i" : self.averagedIntensities, 'errors':self.buffers[-1].getErrors()})
+        
+        if not (self.previousName == datName):
+            self.pub.send_pyobj({"command":"averaged_buffer", "location":datName})
+            self.previousName = datName
 
-    def getAverageBuffer(self):
-        return {'intensities' : self.avIntensities, 'errors' : self.avErrors, 'q' : self.avQ}
+
+
     
-    
-    def sendData(self):
+    def requestBufferThread(self):
         try:
             while True:
                 test = self.reply.recv() #wait for request of buffer
                 if (test == 'test'):
                     self.reply.send_pyobj("REQUESTED DATA")
                 if (test == "request_buffer"):
-                    logger(self.name, "BufferRequested")
-                    v = self.getAverageBuffer()
-                if (v['intensities']):
-                    self.reply.send_pyobj(self.getAverageBuffer())
-                else:
-                    self.reply.send_pyobj("no_buffer")
-                    
-
-        
-
+                    if (self.averagedIntensities):
+                        self.reply.send_pyobj(self.averagedIntensities)      
+                    else:
+                        self.reply.send_pyobj(False)
         except KeyboardInterrupt:
             pass   
-        
-        #OVERRIDE IN BUFFER
-    def close(self):
-        """Close all zmq sockets"""
-        self.pull.close()
-        self.reply.close()
-        logger(self.name, "Sockets Closed")
-        sys.exit()
-        
 
 
+
+
+    def rootNameChange(self):
+        self.logger.info("Root Name Change Called - No Action Required")
+
+    def newBuffer(self):
+        self.averagedBuffer = None
+        self.bufferIndex = self.bufferIndex + 1
+    
+    def clear(self):
+        Worker.clear(self)
+        self.averagedBuffer = None
+        self.bufferIndex = 1
+        self.buffers = []
+
+        
 
 if __name__ == "__main__":
-    pushPort = 4000
-    reqPort = 8000
+    #Test Cases
     context = zmq.Context()
-    replyPass = False
+    port = 1200
+    
+    worker = WorkerBufferAverage()
 
-
-
-
-    #Test 2
-    print "TEST 2 - ONLY REQ/RECV"
-    b = WorkerBufferAverage()
-    t = Thread(target=b.connect, args=(pushPort, reqPort))
+    t = Thread(target=worker.connect, args=(port,))
     t.start()
-    
-    testReq = context.socket(zmq.REQ)
-    testReq.connect("tcp://127.0.0.1:"+str(reqPort))
-    testReq.send("testReply")
-    testReply = testReq.recv_pyobj()
-    
-    if (testReply == "testReply"):
-        replyPass = True
+    time.sleep(0.1)
 
-    testReq.close()
     
-    if (replyPass):
-        print "TEST OVER - Succeeded"
-    else:
-        print "TEST OVER - Failed with reply"     
+    testPush = context.socket(zmq.PUSH)
+    testPush.connect("tcp://127.0.0.1:"+str(port))
+    testPush.send_pyobj({'command' : "averaged_buffer"})
+    testPush.send_pyobj({'command' : "test"})
+    testPush.send_pyobj({'command' : "test"})
+    testPush.send_pyobj({'command' : "static_image"})
+    testPush.send_pyobj({'command' : "test"})
+    testPush.send_pyobj({'command' : "test"})
+    testPush.send_pyobj({'command' : "averaged_buffer"})
+    testPush.send_pyobj({'command' : "test"})
+    testPush.send_pyobj({'command' : "test"})
+    testPush.send_pyobj({'command' : "static_image"})
+    testPush.send_pyobj({'command' : "test"})
+    testPush.send_pyobj({'command' : "averaged_buffer"})
+    testPush.send_pyobj({'command' : "shut_down"})

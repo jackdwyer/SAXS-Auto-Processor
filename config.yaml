@@ -7,6 +7,8 @@ RootDirectory : "/tmp/"
 #RootDirectory : "/data/pilatus1M/data/Cycle_2012_2/"
 RelativeLogFileLocation : "/images/livelogfile.log"
 ExperimentName : "experiment1"
+ExperimentFolderOn : !!bool "false"
+
 
 UserChangePV : "13SIM1:TIFF1:FilePath_RBV"
 ImageTakenPV : "13PIL1:cam1:FullFileName_RBV"

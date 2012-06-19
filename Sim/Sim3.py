@@ -99,7 +99,7 @@ class Sim3():
                     self.clearUsers()
                     user = "Jack"
                     timeout = 1.0
-                    self.runExperiment(user, "editedLiveLog.log", float(timeout))
+                    self.runExperiment(user, "editedLiveLog1.log", float(timeout))
                     
         except KeyboardInterrupt:
             pass
