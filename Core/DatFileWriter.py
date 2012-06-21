@@ -1,18 +1,16 @@
-"""
-Jack Dwyer
-31 March 2012
-
-Common DatFileWriter averaging class/methods.  
-
-expects a dictionary with q, i, error values
-prints to an accuracy of 10 decimal places.
-
-"""
 import os
 import Logger
 
 
 class DatFileWriter:
+    """
+    .. codeauthor:: Jack Dwyer <jackjack.dwyer@gmail.com>
+    An class that writes out datFiles created into a similar format as scatterbrain
+    
+    Args:
+        accuracy (int, default=10): Can specify how many decimal places you want it to write out to
+    """
+    
     
     def __init__(self, accuracy = 10):
         self.name = "DatFileWriter"
@@ -23,6 +21,17 @@ class DatFileWriter:
    
         
     def writeFile(self, location, datName, dict):
+        """
+        Is called when you want the objec to write out a dictionary of values to the specified datFile
+        
+        Args:
+            | location (String): The absolute location specified from the Worker/Engine as to where the datFile is to be written
+            | datName (String): Name for the Datfile
+            | dict (Dictionary): Takes a dictionary of q, i, errors
+        
+        """
+            
+            
         self.location = location
         self.datName = datName
         self.data = dict

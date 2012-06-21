@@ -48,6 +48,8 @@ class Sim3():
                 print "4: Start a Full Experiment"
                 print "5: Send a buffer set"
                 print "6: Use made up log"
+                print "7: Enter User and Experiment"
+                print "8: Enter Only Experiment"
 
     
                 option = raw_input("Enter Option: ")
@@ -100,6 +102,16 @@ class Sim3():
                     user = "Jack"
                     timeout = 1.0
                     self.runExperiment(user, "editedLiveLog1.log", float(timeout))
+                    
+                if (option == "7"):
+                    user = raw_input("USER>> ")
+                    experiment = raw_input("EXPERIMENT>> ")
+                    self.sendUser(user+"/"+experiment)
+                    
+                if (option == "8"):
+                    user = "Jack"
+                    experiment = raw_input("EXPERIMENT>> ")
+                    self.sendUser(user+"/"+experiment)
                     
         except KeyboardInterrupt:
             pass

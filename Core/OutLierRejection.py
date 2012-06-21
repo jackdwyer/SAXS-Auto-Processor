@@ -1,20 +1,27 @@
-"""
-Jack Dwyer
-Outlier rejection
-pass a list of average high Q and averaged low Q.
-
-Will need to pass a dictionary of all dat files to be checked against
-"""
-
 import DatFile
 import glob
 
 class OutLierRejection():
+    """
+    .. codeauthor:: Jack Dwyer <jackjack.dwyer@gmail.com>
+    A class that takes a list of DatFiles and changes the reference Valid value to True or False, based on Nathan Cowieson's Algorithm
+    """
+    
     def __init__(self):
         print "out lier rejection created"
 
     def process(self, datFiles):
-        #If length is 1, can not check
+        """ 
+        Takes the list of datFiles and processses their high/low Q's and checks validity
+        
+        Args:
+            datFiles (list[] of DatFile objects)
+            
+        Returns:
+            Nothing
+        
+        Sets the reference valid value to True or False of the DatFile
+        """
         if (len(datFiles) == 1 or len(datFiles) == 0):
             return False
         else:

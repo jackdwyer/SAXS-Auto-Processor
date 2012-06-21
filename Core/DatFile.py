@@ -1,19 +1,14 @@
-""" 
-Jack Dwyer
-21/02/2012
-
-Holds general methods on for the Dat Files to be processed
-will also auto process datfile data into the q, i, error lists
-
-18 March 2012 - Adding to the new zmq shit
-"""
-
 import os
 
 class DatFile:
-    
+    """
+    .. codeauthor:: Jack Dwyer <jackjack.dwyer@gmail.com>
+    Takes a path to a datFile, parses it and calculates the respective High/Low Q's
+     
+    Args:
+        datFilePath (String): Absolute location of the datFile as told from the local machine
+    """
     def __init__(self, datFilePath):
-        """Must pass the absolute dat file path """
         self.datFilePath = datFilePath
         self.q = []
         self.intensities = []
@@ -40,11 +35,17 @@ class DatFile:
             raise Exception("Dat File did not close")
 
     def getFileName(self):
+        """
+        | Returns the file name of the datFile
+        | eg: datFile1.dat
+        """
         return os.path.basename(self.datFilePath)
     
     def getBaseFileName(self):
-        #Dirty function to loose the numbers in a file name
-        #Will be fixed once actual file naming convention is known
+        """
+        | Returns the base name of the sample type
+        | eg: SampleType1_1555.dat becomes SampleType1.dat
+        """
         fileName = self.getFileName()
         h = fileName.split("_")
         del h[-1]
@@ -61,17 +62,23 @@ class DatFile:
         
 
     def getq(self):
+        """
+        Returns q values
+        """
         return self.q
     
     def getIntensities(self):
+        """
+        Returns Intensities
+        """
         return self.intensities
     
     def getErrors(self):
+        """
+        Returns Errors
+        """
         return self.errors
-
-    """ all set operators expect to be passed a list 
-    TODO: check type, raise exception if not list 
-    pretty not needed functions anyways"""   
+ 
     def setq(self, q):
         self.q = q
         
@@ -100,8 +107,11 @@ class DatFile:
         
         
     def processDatFile(self):
-        """ Based of a read function written by Nathan Cowieson 
-            Reads each line of .dat file, and enters each data value into its correct list"""
+        """
+        | Process the 3 column datfile placing each column data into its correct type
+        | Based off some code by Nathan Cowieson
+        """
+
         f  = self.openDatFile()
         line = f.readline()
         numLines = 0
@@ -127,15 +137,24 @@ class DatFile:
         self.setNumLines(numLines)
         
     def getValues(self):
+        """
+        Returns a dictionary of all the values
+        """
         return { 'q' : self.q, 'intensities' : self.intensities, 'errros' : self.errors }
         
     def reprocessDatFile(self):
         self.processDatFile()
         
     def getIHQ(self):
+        """
+        Returns High Q
+        """
         return self.IHQ 
     
     def getILQ(self):
+        """
+        Returns Low Q
+        """        
         return self.ILQ
     
 

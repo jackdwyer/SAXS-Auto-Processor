@@ -1,17 +1,27 @@
-"""
-Jack Dwyer
-31 March 2012
-
-Common generic averaging class/methods.  
-
-"""
-
 class AverageList:
+    """
+    .. codeauthor:: Jack Dwyer <jackjack.dwyer@gmail.com>
+    An Object that takes a list of lists as the parameter and averages them out
+    """
+    
     
     def __init__(self, list = []):
         self.outterList = list      
     
     def average(self, list):
+        """
+        Averages out the lists
+        
+        Args:
+            lists (list of lists)
+        
+        Return:
+            results (lits): the averaged results from the list
+        
+        Raises:
+            IndexError: If the list of lists don't match up
+            
+        """
         self.outterList = list
         if (len(self.outterList) == 1): #Unable to average with only 1 list
             return list[0] #need this, else it returns a list of lists

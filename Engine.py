@@ -13,8 +13,8 @@ import yaml
 
 from threading import Thread
 
-from Core.EngineFunctions import getUser as getUser
-from Core.EngineFunctions import testUserChange as testUserChange
+from Core.EngineFunctions import getString as getString
+from Core.EngineFunctions import testStringChange as testStringChange
 from Core.EngineFunctions import createFolderStructure as createFolderStructure
 from Core.RootName import changeInRootName
 
@@ -25,11 +25,11 @@ from Core import DatFile
 
 class Engine():
     """
-    Engine does some things
+    .. codeauthor:: Jack Dwyer <jackjack.dwyer@gmail.com>
+    Is the goto man for controlling the sequence of events that will occur after a datFile has been created
     
     """
     def __init__(self, configuration):
-        #Set up the Logger
         self.name = "Engine"
         self.logger = None
         self.setLoggingDetails()
@@ -40,7 +40,6 @@ class Engine():
         self.user = None
         self.logLines = []
         self.needBuffer = True
-        """Attribute self.needBuffer"""
         
         # Object that will be watching the LiveLogFile
         self.logWatcher = LogWatcher.LogWatcher()
@@ -62,32 +61,31 @@ class Engine():
         self.requestBuffer = None
 
         #Instantiate all workers, get them all ready to push out into their own thread and connected up
-        self.instanceWorkerList = self.instantiateWorkers(self.workers)
+        self.instanceWorkerDict = self.instantiateWorkers(self.workers)
         #Connect up workers
-        self.connectWorkers(self.instanceWorkerList)    
+        self.connectWorkers(self.instanceWorkerDict)    
     
     def setConfiguration(self, configuration):
         """Reads the default configuration file that is passed at object creation 
-        """
-        #The configuration stores the Workers that need to be loaded, whether an Experiment name is being used
-        #The Absolute location of the datFiles.
-        #Any PV's that need to be watched
-        
-        # Args:
-        #     configuration: A YAML config file
+        The configuration stores the Workers that need to be loaded, whether an Experiment name is being used
+        The Absolute location of the datFiles.
+        Any PV's that need to be watched
+    
+        Args:
+            Configuration (file): A YAML config file
           
-        #Returns:
-        #   Nothing
-        #   Sets class Variables:
-        #       self.rootDirectory = The absolute location of the experiments as mounted on the local machine
-        #       self.userChangePV = The FullPath PV from epics to watch for user/experiment change over
-        
-          #self.experimentFolderOn = Switch if they experiment folders are being used
-           #   self.workrs = List of all workers that need to be instantiated
+        Returns:
+           Nothing
+           
+        Sets class Variables:
+            | self.rootDirectory = The absolute location of the experiments as mounted on the local machine.
+            | self.userChangePV = The FullPath PV from epics to watch for user/experiment change over.
+            | self.experimentFolderOn = Switch if they experiment folders are being used.
+            | self.workrs = List of all workers that need to be instantiated.
           
-        #Raises:
-        #   IOError: When it is unable to find the configuration
-            
+        Raises:
+           IOError: When it is unable to find the configuration
+        """    
         try:
             stream = file(configuration, 'r') 
         except IOError:
@@ -104,10 +102,16 @@ class Engine():
         self.workers = config.get('workers')
 
     def instantiateWorkers(self, workers):
+        """Instantiates each worker as specified by the Configuration 
+        
+        Args:
+            Workers: A list of string names of each worker
+            
+        Returns:
+            instanceDict: A dictionary of Key (Worker Name String): Value (Instantiated Worker Object)
+        """
         self.logger.info("Instantiating all workers")
         instanceDict = {}
-        """Loads up each worker into their own thread
-        sets them to be daemons and starts the thread"""
         for worker in workers:
             im = __import__('Workers.'+worker, globals(), locals(), [worker])
             v = getattr(im, worker)
@@ -115,7 +119,27 @@ class Engine():
             instanceDict[worker] = x
         return instanceDict
 
-    def connectWorkers(self, instanceList):
+    def connectWorkers(self, instanceDict):
+        """
+        Connects all Workers to required ZMQ sockets
+        Loads each worker into a Daemon Thread
+        Uses Push for all workers
+        PUB/SUB for WorkerDB
+        REQ/REP for WorkerBufferAverage
+        
+        
+        Args:
+            instanceDict (dictionary): Dictionary created from instantiateWorkers
+        
+        Returns:
+            Nothing
+        
+        Sets Class Variables:
+            | self.connectedWorkers = Dictionary - key, Worker(string): push port(string)
+        
+        
+        """
+        
         pushPort = 2000
         pubPort = 1998
         bufferRequestPort = 1999
@@ -127,15 +151,15 @@ class Engine():
         self.connectedWorkers = {}
 
         #Start up a dictionary of threads, so we know where all the workers are        
-        for worker in instanceList:
+        for worker in instanceDict:
             if (worker == "WorkerBufferAverage"):
-                workerThreads[worker] = Thread(target=instanceList[worker].connect, args=(pushPort, pubPort, bufferRequestPort))
+                workerThreads[worker] = Thread(target=instanceDict[worker].connect, args=(pushPort, pubPort, bufferRequestPort))
                 workerPortLocation[worker] = pushPort
                 self.requestBuffer = self.zmqContext.socket(zmq.REQ)
                 self.requestBuffer.connect("tcp://127.0.0.1:"+str(bufferRequestPort))
                 pushPort = pushPort + 1
             else:
-                workerThreads[worker] = Thread(target=instanceList[worker].connect, args=(pushPort, pubPort,))                            
+                workerThreads[worker] = Thread(target=instanceDict[worker].connect, args=(pushPort, pubPort,))                            
                 workerPortLocation[worker] = pushPort #So we know where to send commands
                 pushPort = pushPort + 1
             
@@ -162,36 +186,100 @@ class Engine():
 
     # Event Watching
     def setUserWatcher(self):
+        """
+        Sets up a epics.camonitor against the PV set by the configuration file
+        
+        Callback:
+            setUser()
+        """
+        
         epics.camonitor(self.userChangePV, callback=self.setUser)
         
     def watchForLogLines(self, logLocation):
+        """
+        Creates an object for watching the logfile that callsback when ever a new line has been written
+        
+        Callback:
+            lineCreated()
+        
+        """      
         self.logWatcher.setLocation(logLocation)
         self.logWatcher.setCallback(self.lineCreated)
         self.logWatcher.watch()
         
     def killLogWatcher(self):
+        """
+        Kills Log Watcher Object
+        """
         self.logWatcher.kill()
 
 
 
         
     def setUser(self, char_value, **kw):
+        """
+        | Sets the User for the Engine, and all workers.
+        | Is called when the PV changes
+        | Checks new user value against previous user
+        | If matching values, nothing occurs
+        | Calls newUser(user) if it is a new user
+        
+        Args:
+            char_value (string): String value of the PV, should be the full path to the image locations relative to epics
+            **kw (dict): remaining values returned from epics
+            
+        """
         self.logger.info("User Change Event")
         
-        user = getUser(char_value)
+        #user = getUser(char_value)
         
         if (self.experimentFolderOn):
-            experiment = getUser(char_value, -2)
-            user = getUser(char_value, -3)
-            if (testUserChange(experiment, self.previousExperiment)):
-                self.previousExperiment = experiment
-                self.newUser(user, experiment)
-
-            if (testUserChange(user, self.previousUser)):
-                self.previousUser = user
-                self.newUser(user, experiment)
-                
+            print "Experiment folder on"
+            experiment = getString(char_value, -2)
+            user = getString(char_value, -3)
             
+            print "EXPERIMENT : %s" % experiment
+            print "USER : %s" % user
+
+            #Test user change
+            if (testStringChange(user, self.previousUser)):
+                print "USER CHANGE, SO YES experiment CHANGE \nRUN user.change with experiment!"
+                self.previousUser = user
+                self.previousExperiment = experiment
+                self.newUser1()
+
+            else:
+                print "NO USER CHANAGE"
+                
+                print "BETTER CHECK IF USER CHANGED!"
+                if (testStringChange(experiment, self.previousExperiment)):
+                    print "EXPERUIMENT CHANGE!"
+                    self.previousExperiment = experiment
+                    self.newExperiment()
+                else:
+                    print "Nothing changed, user nor experiment"
+                    pass
+            
+
+        #experiment filder is off, onlty just againse user
+        else:
+            print "exerpimetn folder off, on;y check user"
+            user = getString(char_value, -2)
+            print "USER: %s" % user
+            
+            if testStringChange(user, self.previousUser):
+                print "USER HAS CHANGED, run new user"
+                self.previousUser = user
+                self.newUser1()
+
+            else:
+                print "NO USER CHANGE DO NOTHING"
+                pass
+            
+                
+                
+                
+        """    
         else:
             user = getUser(char_value, -2)
             if (testUserChange(user, self.previousUser)):
@@ -199,8 +287,26 @@ class Engine():
                 self.newUser(user)
             else:
                 pass
+        """
         
-    def newUser(self, user, experiment):
+    def newExperiment(self):
+        print "function new experiment"
+        
+    def newUser1(self):
+        print "function new user"
+        
+    def newUser(self, user):
+        """
+        New User has been found, need to communicate to myself and all workers the new details
+        A new Database is created
+        And the engine commences watching the logfile.
+        
+        Args:
+            user (string): string value of the user
+         
+        """
+        
+        
         self.logger.info("New User Requested")
         #Reset class variables for controlling logic and data
         self.first = True
@@ -210,8 +316,6 @@ class Engine():
         self.user = user
         self.liveLog = self.rootDirectory + "/" + self.user + "/images/livelogfile.log"
         self.datFileLocation = self.rootDirectory + "/" + self.user + "/raw_dat/"
-        print "DAT FILE LOCATIONLLLLL"
-        print self.datFileLocation
         
         #Generate Directory Structure
         createFolderStructure(self.rootDirectory, self.user)
@@ -221,24 +325,22 @@ class Engine():
         self.sendCommand({"command":"update_user", "user":self.user})
         self.sendCommand({"command":"absolute_directory","absolute_directory":self.rootDirectory + "/" + self.user})
         
+        
+        
+        
         self.createDB()
         
         #Start waiting for log to appear
         self.watchForLogLines(self.liveLog) # Start waiting for the Log
 
 
-    def run(self): 
-        ## Get the user from epics if it needs to auto start       
+    def run(self):
         """
-        if (self.user == None):
-            print self.user
-        """
-        
+        Starts the epics watcher for user change
+        Keeps on running as the main thread
+        """ 
         self.setUserWatcher() #Start epics call back
-
-        
-        
-        
+              
         while True:
             #Keep the script running
             time.sleep(0.1)
@@ -249,11 +351,14 @@ class Engine():
  
     def lineCreated(self, line, **kw):
         """
-        Here we will decide how to process the file
-        Sample Types:
-        6 - Water
-        0 - Buffer
-        1 - Static Sample
+        | Here we parse the logline for the Image Location
+        | it Preliminarily checks against the image type for weather it needs to bother looking for it or not 
+        | Calls processDat if we care for the datFile
+        | sends the logline to be written out to the database
+        
+        Args:
+            line (string): returned latest line from call back
+            **kw (dictionary): any more remaining values
         """
         
         latestLine = LogLine.LogLine(line)
@@ -271,6 +376,19 @@ class Engine():
    
    
     def getDatFile(self, fullPath):
+        """
+        | Called from lineCreated, is called if we want the datFile from the log line
+        | It looks in the location created from the configuration file for the corresponding datFile
+        | Times out after 3seconds and passes
+        
+        Args:
+            fullPath (String): Absolute location of the datFile from the LogLine
+            
+        Returns:
+            | datFile object created from the static image
+            | or, returns False if nothing is found
+        
+        """
         imageName = os.path.basename(fullPath)
         imageName = os.path.splitext(imageName)[0]
         datFileName = imageName + ".dat"
@@ -293,6 +411,31 @@ class Engine():
    
    
     def processDat(self, logLine, datFile):
+        """
+        
+        | Here we will decide how to process the datFile
+        | Sample Types:
+        | 6 - Water
+        | 0 - Buffer
+        | 1 - Static Sample
+        
+        | Sample type of DatFile is determined by the logline.  We only currently care for 0 (buffer), or 1 (static Sample)
+        | Is sample is a buffer, it needs to be passed to WorkerBufferAverage to be processed
+        | If it is a sample it is passed to all workers to be processed by them if they want
+        
+        We check if the Workers need an AveragedBuffer which we then can request from WorkerBufferAverage
+        We check for a rootname change indicating a new sample which may or may not require a new buffer average
+        
+        Args:
+            logLine (LogLine Object): Latest Logline
+            datFile (datFile Object): Corresponding DatFile from LogLine
+            
+        Raises:
+            IndexError: Raised only on first pass, as we need the current user to check againse the previous user
+        
+        """
+        
+        
         try:
             if (changeInRootName(os.path.basename(self.logLines[-1].getValue("ImageLocation")), os.path.basename(self.logLines[-2].getValue("ImageLocation")))):
                 self.logger.info("There has been a change in the root name")
@@ -377,6 +520,13 @@ class Engine():
 
     #Generic Methods
     def sendCommand(self, command):
+        """
+        Sends a structed Dictionary command to all connected Workers
+        
+        Args:
+            command (Dictionary): requested command to be sent
+        
+        """
         if (type(command) is dict):
             for worker in self.connectedWorkers:
                 self.connectedWorkers[worker].send_pyobj(command)
@@ -384,12 +534,29 @@ class Engine():
             self.logger.critical("Incorrect Command datatype, must send a dictionary")
 
     def sendLogLine(self, line):
+        """
+        Sends the pass logline to the WorkerDB to be written out to the database
+        
+        Args:
+            line (LogLine object): LogLine object that you want to write to the DB
+        """
         self.connectedWorkers['WorkerDB'].send_pyobj({"command":"log_line", "line":line})
         
     def createDB(self):
+        """
+        Create the specified database for the new user
+        """
+        
         self.connectedWorkers['WorkerDB'].send_pyobj({"command":"createDB"})
         
     def requestAveragedBuffer(self):
+        """
+        Request from the WorkerBufferAverage for the current averaged buffer
+        
+        Returns:
+            Averaged Buffer List
+        """
+        
         self.requestBuffer.send("request_buffer")
         buffer = self.requestBuffer.recv_pyobj()
         return buffer
@@ -400,12 +567,18 @@ class Engine():
         time.sleep(0.1)
         
     def exit(self):
+        """
+        Properly shuts down all the workers
+        """
         self.sendCommand({"command":"shut_down"})
         time.sleep(0.1)
         sys.exit()
         
         
     def setLoggingDetails(self):
+        """
+        Current generic logging setup using the python logging module
+        """
         LOG_FILENAME = 'logs/'+self.name+'.log'
         FORMAT = "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
         logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG,format=FORMAT)

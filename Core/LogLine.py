@@ -1,15 +1,12 @@
-"""
-21/02/2012
-Jack Dwyer
-
-Class for processing a single line off the logfile
-"""
-
-#TODO: should only get the attributes when needing to generate sql DB, then should just pass it the list
-#to grab only the values that are required in the list
-
 import xml.etree.ElementTree 
+
 class LogLine:    
+    """
+    .. codeauthor:: Jack Dwyer <jackjack.dwyer@gmail.com>
+    Class for parsing each log line into an XML format so to all easy data retrieval 
+    Args:
+        line (String): the logline that you want to parse
+    """
     
     def __init__(self, line):
         self.line = line
@@ -30,7 +27,9 @@ class LogLine:
         #<?xml version='1.0'?><root><LOGLINE TimeStamp = 'Thu Feb 09 2012 11:44:51.659' NumericTimeStamp = '110162691.659' exptime = '1' Energy = '12' Temp1 = '-273.15' >/home/det/p2_det/images/data/Cycle_2012_1/Sarrac_4661/lineup_1_0001.tif</LOGLINE></root>
 
     def getAttributes(self):
-        """Gets all the attributes from the line  """
+        """
+        Gets all the attributes from the line to then be used to match up an element dictionary
+        """
         attribList = []
         for el in self.line:
             for p in el.attrib:
@@ -43,7 +42,10 @@ class LogLine:
 
 
     def getValueDict(self, attributeList):
-        """Generates a dictionary of Key(the attribute name) : value """
+        """
+        | Generates a dictionary of Key(the attribute name) : value 
+        | ImageLocation is manually added as it falls out of the auto generated xml scope
+        """
         for el in self.line:
             for i in range(len(attributeList)):
                 if (attributeList[i] == "ImageLocation"): #this needs to be here as imagelocation has to be forced as its element.text
@@ -53,7 +55,11 @@ class LogLine:
         #self.data['ImageLocation'] = el.text
 
     def getValue(self, attribute):
-        """Can just use eg:x logObject.data['value'] instead of calling this method """
+        """Can just use eg:x logObject.data['value'] instead of calling this method 
+        
+        Returns:
+            The 'value' specified
+        """
         return self.data[attribute]
                 
 

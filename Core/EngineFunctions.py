@@ -1,34 +1,40 @@
 """
-Jack Dwyer
-07-06-2012
-
+.. codeauthor:: Jack Dwyer <jackjack.dwyer@gmail.com>
 Collection of Functions used by the Engine
 """
 
 import os
 
 
-def getUser(path, index):
-    """Splits file path, and returns only user"""
-    user = path.split("/")
-    user = filter(None, user) #needed to remove the none characters from the array
+def getString(string, index):
+    """
+    Splits the string by / and empty chars. Was orginally for returning user, but now it is used to get user and experiment
+    """
+    values = string.split("/")
+    values = filter(None, values) #needed to remove the none characters from the array
     
     ###########################################################################################################
     #set to -2
-    return user[index] #
+    return values[index] #
     ###########################################################################################################
     
 
-def testUserChange(user, perviousUser = None):
-    if not (perviousUser):
+def testStringChange(string, previousString = None):
+    """
+    Tests against 2 strings, orginally was to check if there had been a change in user, now it is used to check against user and expierment
+    """
+    if not (previousString):
         return True
     else:
-        if (perviousUser == user):
+        if (previousString == string):
             return False
-        if (perviousUser != user):
+        if (previousString != string):
             return True
         
 def createFolderStructure(rootDirectory, user):
+    """
+    Creates Directory structure if it is not already present
+    """
     fullPath = rootDirectory + "/"+ user
    
     try:
